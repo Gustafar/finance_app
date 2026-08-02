@@ -1,0 +1,13 @@
+# Variáveis de ambiente (segredos)
+.env
+
+# Binários compilados do Go
+backend/bin/
+*.exe
+
+# Dependências do Node (quando criarmos o frontend)
+frontend/node_modules/
+
+# Arquivos de IDE
+.vscode/
+.idea/
