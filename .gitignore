@@ -11,3 +11,6 @@ frontend/node_modules/
 # Arquivos de IDE
 .vscode/
 .idea/
+
+CLAUDE.md
+.claude
