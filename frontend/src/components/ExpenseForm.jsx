@@ -5,7 +5,9 @@ import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
+import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
+import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
 
 function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
@@ -13,6 +15,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { buckets, isLoading: isLoadingBuckets } = useBuckets()
   const { banks, isLoading: isLoadingBanks } = useBanks()
+  const { investmentBoxes, isLoading: isLoadingInvestmentBoxes } = useInvestmentBoxes()
 
   const [type, setType] = useState('expense')
   const [isInstallment, setIsInstallment] = useState(false)
@@ -20,11 +23,13 @@ function ExpenseForm({ onExpenseCreated }) {
   const [amount, setAmount] = useState('')
   const [totalAmount, setTotalAmount] = useState('')
   const [installmentCount, setInstallmentCount] = useState('2')
+  const [date, setDate] = useState(todayDateInputValue)
   const [categoryId, setCategoryId] = useState('')
   const [personId, setPersonId] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState('')
   const [bucketId, setBucketId] = useState('')
   const [bankId, setBankId] = useState('')
+  const [investmentBoxId, setInvestmentBoxId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
@@ -50,6 +55,13 @@ function ExpenseForm({ onExpenseCreated }) {
   }, [banks])
 
   const effectiveBankId = bankId || defaultBankId
+
+  const defaultInvestmentBoxId = useMemo(() => {
+    const defaultBox = investmentBoxes.find((b) => b.is_default)
+    return defaultBox ? String(defaultBox.id) : investmentBoxes[0] ? String(investmentBoxes[0].id) : ''
+  }, [investmentBoxes])
+
+  const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
 
   const handleTypeChange = (nextType) => {
     setType(nextType)
@@ -77,13 +89,14 @@ function ExpenseForm({ onExpenseCreated }) {
           ...shared,
           total_amount: parseFloat(totalAmount),
           installment_count: Number(installmentCount),
-          purchase_date: new Date().toISOString(),
+          purchase_date: dateInputValueToISOString(date),
         })
       : createExpense({
           ...shared,
           amount: parseFloat(amount),
           type,
-          date: new Date().toISOString(),
+          date: dateInputValueToISOString(date),
+          ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
         })
 
     request
@@ -93,7 +106,9 @@ function ExpenseForm({ onExpenseCreated }) {
         setAmount('')
         setTotalAmount('')
         setInstallmentCount('2')
+        setDate(todayDateInputValue())
         setCategoryId('')
+        setInvestmentBoxId('')
         setIsInstallment(false)
       })
       .catch((err) => {
@@ -180,20 +195,33 @@ function ExpenseForm({ onExpenseCreated }) {
             </div>
           </div>
 
-          <div className="field">
-            <label htmlFor="category">Categoria</label>
-            <select
-              id="category"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              required
-              disabled={noCategories}
-            >
-              <option value="" disabled>Selecione…</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="purchase-date">Data da compra</label>
+              <input
+                id="purchase-date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="category">Categoria</label>
+              <select
+                id="category"
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                required
+                disabled={noCategories}
+              >
+                <option value="" disabled>Selecione…</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </>
       ) : (
@@ -208,6 +236,17 @@ function ExpenseForm({ onExpenseCreated }) {
               placeholder="0,00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="date">Data</label>
+            <input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               required
             />
           </div>
@@ -230,69 +269,91 @@ function ExpenseForm({ onExpenseCreated }) {
         </div>
       )}
 
-      <div className="field">
-        <label htmlFor="person">Responsável</label>
-        <select
-          id="person"
-          value={effectivePersonId}
-          onChange={(e) => setPersonId(e.target.value)}
-          required
-          disabled={isLoadingPeople}
-        >
-          <option value="" disabled>Selecione…</option>
-          {people.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+      <div className="field-row">
+        <div className="field">
+          <label htmlFor="person">Responsável</label>
+          <select
+            id="person"
+            value={effectivePersonId}
+            onChange={(e) => setPersonId(e.target.value)}
+            required
+            disabled={isLoadingPeople}
+          >
+            <option value="" disabled>Selecione…</option>
+            {people.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="payment-method">Método de pagamento</label>
+          <select
+            id="payment-method"
+            value={paymentMethodId}
+            onChange={(e) => setPaymentMethodId(e.target.value)}
+            required
+            disabled={isLoadingPaymentMethods}
+          >
+            <option value="" disabled>Selecione…</option>
+            {paymentMethods.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="field">
-        <label htmlFor="payment-method">Método de pagamento</label>
-        <select
-          id="payment-method"
-          value={paymentMethodId}
-          onChange={(e) => setPaymentMethodId(e.target.value)}
-          required
-          disabled={isLoadingPaymentMethods}
-        >
-          <option value="" disabled>Selecione…</option>
-          {paymentMethods.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
-          ))}
-        </select>
+      <div className="field-row">
+        <div className="field">
+          <label htmlFor="bucket">Envelope</label>
+          <select
+            id="bucket"
+            value={effectiveBucketId}
+            onChange={(e) => setBucketId(e.target.value)}
+            required
+            disabled={isLoadingBuckets}
+          >
+            <option value="" disabled>Selecione…</option>
+            {buckets.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="bank">Banco</label>
+          <select
+            id="bank"
+            value={effectiveBankId}
+            onChange={(e) => setBankId(e.target.value)}
+            required
+            disabled={isLoadingBanks}
+          >
+            <option value="" disabled>Selecione…</option>
+            {banks.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="field">
-        <label htmlFor="bucket">Envelope</label>
-        <select
-          id="bucket"
-          value={effectiveBucketId}
-          onChange={(e) => setBucketId(e.target.value)}
-          required
-          disabled={isLoadingBuckets}
-        >
-          <option value="" disabled>Selecione…</option>
-          {buckets.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="field">
-        <label htmlFor="bank">Banco</label>
-        <select
-          id="bank"
-          value={effectiveBankId}
-          onChange={(e) => setBankId(e.target.value)}
-          required
-          disabled={isLoadingBanks}
-        >
-          <option value="" disabled>Selecione…</option>
-          {banks.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
-      </div>
+      {type === 'investment' && (
+        <div className="field">
+          <label htmlFor="investment-box">Caixinha de investimento</label>
+          <select
+            id="investment-box"
+            value={effectiveInvestmentBoxId}
+            onChange={(e) => setInvestmentBoxId(e.target.value)}
+            required
+            disabled={isLoadingInvestmentBoxes}
+          >
+            <option value="" disabled>Selecione…</option>
+            {investmentBoxes.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {noCategories && (
         <p className="form-error">Cadastre uma categoria em "Categorias" antes de adicionar despesas.</p>
@@ -311,6 +372,7 @@ function ExpenseForm({ onExpenseCreated }) {
           !paymentMethodId ||
           !effectiveBucketId ||
           !effectiveBankId ||
+          (type === 'investment' && !effectiveInvestmentBoxId) ||
           isAmountMissing
         }
       >

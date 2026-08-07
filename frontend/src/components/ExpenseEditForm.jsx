@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { updateExpense } from '../api/expenses'
 import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
+import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import ConfirmDialog from './ConfirmDialog'
 
@@ -14,6 +15,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { buckets, isLoading: isLoadingBuckets } = useBuckets()
   const { banks, isLoading: isLoadingBanks } = useBanks()
+  const { investmentBoxes, isLoading: isLoadingInvestmentBoxes } = useInvestmentBoxes()
 
   const [type, setType] = useState(expense.type)
   const [description, setDescription] = useState(expense.description)
@@ -23,11 +25,21 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [paymentMethodId, setPaymentMethodId] = useState(String(expense.payment_method_id))
   const [bucketId, setBucketId] = useState(String(expense.bucket_id))
   const [bankId, setBankId] = useState(String(expense.bank_id))
+  const [investmentBoxId, setInvestmentBoxId] = useState(
+    expense.investment_box_id ? String(expense.investment_box_id) : ''
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [showConfirm, setShowConfirm] = useState(false)
 
   const noCategories = !isLoadingCategories && categories.length === 0
+
+  const defaultInvestmentBoxId = useMemo(() => {
+    const defaultBox = investmentBoxes.find((b) => b.is_default)
+    return defaultBox ? String(defaultBox.id) : investmentBoxes[0] ? String(investmentBoxes[0].id) : ''
+  }, [investmentBoxes])
+
+  const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -49,6 +61,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       bucket_id: Number(bucketId),
       bank_id: Number(bankId),
       date: expense.date,
+      ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
     }
 
     updateExpense(expense.id, updatedExpense)
@@ -189,12 +202,39 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </select>
         </div>
 
+        {type === 'investment' && (
+          <div className="field">
+            <label htmlFor="edit-investment-box">Caixinha de investimento</label>
+            <select
+              id="edit-investment-box"
+              value={effectiveInvestmentBoxId}
+              onChange={(e) => setInvestmentBoxId(e.target.value)}
+              required
+              disabled={isLoadingInvestmentBoxes}
+            >
+              <option value="" disabled>Selecione…</option>
+              {investmentBoxes.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {error && <p className="form-error">{error}</p>}
 
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={isSubmitting || noCategories || !categoryId || !personId || !paymentMethodId || !bucketId || !bankId}
+          disabled={
+            isSubmitting ||
+            noCategories ||
+            !categoryId ||
+            !personId ||
+            !paymentMethodId ||
+            !bucketId ||
+            !bankId ||
+            (type === 'investment' && !effectiveInvestmentBoxId)
+          }
         >
           {isSubmitting ? 'Salvando…' : 'Salvar alterações'}
         </button>

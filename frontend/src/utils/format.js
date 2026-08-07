@@ -9,8 +9,19 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   year: 'numeric',
 })
 
+const compactCurrencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
 export function formatCurrency(value) {
   return currencyFormatter.format(value ?? 0)
+}
+
+export function formatCompactCurrency(value) {
+  return compactCurrencyFormatter.format(value ?? 0)
 }
 
 export function formatDate(dateString) {

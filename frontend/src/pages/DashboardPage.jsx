@@ -1,16 +1,25 @@
 import ExpenseList from '../components/ExpenseList'
 import SummaryCard from '../components/SummaryCard'
+import FilterBar from '../components/FilterBar'
 import { formatCurrency } from '../utils/format'
 import { formatMonthLabel } from '../utils/date'
 
 function DashboardPage({
   selectedMonth,
   onShiftMonth,
+  periodFilterActive,
   summary,
   isLoading,
   loadError,
   expenses,
-  monthExpenses,
+  filteredExpenses,
+  filters,
+  onFiltersChange,
+  categories,
+  people,
+  paymentMethods,
+  buckets,
+  banks,
   onAddClick,
   onEditExpense,
   onDeleteExpense,
@@ -22,6 +31,7 @@ function DashboardPage({
           type="button"
           className="icon-btn"
           onClick={() => onShiftMonth(-1)}
+          disabled={periodFilterActive}
           aria-label="Mês anterior"
           title="Mês anterior"
         >
@@ -29,11 +39,14 @@ function DashboardPage({
             <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <span className="month-nav-label">{formatMonthLabel(selectedMonth)}</span>
+        <span className="month-nav-label">
+          {periodFilterActive ? 'Período personalizado' : formatMonthLabel(selectedMonth)}
+        </span>
         <button
           type="button"
           className="icon-btn"
           onClick={() => onShiftMonth(1)}
+          disabled={periodFilterActive}
           aria-label="Próximo mês"
           title="Próximo mês"
         >
@@ -55,6 +68,16 @@ function DashboardPage({
         />
       </section>
 
+      <FilterBar
+        filters={filters}
+        onChange={onFiltersChange}
+        categories={categories}
+        people={people}
+        paymentMethods={paymentMethods}
+        buckets={buckets}
+        banks={banks}
+      />
+
       <section className="panel">
         <div className="panel-header">
           <h2>Despesas</h2>
@@ -73,12 +96,12 @@ function DashboardPage({
           </div>
         )}
 
-        {!isLoading && !loadError && expenses.length > 0 && monthExpenses.length === 0 && (
-          <p className="state-message">Nenhuma transação neste mês.</p>
+        {!isLoading && !loadError && expenses.length > 0 && filteredExpenses.length === 0 && (
+          <p className="state-message">Nenhuma transação encontrada para os filtros selecionados.</p>
         )}
 
-        {!isLoading && !loadError && monthExpenses.length > 0 && (
-          <ExpenseList expenses={monthExpenses} onDelete={onDeleteExpense} onEdit={onEditExpense} />
+        {!isLoading && !loadError && filteredExpenses.length > 0 && (
+          <ExpenseList expenses={filteredExpenses} onDelete={onDeleteExpense} onEdit={onEditExpense} />
         )}
       </section>
     </main>
