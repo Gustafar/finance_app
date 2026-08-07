@@ -7,6 +7,7 @@ var (
 	ErrEmptyCategory      = errors.New("category cannot be empty")
 	ErrEmptyPerson        = errors.New("person cannot be empty")
 	ErrEmptyPaymentMethod = errors.New("payment method cannot be empty")
+	ErrEmptyCaixinha      = errors.New("caixinha cannot be empty")
 	ErrEmptyDescription   = errors.New("description cannot be empty")
 	ErrExpenseNotFound    = errors.New("expense not found")
 
@@ -27,4 +28,10 @@ var (
 	ErrPaymentMethodNotFound            = errors.New("payment method not found")
 	ErrPaymentMethodAlreadyExists       = errors.New("payment method already exists")
 	ErrCannotDeleteDefaultPaymentMethod = errors.New("this payment method cannot be deleted")
+
+	ErrEmptyCaixinhaName           = errors.New("caixinha name cannot be empty")
+	ErrInvalidCaixinhaColor        = errors.New("invalid caixinha color")
+	ErrCaixinhaNotFound            = errors.New("caixinha not found")
+	ErrCaixinhaAlreadyExists       = errors.New("caixinha already exists")
+	ErrCannotDeleteDefaultCaixinha = errors.New("the default caixinha cannot be deleted")
 )

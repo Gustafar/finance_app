@@ -16,18 +16,21 @@ func NewExpenseRepository(db *sql.DB) *ExpenseRepository {
 
 const selectExpenseQuery = `
 	SELECT e.id, e.description, e.amount, e.category_id, c.name, c.color, e.person_id, p.name, p.color,
-	       e.payment_method_id, m.name, m.color, e.date
+	       e.payment_method_id, m.name, m.color, e.caixinha_id, x.name, x.color, e.date
 	FROM expenses e
 	JOIN categories c ON c.id = e.category_id
 	JOIN people p ON p.id = e.person_id
 	JOIN payment_methods m ON m.id = e.payment_method_id
+	JOIN caixinhas x ON x.id = e.caixinha_id
 `
 
 func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
-	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, date) VALUES (?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, caixinha_id, date)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.DB.Exec(
-		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID, expense.Date,
+		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
+		expense.CaixinhaID, expense.Date,
 	)
 	if err != nil {
 		return models.Expense{}, err
@@ -48,7 +51,8 @@ func (r *ExpenseRepository) GetByID(id int) (models.Expense, error) {
 	err := r.DB.QueryRow(query, id).Scan(
 		&expense.ID, &expense.Description, &expense.Amount, &expense.CategoryID, &expense.CategoryName, &expense.CategoryColor,
 		&expense.PersonID, &expense.PersonName, &expense.PersonColor,
-		&expense.PaymentMethodID, &expense.PaymentMethodName, &expense.PaymentMethodColor, &expense.Date,
+		&expense.PaymentMethodID, &expense.PaymentMethodName, &expense.PaymentMethodColor,
+		&expense.CaixinhaID, &expense.CaixinhaName, &expense.CaixinhaColor, &expense.Date,
 	)
 	if err != nil {
 		return models.Expense{}, err
@@ -72,7 +76,8 @@ func (r *ExpenseRepository) GetAll() ([]models.Expense, error) {
 		err := rows.Scan(
 			&expense.ID, &expense.Description, &expense.Amount, &expense.CategoryID, &expense.CategoryName, &expense.CategoryColor,
 			&expense.PersonID, &expense.PersonName, &expense.PersonColor,
-			&expense.PaymentMethodID, &expense.PaymentMethodName, &expense.PaymentMethodColor, &expense.Date,
+			&expense.PaymentMethodID, &expense.PaymentMethodName, &expense.PaymentMethodColor,
+			&expense.CaixinhaID, &expense.CaixinhaName, &expense.CaixinhaColor, &expense.Date,
 		)
 		if err != nil {
 			return nil, err
@@ -89,11 +94,12 @@ func (r *ExpenseRepository) GetAll() ([]models.Expense, error) {
 }
 
 func (r *ExpenseRepository) Update(id int, expense models.Expense) (models.Expense, error) {
-	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, person_id = ?, payment_method_id = ?, date = ?
+	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, person_id = ?, payment_method_id = ?, caixinha_id = ?, date = ?
 		WHERE id = ?`
 
 	_, err := r.DB.Exec(
-		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID, expense.Date, id,
+		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
+		expense.CaixinhaID, expense.Date, id,
 	)
 	if err != nil {
 		return models.Expense{}, err

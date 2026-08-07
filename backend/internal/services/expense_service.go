@@ -29,6 +29,9 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.PaymentMethodID <= 0 {
 		return ErrEmptyPaymentMethod
 	}
+	if expense.CaixinhaID <= 0 {
+		return ErrEmptyCaixinha
+	}
 	if expense.Description == "" {
 		return ErrEmptyDescription
 	}
@@ -44,6 +47,9 @@ func referencedEntityError(err error) error {
 	}
 	if violatesConstraint(err, "fk_expenses_payment_method") {
 		return ErrPaymentMethodNotFound
+	}
+	if violatesConstraint(err, "fk_expenses_caixinha") {
+		return ErrCaixinhaNotFound
 	}
 	return nil
 }
