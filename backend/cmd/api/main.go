@@ -26,6 +26,10 @@ func main() {
 	categoryService := services.NewCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
+	personRepo := repositories.NewPersonRepository(db)
+	personService := services.NewPersonService(personRepo)
+	personHandler := handlers.NewPersonHandler(personService)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /expenses", expenseHandler.GetAll)
 	mux.HandleFunc("GET /expenses/{id}", expenseHandler.GetByID)
@@ -38,6 +42,12 @@ func main() {
 	mux.HandleFunc("POST /categories", categoryHandler.Create)
 	mux.HandleFunc("PUT /categories/{id}", categoryHandler.Update)
 	mux.HandleFunc("DELETE /categories/{id}", categoryHandler.Delete)
+
+	mux.HandleFunc("GET /people", personHandler.GetAll)
+	mux.HandleFunc("GET /people/{id}", personHandler.GetByID)
+	mux.HandleFunc("POST /people", personHandler.Create)
+	mux.HandleFunc("PUT /people/{id}", personHandler.Update)
+	mux.HandleFunc("DELETE /people/{id}", personHandler.Delete)
 
 	handler := middleware.Logging(middleware.CORS(mux))
 

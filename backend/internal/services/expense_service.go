@@ -23,6 +23,9 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.CategoryID <= 0 {
 		return ErrEmptyCategory
 	}
+	if expense.PersonID <= 0 {
+		return ErrEmptyPerson
+	}
 	if expense.Description == "" {
 		return ErrEmptyDescription
 	}
@@ -32,6 +35,9 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 func referencedEntityError(err error) error {
 	if violatesConstraint(err, "fk_expenses_category") {
 		return ErrCategoryNotFound
+	}
+	if violatesConstraint(err, "fk_expenses_person") {
+		return ErrPersonNotFound
 	}
 	return nil
 }

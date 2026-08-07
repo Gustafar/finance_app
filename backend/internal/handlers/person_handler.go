@@ -10,32 +10,32 @@ import (
 	"finance_app/internal/services"
 )
 
-type ExpenseHandler struct {
-	Service *services.ExpenseService
+type PersonHandler struct {
+	Service *services.PersonService
 }
 
-func NewExpenseHandler(service *services.ExpenseService) *ExpenseHandler {
-	return &ExpenseHandler{Service: service}
+func NewPersonHandler(service *services.PersonService) *PersonHandler {
+	return &PersonHandler{Service: service}
 }
 
-func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var expense models.Expense
+func (h *PersonHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var person models.Person
 
-	err := json.NewDecoder(r.Body).Decode(&expense)
+	err := json.NewDecoder(r.Body).Decode(&person)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	criada, err := h.Service.Create(expense)
+	criado, err := h.Service.Create(person)
 	if err != nil {
-		if errors.Is(err, services.ErrInvalidAmount) ||
-			errors.Is(err, services.ErrEmptyCategory) ||
-			errors.Is(err, services.ErrEmptyPerson) ||
-			errors.Is(err, services.ErrEmptyDescription) ||
-			errors.Is(err, services.ErrCategoryNotFound) ||
-			errors.Is(err, services.ErrPersonNotFound) {
+		if errors.Is(err, services.ErrEmptyPersonName) ||
+			errors.Is(err, services.ErrInvalidPersonColor) {
 			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrPersonAlreadyExists) {
+			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
 
@@ -43,20 +43,20 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, criada)
+	respondJSON(w, http.StatusCreated, criado)
 }
 
-func (h *ExpenseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	expenses, err := h.Service.GetAll()
+func (h *PersonHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	people, err := h.Service.GetAll()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, expenses)
+	respondJSON(w, http.StatusOK, people)
 }
 
-func (h *ExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (h *PersonHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -65,9 +65,9 @@ func (h *ExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expense, err := h.Service.GetByID(id)
+	person, err := h.Service.GetByID(id)
 	if err != nil {
-		if errors.Is(err, services.ErrExpenseNotFound) {
+		if errors.Is(err, services.ErrPersonNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
@@ -76,10 +76,10 @@ func (h *ExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, expense)
+	respondJSON(w, http.StatusOK, person)
 }
 
-func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *PersonHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -88,26 +88,26 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var expense models.Expense
-	err = json.NewDecoder(r.Body).Decode(&expense)
+	var person models.Person
+	err = json.NewDecoder(r.Body).Decode(&person)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	updated, err := h.Service.Update(id, expense)
+	updated, err := h.Service.Update(id, person)
 	if err != nil {
-		if errors.Is(err, services.ErrExpenseNotFound) {
+		if errors.Is(err, services.ErrPersonNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, services.ErrInvalidAmount) ||
-			errors.Is(err, services.ErrEmptyCategory) ||
-			errors.Is(err, services.ErrEmptyPerson) ||
-			errors.Is(err, services.ErrEmptyDescription) ||
-			errors.Is(err, services.ErrCategoryNotFound) ||
-			errors.Is(err, services.ErrPersonNotFound) {
+		if errors.Is(err, services.ErrEmptyPersonName) ||
+			errors.Is(err, services.ErrInvalidPersonColor) {
 			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrPersonAlreadyExists) {
+			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
 
@@ -118,7 +118,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updated)
 }
 
-func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *PersonHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -129,8 +129,12 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Service.Delete(id)
 	if err != nil {
-		if errors.Is(err, services.ErrExpenseNotFound) {
+		if errors.Is(err, services.ErrPersonNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrCannotDeleteDefaultPerson) {
+			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
 

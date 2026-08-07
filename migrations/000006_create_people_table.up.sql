@@ -1,0 +1,7 @@
+CREATE TABLE people (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+INSERT INTO people (name, is_default) VALUES ('Casal', TRUE);
