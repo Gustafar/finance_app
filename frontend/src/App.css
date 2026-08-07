@@ -211,7 +211,7 @@
 
 .expense-row {
   display: grid;
-  grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) 1fr auto auto;
+  grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   padding: 14px 24px;
@@ -260,11 +260,17 @@
 .expense-date {
   font-size: 12.5px;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .installment-note {
   font-size: 12px;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .expense-amount {
@@ -625,7 +631,7 @@
 
 /* Responsive expense row */
 
-@media (max-width: 560px) {
+@media (max-width: 720px) {
   .expense-row {
     grid-template-columns: 1fr auto;
     grid-template-areas:
