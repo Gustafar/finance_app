@@ -10,6 +10,9 @@ var (
 	ErrEmptyCaixinha      = errors.New("caixinha cannot be empty")
 	ErrEmptyDescription   = errors.New("description cannot be empty")
 	ErrExpenseNotFound    = errors.New("expense not found")
+	ErrInvalidType        = errors.New("type must be income, expense or investment")
+
+	ErrInvalidInstallmentCount = errors.New("installment count must be between 2 and 60")
 
 	ErrEmptyCategoryName           = errors.New("category name cannot be empty")
 	ErrInvalidCategoryColor        = errors.New("invalid category color")

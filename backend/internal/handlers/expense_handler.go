@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"finance_app/internal/models"
 	"finance_app/internal/services"
@@ -30,6 +31,7 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	criada, err := h.Service.Create(expense)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidAmount) ||
+			errors.Is(err, services.ErrInvalidType) ||
 			errors.Is(err, services.ErrEmptyCategory) ||
 			errors.Is(err, services.ErrEmptyPerson) ||
 			errors.Is(err, services.ErrEmptyPaymentMethod) ||
@@ -48,6 +50,58 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusCreated, criada)
+}
+
+type createInstallmentsRequest struct {
+	Description      string    `json:"description"`
+	TotalAmount      float64   `json:"total_amount"`
+	InstallmentCount int       `json:"installment_count"`
+	CategoryID       int       `json:"category_id"`
+	PersonID         int       `json:"person_id"`
+	PaymentMethodID  int       `json:"payment_method_id"`
+	CaixinhaID       int       `json:"caixinha_id"`
+	PurchaseDate     time.Time `json:"purchase_date"`
+}
+
+func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Request) {
+	var req createInstallmentsRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	created, err := h.Service.CreateInstallmentPurchase(services.InstallmentPurchaseInput{
+		Description:      req.Description,
+		TotalAmount:      req.TotalAmount,
+		InstallmentCount: req.InstallmentCount,
+		PurchaseDate:     req.PurchaseDate,
+		CategoryID:       req.CategoryID,
+		PersonID:         req.PersonID,
+		PaymentMethodID:  req.PaymentMethodID,
+		CaixinhaID:       req.CaixinhaID,
+	})
+	if err != nil {
+		if errors.Is(err, services.ErrInvalidAmount) ||
+			errors.Is(err, services.ErrInvalidInstallmentCount) ||
+			errors.Is(err, services.ErrEmptyCategory) ||
+			errors.Is(err, services.ErrEmptyPerson) ||
+			errors.Is(err, services.ErrEmptyPaymentMethod) ||
+			errors.Is(err, services.ErrEmptyCaixinha) ||
+			errors.Is(err, services.ErrEmptyDescription) ||
+			errors.Is(err, services.ErrCategoryNotFound) ||
+			errors.Is(err, services.ErrPersonNotFound) ||
+			errors.Is(err, services.ErrPaymentMethodNotFound) ||
+			errors.Is(err, services.ErrCaixinhaNotFound) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, created)
 }
 
 func (h *ExpenseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -106,6 +160,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, services.ErrInvalidAmount) ||
+			errors.Is(err, services.ErrInvalidType) ||
 			errors.Is(err, services.ErrEmptyCategory) ||
 			errors.Is(err, services.ErrEmptyPerson) ||
 			errors.Is(err, services.ErrEmptyPaymentMethod) ||
