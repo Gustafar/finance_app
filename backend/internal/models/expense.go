@@ -3,9 +3,11 @@ package models
 import "time"
 
 type Expense struct {
-	ID          int       `json:"id"`
-	Description string    `json:"description"`
-	Amount      float64   `json:"amount"`
-	Category    string    `json:"category"`
-	Date        time.Time `json:"date"`
+	ID            int       `json:"id"`
+	Description   string    `json:"description"`
+	Amount        float64   `json:"amount"`
+	CategoryID    int       `json:"category_id"`
+	CategoryName  string    `json:"category_name"`
+	CategoryColor string    `json:"category_color"`
+	Date          time.Time `json:"date"`
 }

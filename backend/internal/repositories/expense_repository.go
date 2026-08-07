@@ -14,10 +14,16 @@ func NewExpenseRepository(db *sql.DB) *ExpenseRepository {
 	return &ExpenseRepository{DB: db}
 }
 
-func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
-	query := "INSERT INTO expenses (description, amount, category, date) VALUES (?, ?, ?, ?)"
+const selectExpenseQuery = `
+	SELECT e.id, e.description, e.amount, e.category_id, c.name, c.color, e.date
+	FROM expenses e
+	JOIN categories c ON c.id = e.category_id
+`
 
-	result, err := r.DB.Exec(query, expense.Description, expense.Amount, expense.Category, expense.Date)
+func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
+	query := `INSERT INTO expenses (description, amount, category_id, date) VALUES (?, ?, ?, ?)`
+
+	result, err := r.DB.Exec(query, expense.Description, expense.Amount, expense.CategoryID, expense.Date)
 	if err != nil {
 		return models.Expense{}, err
 	}
@@ -27,15 +33,16 @@ func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, erro
 		return models.Expense{}, err
 	}
 
-	expense.ID = int(id)
-	return expense, nil
+	return r.GetByID(int(id))
 }
 
 func (r *ExpenseRepository) GetByID(id int) (models.Expense, error) {
-	query := "SELECT id, description, amount, category, date FROM expenses WHERE id = ?"
+	query := selectExpenseQuery + " WHERE e.id = ?"
 
 	var expense models.Expense
-	err := r.DB.QueryRow(query, id).Scan(&expense.ID, &expense.Description, &expense.Amount, &expense.Category, &expense.Date)
+	err := r.DB.QueryRow(query, id).Scan(
+		&expense.ID, &expense.Description, &expense.Amount, &expense.CategoryID, &expense.CategoryName, &expense.CategoryColor, &expense.Date,
+	)
 	if err != nil {
 		return models.Expense{}, err
 	}
@@ -44,9 +51,7 @@ func (r *ExpenseRepository) GetByID(id int) (models.Expense, error) {
 }
 
 func (r *ExpenseRepository) GetAll() ([]models.Expense, error) {
-	query := "SELECT id, description, amount, category, date FROM expenses"
-
-	rows, err := r.DB.Query(query)
+	rows, err := r.DB.Query(selectExpenseQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +62,9 @@ func (r *ExpenseRepository) GetAll() ([]models.Expense, error) {
 	for rows.Next() {
 		var expense models.Expense
 
-		err := rows.Scan(&expense.ID, &expense.Description, &expense.Amount, &expense.Category, &expense.Date)
+		err := rows.Scan(
+			&expense.ID, &expense.Description, &expense.Amount, &expense.CategoryID, &expense.CategoryName, &expense.CategoryColor, &expense.Date,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -73,24 +80,14 @@ func (r *ExpenseRepository) GetAll() ([]models.Expense, error) {
 }
 
 func (r *ExpenseRepository) Update(id int, expense models.Expense) (models.Expense, error) {
-	query := "UPDATE expenses SET description = ?, amount = ?, category = ?, date = ? WHERE id = ?"
+	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, date = ? WHERE id = ?`
 
-	result, err := r.DB.Exec(query, expense.Description, expense.Amount, expense.Category, expense.Date, id)
+	_, err := r.DB.Exec(query, expense.Description, expense.Amount, expense.CategoryID, expense.Date, id)
 	if err != nil {
 		return models.Expense{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return models.Expense{}, err
-	}
-
-	if rowsAffected == 0 {
-		return models.Expense{}, sql.ErrNoRows
-	}
-
-	expense.ID = id
-	return expense, nil
+	return r.GetByID(id)
 }
 
 func (r *ExpenseRepository) Delete(id int) error {

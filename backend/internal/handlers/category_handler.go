@@ -10,30 +10,32 @@ import (
 	"finance_app/internal/services"
 )
 
-type ExpenseHandler struct {
-	Service *services.ExpenseService
+type CategoryHandler struct {
+	Service *services.CategoryService
 }
 
-func NewExpenseHandler(service *services.ExpenseService) *ExpenseHandler {
-	return &ExpenseHandler{Service: service}
+func NewCategoryHandler(service *services.CategoryService) *CategoryHandler {
+	return &CategoryHandler{Service: service}
 }
 
-func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var expense models.Expense
+func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var category models.Category
 
-	err := json.NewDecoder(r.Body).Decode(&expense)
+	err := json.NewDecoder(r.Body).Decode(&category)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	criada, err := h.Service.Create(expense)
+	criada, err := h.Service.Create(category)
 	if err != nil {
-		if errors.Is(err, services.ErrInvalidAmount) ||
-			errors.Is(err, services.ErrEmptyCategory) ||
-			errors.Is(err, services.ErrEmptyDescription) ||
-			errors.Is(err, services.ErrCategoryNotFound) {
+		if errors.Is(err, services.ErrEmptyCategoryName) ||
+			errors.Is(err, services.ErrInvalidCategoryColor) {
 			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrCategoryAlreadyExists) {
+			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
 
@@ -44,17 +46,17 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, criada)
 }
 
-func (h *ExpenseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	expenses, err := h.Service.GetAll()
+func (h *CategoryHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	categories, err := h.Service.GetAll()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, expenses)
+	respondJSON(w, http.StatusOK, categories)
 }
 
-func (h *ExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -63,9 +65,9 @@ func (h *ExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expense, err := h.Service.GetByID(id)
+	category, err := h.Service.GetByID(id)
 	if err != nil {
-		if errors.Is(err, services.ErrExpenseNotFound) {
+		if errors.Is(err, services.ErrCategoryNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
@@ -74,10 +76,10 @@ func (h *ExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, expense)
+	respondJSON(w, http.StatusOK, category)
 }
 
-func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -86,24 +88,26 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var expense models.Expense
-	err = json.NewDecoder(r.Body).Decode(&expense)
+	var category models.Category
+	err = json.NewDecoder(r.Body).Decode(&category)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	updated, err := h.Service.Update(id, expense)
+	updated, err := h.Service.Update(id, category)
 	if err != nil {
-		if errors.Is(err, services.ErrExpenseNotFound) {
+		if errors.Is(err, services.ErrCategoryNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, services.ErrInvalidAmount) ||
-			errors.Is(err, services.ErrEmptyCategory) ||
-			errors.Is(err, services.ErrEmptyDescription) ||
-			errors.Is(err, services.ErrCategoryNotFound) {
+		if errors.Is(err, services.ErrEmptyCategoryName) ||
+			errors.Is(err, services.ErrInvalidCategoryColor) {
 			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrCategoryAlreadyExists) {
+			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
 
@@ -114,7 +118,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updated)
 }
 
-func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -125,8 +129,12 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Service.Delete(id)
 	if err != nil {
-		if errors.Is(err, services.ErrExpenseNotFound) {
+		if errors.Is(err, services.ErrCategoryNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrCannotDeleteDefaultCategory) {
+			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
 

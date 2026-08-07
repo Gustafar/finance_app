@@ -20,11 +20,18 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.Amount <= 0 {
 		return ErrInvalidAmount
 	}
-	if expense.Category == "" {
+	if expense.CategoryID <= 0 {
 		return ErrEmptyCategory
 	}
 	if expense.Description == "" {
 		return ErrEmptyDescription
+	}
+	return nil
+}
+
+func referencedEntityError(err error) error {
+	if violatesConstraint(err, "fk_expenses_category") {
+		return ErrCategoryNotFound
 	}
 	return nil
 }
@@ -34,7 +41,15 @@ func (s *ExpenseService) Create(expense models.Expense) (models.Expense, error) 
 		return models.Expense{}, err
 	}
 
-	return s.Repo.Create(expense)
+	created, err := s.Repo.Create(expense)
+	if err != nil {
+		if refErr := referencedEntityError(err); refErr != nil {
+			return models.Expense{}, refErr
+		}
+		return models.Expense{}, err
+	}
+
+	return created, nil
 }
 
 func (s *ExpenseService) GetAll() ([]models.Expense, error) {
@@ -62,6 +77,9 @@ func (s *ExpenseService) Update(id int, expense models.Expense) (models.Expense,
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Expense{}, ErrExpenseNotFound
+		}
+		if refErr := referencedEntityError(err); refErr != nil {
+			return models.Expense{}, refErr
 		}
 		return models.Expense{}, err
 	}
