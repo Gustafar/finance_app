@@ -1,0 +1,217 @@
+import { useState } from 'react'
+import { createPerson, updatePerson, deletePerson } from '../api/people'
+import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
+import { usePeople, sortByName } from '../hooks/usePeople'
+import ColorSwatchPicker from './ColorSwatchPicker'
+
+function PersonManager() {
+  const { people, setPeople, isLoading, error: loadError } = usePeople()
+
+  const [newName, setNewName] = useState('')
+  const [newColor, setNewColor] = useState(COLOR_KEYS[0])
+  const [isCreating, setIsCreating] = useState(false)
+  const [createError, setCreateError] = useState(null)
+
+  const [editingId, setEditingId] = useState(null)
+  const [editingName, setEditingName] = useState('')
+  const [editingColor, setEditingColor] = useState(COLOR_KEYS[0])
+  const [rowError, setRowError] = useState(null)
+
+  const [deleteError, setDeleteError] = useState(null)
+
+  const handleCreate = (e) => {
+    e.preventDefault()
+    const name = newName.trim()
+    if (!name) return
+
+    setCreateError(null)
+    setIsCreating(true)
+
+    createPerson({ name, color: newColor })
+      .then((created) => {
+        setPeople((prev) => sortByName([...prev, created]))
+        setNewName('')
+        setNewColor(COLOR_KEYS[0])
+      })
+      .catch((error) => {
+        console.error('Erro ao criar responsável:', error)
+        setCreateError('Não foi possível criar o responsável. O nome já pode existir.')
+      })
+      .finally(() => setIsCreating(false))
+  }
+
+  const startEditing = (person) => {
+    setEditingId(person.id)
+    setEditingName(person.name)
+    setEditingColor(person.color)
+    setRowError(null)
+  }
+
+  const cancelEditing = () => {
+    setEditingId(null)
+    setEditingName('')
+    setRowError(null)
+  }
+
+  const handleUpdate = (id) => {
+    const name = editingName.trim()
+    if (!name) return
+
+    setRowError(null)
+
+    updatePerson(id, { name, color: editingColor })
+      .then((updated) => {
+        setPeople((prev) => sortByName(prev.map((person) => (person.id === id ? updated : person))))
+        cancelEditing()
+      })
+      .catch((error) => {
+        console.error('Erro ao atualizar responsável:', error)
+        setRowError('Não foi possível salvar. O nome já pode existir.')
+      })
+  }
+
+  const handleDelete = (id) => {
+    setDeleteError(null)
+
+    deletePerson(id)
+      .then(() => {
+        setPeople((prev) => prev.filter((person) => person.id !== id))
+      })
+      .catch((error) => {
+        console.error('Erro ao excluir responsável:', error)
+        setDeleteError('Não foi possível excluir o responsável. Tente novamente.')
+      })
+  }
+
+  return (
+    <div className="entity-manager">
+      <h2>Responsáveis</h2>
+
+      <form className="entity-create-form" onSubmit={handleCreate}>
+        <div className="entity-create-form-row">
+          <input
+            type="text"
+            placeholder="Novo responsável"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim()}>
+            Adicionar
+          </button>
+        </div>
+        <ColorSwatchPicker value={newColor} onChange={setNewColor} />
+      </form>
+      {createError && <p className="form-error">{createError}</p>}
+
+      {deleteError && <p className="form-error">{deleteError}</p>}
+
+      {isLoading && <p className="state-message">Carregando responsáveis…</p>}
+      {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
+      {!isLoading && !loadError && people.length === 0 && (
+        <p className="state-message">Nenhum responsável cadastrado ainda.</p>
+      )}
+
+      {!isLoading && !loadError && people.length > 0 && (
+        <ul className="entity-list">
+          {people.map((person) => {
+            const color = paletteColor(person.color)
+            const isEditing = editingId === person.id
+
+            return (
+              <li className="entity-row" key={person.id}>
+                <div className="entity-row-main">
+                  {isEditing ? (
+                    <>
+                      <input
+                        type="text"
+                        className="entity-edit-input"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="entity-actions">
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => handleUpdate(person.id)}
+                          disabled={!editingName.trim()}
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={cancelEditing}
+                          aria-label="Cancelar edição"
+                          title="Cancelar"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M4 4l8 8M12 4l-8 8"
+                              stroke="currentColor"
+                              strokeWidth="1.3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="badge" style={{ background: color.bg, color: color.text }}>
+                        {person.name}
+                        {person.is_default && ' (padrão)'}
+                      </span>
+                      <div className="entity-actions">
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={() => startEditing(person)}
+                          aria-label="Editar responsável"
+                          title="Editar"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                              stroke="currentColor"
+                              strokeWidth="1.3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        {!person.is_default && (
+                          <button
+                            type="button"
+                            className="icon-btn icon-btn--danger"
+                            onClick={() => handleDelete(person.id)}
+                            aria-label="Excluir responsável"
+                            title="Excluir"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                                stroke="currentColor"
+                                strokeWidth="1.3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+                {isEditing && <ColorSwatchPicker value={editingColor} onChange={setEditingColor} />}
+                {isEditing && rowError && <p className="form-error">{rowError}</p>}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+export default PersonManager
