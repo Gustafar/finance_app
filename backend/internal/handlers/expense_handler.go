@@ -32,9 +32,11 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, services.ErrInvalidAmount) ||
 			errors.Is(err, services.ErrEmptyCategory) ||
 			errors.Is(err, services.ErrEmptyPerson) ||
+			errors.Is(err, services.ErrEmptyPaymentMethod) ||
 			errors.Is(err, services.ErrEmptyDescription) ||
 			errors.Is(err, services.ErrCategoryNotFound) ||
-			errors.Is(err, services.ErrPersonNotFound) {
+			errors.Is(err, services.ErrPersonNotFound) ||
+			errors.Is(err, services.ErrPaymentMethodNotFound) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -104,9 +106,11 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, services.ErrInvalidAmount) ||
 			errors.Is(err, services.ErrEmptyCategory) ||
 			errors.Is(err, services.ErrEmptyPerson) ||
+			errors.Is(err, services.ErrEmptyPaymentMethod) ||
 			errors.Is(err, services.ErrEmptyDescription) ||
 			errors.Is(err, services.ErrCategoryNotFound) ||
-			errors.Is(err, services.ErrPersonNotFound) {
+			errors.Is(err, services.ErrPersonNotFound) ||
+			errors.Is(err, services.ErrPaymentMethodNotFound) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}

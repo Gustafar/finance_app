@@ -30,6 +30,10 @@ func main() {
 	personService := services.NewPersonService(personRepo)
 	personHandler := handlers.NewPersonHandler(personService)
 
+	paymentMethodRepo := repositories.NewPaymentMethodRepository(db)
+	paymentMethodService := services.NewPaymentMethodService(paymentMethodRepo)
+	paymentMethodHandler := handlers.NewPaymentMethodHandler(paymentMethodService)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /expenses", expenseHandler.GetAll)
 	mux.HandleFunc("GET /expenses/{id}", expenseHandler.GetByID)
@@ -48,6 +52,12 @@ func main() {
 	mux.HandleFunc("POST /people", personHandler.Create)
 	mux.HandleFunc("PUT /people/{id}", personHandler.Update)
 	mux.HandleFunc("DELETE /people/{id}", personHandler.Delete)
+
+	mux.HandleFunc("GET /payment-methods", paymentMethodHandler.GetAll)
+	mux.HandleFunc("GET /payment-methods/{id}", paymentMethodHandler.GetByID)
+	mux.HandleFunc("POST /payment-methods", paymentMethodHandler.Create)
+	mux.HandleFunc("PUT /payment-methods/{id}", paymentMethodHandler.Update)
+	mux.HandleFunc("DELETE /payment-methods/{id}", paymentMethodHandler.Delete)
 
 	handler := middleware.Logging(middleware.CORS(mux))
 

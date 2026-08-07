@@ -26,6 +26,9 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.PersonID <= 0 {
 		return ErrEmptyPerson
 	}
+	if expense.PaymentMethodID <= 0 {
+		return ErrEmptyPaymentMethod
+	}
 	if expense.Description == "" {
 		return ErrEmptyDescription
 	}
@@ -38,6 +41,9 @@ func referencedEntityError(err error) error {
 	}
 	if violatesConstraint(err, "fk_expenses_person") {
 		return ErrPersonNotFound
+	}
+	if violatesConstraint(err, "fk_expenses_payment_method") {
+		return ErrPaymentMethodNotFound
 	}
 	return nil
 }

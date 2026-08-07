@@ -3,11 +3,12 @@ package services
 import "errors"
 
 var (
-	ErrInvalidAmount    = errors.New("amount must be greater than zero")
-	ErrEmptyCategory    = errors.New("category cannot be empty")
-	ErrEmptyPerson      = errors.New("person cannot be empty")
-	ErrEmptyDescription = errors.New("description cannot be empty")
-	ErrExpenseNotFound  = errors.New("expense not found")
+	ErrInvalidAmount      = errors.New("amount must be greater than zero")
+	ErrEmptyCategory      = errors.New("category cannot be empty")
+	ErrEmptyPerson        = errors.New("person cannot be empty")
+	ErrEmptyPaymentMethod = errors.New("payment method cannot be empty")
+	ErrEmptyDescription   = errors.New("description cannot be empty")
+	ErrExpenseNotFound    = errors.New("expense not found")
 
 	ErrEmptyCategoryName           = errors.New("category name cannot be empty")
 	ErrInvalidCategoryColor        = errors.New("invalid category color")
@@ -20,4 +21,10 @@ var (
 	ErrPersonNotFound            = errors.New("person not found")
 	ErrPersonAlreadyExists       = errors.New("person already exists")
 	ErrCannotDeleteDefaultPerson = errors.New("the default person cannot be deleted")
+
+	ErrEmptyPaymentMethodName           = errors.New("payment method name cannot be empty")
+	ErrInvalidPaymentMethodColor        = errors.New("invalid payment method color")
+	ErrPaymentMethodNotFound            = errors.New("payment method not found")
+	ErrPaymentMethodAlreadyExists       = errors.New("payment method already exists")
+	ErrCannotDeleteDefaultPaymentMethod = errors.New("this payment method cannot be deleted")
 )
