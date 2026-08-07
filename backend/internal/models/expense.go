@@ -15,9 +15,9 @@ type Expense struct {
 	PaymentMethodID    int       `json:"payment_method_id"`
 	PaymentMethodName  string    `json:"payment_method_name"`
 	PaymentMethodColor string    `json:"payment_method_color"`
-	CaixinhaID         int       `json:"caixinha_id"`
-	CaixinhaName       string    `json:"caixinha_name"`
-	CaixinhaColor      string    `json:"caixinha_color"`
+	BucketID           int       `json:"bucket_id"`
+	BucketName         string    `json:"bucket_name"`
+	BucketColor        string    `json:"bucket_color"`
 	BankID             int       `json:"bank_id"`
 	BankName           string    `json:"bank_name"`
 	BankColor          string    `json:"bank_color"`

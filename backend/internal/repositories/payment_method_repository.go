@@ -93,10 +93,7 @@ func (r *PaymentMethodRepository) Update(id int, paymentMethod models.PaymentMet
 	return paymentMethod, nil
 }
 
-// Delete removes a payment method after reassigning any expenses that
-// reference it to the first protected default (ordered by id, deterministic
-// since multiple payment methods can be marked default), so deleting one
-// never orphans expense data.
+// Delete reassigns referencing expenses to the first default (by id, since several can be marked default).
 func (r *PaymentMethodRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()
 	if err != nil {

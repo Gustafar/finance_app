@@ -3,7 +3,7 @@ import { createExpense, createInstallmentPurchase } from '../api/expenses'
 import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
-import { useCaixinhas } from '../hooks/useCaixinhas'
+import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 
@@ -11,7 +11,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
-  const { caixinhas, isLoading: isLoadingCaixinhas } = useCaixinhas()
+  const { buckets, isLoading: isLoadingBuckets } = useBuckets()
   const { banks, isLoading: isLoadingBanks } = useBanks()
 
   const [type, setType] = useState('expense')
@@ -23,7 +23,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const [categoryId, setCategoryId] = useState('')
   const [personId, setPersonId] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState('')
-  const [caixinhaId, setCaixinhaId] = useState('')
+  const [bucketId, setBucketId] = useState('')
   const [bankId, setBankId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -37,12 +37,12 @@ function ExpenseForm({ onExpenseCreated }) {
 
   const effectivePersonId = personId || defaultPersonId
 
-  const defaultCaixinhaId = useMemo(() => {
-    const defaultCaixinha = caixinhas.find((c) => c.is_default)
-    return defaultCaixinha ? String(defaultCaixinha.id) : caixinhas[0] ? String(caixinhas[0].id) : ''
-  }, [caixinhas])
+  const defaultBucketId = useMemo(() => {
+    const defaultBucket = buckets.find((c) => c.is_default)
+    return defaultBucket ? String(defaultBucket.id) : buckets[0] ? String(buckets[0].id) : ''
+  }, [buckets])
 
-  const effectiveCaixinhaId = caixinhaId || defaultCaixinhaId
+  const effectiveBucketId = bucketId || defaultBucketId
 
   const defaultBankId = useMemo(() => {
     const defaultBank = banks.find((b) => b.is_default)
@@ -68,7 +68,7 @@ function ExpenseForm({ onExpenseCreated }) {
       category_id: Number(categoryId),
       person_id: Number(effectivePersonId),
       payment_method_id: Number(paymentMethodId),
-      caixinha_id: Number(effectiveCaixinhaId),
+      bucket_id: Number(effectiveBucketId),
       bank_id: Number(effectiveBankId),
     }
 
@@ -263,16 +263,16 @@ function ExpenseForm({ onExpenseCreated }) {
       </div>
 
       <div className="field">
-        <label htmlFor="caixinha">Caixinha</label>
+        <label htmlFor="bucket">Envelope</label>
         <select
-          id="caixinha"
-          value={effectiveCaixinhaId}
-          onChange={(e) => setCaixinhaId(e.target.value)}
+          id="bucket"
+          value={effectiveBucketId}
+          onChange={(e) => setBucketId(e.target.value)}
           required
-          disabled={isLoadingCaixinhas}
+          disabled={isLoadingBuckets}
         >
           <option value="" disabled>Selecione…</option>
-          {caixinhas.map((c) => (
+          {buckets.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
@@ -309,7 +309,7 @@ function ExpenseForm({ onExpenseCreated }) {
           !categoryId ||
           !effectivePersonId ||
           !paymentMethodId ||
-          !effectiveCaixinhaId ||
+          !effectiveBucketId ||
           !effectiveBankId ||
           isAmountMissing
         }

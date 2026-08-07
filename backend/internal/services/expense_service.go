@@ -46,8 +46,8 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.PaymentMethodID <= 0 {
 		return ErrEmptyPaymentMethod
 	}
-	if expense.CaixinhaID <= 0 {
-		return ErrEmptyCaixinha
+	if expense.BucketID <= 0 {
+		return ErrEmptyBucket
 	}
 	if expense.BankID <= 0 {
 		return ErrEmptyBank
@@ -66,7 +66,7 @@ type InstallmentPurchaseInput struct {
 	CategoryID       int
 	PersonID         int
 	PaymentMethodID  int
-	CaixinhaID       int
+	BucketID         int
 	BankID           int
 }
 
@@ -86,8 +86,8 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 	if input.PaymentMethodID <= 0 {
 		return nil, ErrEmptyPaymentMethod
 	}
-	if input.CaixinhaID <= 0 {
-		return nil, ErrEmptyCaixinha
+	if input.BucketID <= 0 {
+		return nil, ErrEmptyBucket
 	}
 	if input.BankID <= 0 {
 		return nil, ErrEmptyBank
@@ -104,7 +104,7 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 		CategoryID:       input.CategoryID,
 		PersonID:         input.PersonID,
 		PaymentMethodID:  input.PaymentMethodID,
-		CaixinhaID:       input.CaixinhaID,
+		BucketID:         input.BucketID,
 		BankID:           input.BankID,
 	}
 
@@ -119,9 +119,7 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 	return created, nil
 }
 
-// installmentSlices splits total into count monthly slices, each rounded to
-// the cent, with the rounding remainder absorbed by the last installment so
-// the slices always sum back to the original total exactly.
+// installmentSlices rounds total into count monthly slices, dumping the rounding remainder into the last one.
 func installmentSlices(total float64, count int, start time.Time) []repositories.InstallmentSlice {
 	base := math.Round(total/float64(count)*100) / 100
 
@@ -144,9 +142,7 @@ func installmentSlices(total float64, count int, start time.Time) []repositories
 	return slices
 }
 
-// addMonthsClamped adds the given number of months to t, clamping the day to
-// the target month's last day (time.AddDate would otherwise overflow, e.g.
-// Jan 31 + 1 month becoming Mar 3 instead of Feb 28/29).
+// addMonthsClamped adds months to t, clamping the day to the target month's last day.
 func addMonthsClamped(t time.Time, months int) time.Time {
 	firstOfTarget := time.Date(t.Year(), t.Month()+time.Month(months), 1, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
 	lastDay := firstOfTarget.AddDate(0, 1, -1).Day()
@@ -159,11 +155,7 @@ func addMonthsClamped(t time.Time, months int) time.Time {
 	return time.Date(firstOfTarget.Year(), firstOfTarget.Month(), day, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
 }
 
-// ApplyDueRecurringExpenses walks every recurring rule and, for each calendar
-// month between its last generated month (or its creation month, if it has
-// never generated one) and the current month, inserts the corresponding
-// expense and advances the rule's last-generated marker. Running this
-// multiple times in the same month is a no-op past the first call.
+// ApplyDueRecurringExpenses backfills expenses for every month a rule missed since it last ran.
 func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
 	recurrences, err := s.RecurringRepo.GetAll()
 	if err != nil {
@@ -191,7 +183,7 @@ func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
 				CategoryID:         recurring.CategoryID,
 				PersonID:           recurring.PersonID,
 				PaymentMethodID:    recurring.PaymentMethodID,
-				CaixinhaID:         recurring.CaixinhaID,
+				BucketID:           recurring.BucketID,
 				BankID:             recurring.BankID,
 				Date:               dateForDay(cursor.Year(), cursor.Month(), recurring.DayOfMonth),
 				RecurringExpenseID: &recurringID,
@@ -212,8 +204,7 @@ func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
 	return created, nil
 }
 
-// dateForDay builds a date in the given year/month, clamping day to the
-// month's last day (e.g. day 31 in February becomes Feb 28/29).
+// dateForDay clamps day to the given month's last day (e.g. 31 in February becomes 28/29).
 func dateForDay(year int, month time.Month, day int) time.Time {
 	firstOfMonth := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
 	lastDay := firstOfMonth.AddDate(0, 1, -1).Day()
@@ -235,8 +226,8 @@ func referencedEntityError(err error) error {
 	if violatesConstraint(err, "fk_expenses_payment_method") {
 		return ErrPaymentMethodNotFound
 	}
-	if violatesConstraint(err, "fk_expenses_caixinha") {
-		return ErrCaixinhaNotFound
+	if violatesConstraint(err, "fk_expenses_bucket") {
+		return ErrBucketNotFound
 	}
 	if violatesConstraint(err, "fk_expenses_bank") {
 		return ErrBankNotFound

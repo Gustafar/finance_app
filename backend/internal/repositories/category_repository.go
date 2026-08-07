@@ -93,8 +93,7 @@ func (r *CategoryRepository) Update(id int, category models.Category) (models.Ca
 	return category, nil
 }
 
-// Delete removes a category after reassigning any expenses that reference it
-// to the default category, so deleting a category never orphans expense data.
+// Delete reassigns referencing expenses to the default category first, so deleting never orphans data.
 func (r *CategoryRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()
 	if err != nil {

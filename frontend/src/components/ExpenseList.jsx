@@ -15,7 +15,7 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
           const categoryColor = paletteColor(expense.category_color)
           const personColor = paletteColor(expense.person_color)
           const paymentMethodColor = paletteColor(expense.payment_method_color)
-          const caixinhaColor = paletteColor(expense.caixinha_color)
+          const bucketColor = paletteColor(expense.bucket_color)
           const bankColor = paletteColor(expense.bank_color)
           const amountConfig = TRANSACTION_TYPE_AMOUNT_STYLE[expense.type] ?? TRANSACTION_TYPE_AMOUNT_STYLE.expense
           return (
@@ -43,10 +43,10 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
                 </span>
 
                 <span
-                  className="badge badge--caixinha"
-                  style={{ background: caixinhaColor.bg, color: caixinhaColor.text }}
+                  className="badge badge--bucket"
+                  style={{ background: bucketColor.bg, color: bucketColor.text }}
                 >
-                  {expense.caixinha_name}
+                  {expense.bucket_name}
                 </span>
 
                 <span

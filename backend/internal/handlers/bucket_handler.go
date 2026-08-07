@@ -10,31 +10,31 @@ import (
 	"finance_app/internal/services"
 )
 
-type CaixinhaHandler struct {
-	Service *services.CaixinhaService
+type BucketHandler struct {
+	Service *services.BucketService
 }
 
-func NewCaixinhaHandler(service *services.CaixinhaService) *CaixinhaHandler {
-	return &CaixinhaHandler{Service: service}
+func NewBucketHandler(service *services.BucketService) *BucketHandler {
+	return &BucketHandler{Service: service}
 }
 
-func (h *CaixinhaHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var caixinha models.Caixinha
+func (h *BucketHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var bucket models.Bucket
 
-	err := json.NewDecoder(r.Body).Decode(&caixinha)
+	err := json.NewDecoder(r.Body).Decode(&bucket)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	criada, err := h.Service.Create(caixinha)
+	criado, err := h.Service.Create(bucket)
 	if err != nil {
-		if errors.Is(err, services.ErrEmptyCaixinhaName) ||
-			errors.Is(err, services.ErrInvalidCaixinhaColor) {
+		if errors.Is(err, services.ErrEmptyBucketName) ||
+			errors.Is(err, services.ErrInvalidBucketColor) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		if errors.Is(err, services.ErrCaixinhaAlreadyExists) {
+		if errors.Is(err, services.ErrBucketAlreadyExists) {
 			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
@@ -43,20 +43,20 @@ func (h *CaixinhaHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, criada)
+	respondJSON(w, http.StatusCreated, criado)
 }
 
-func (h *CaixinhaHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	caixinhas, err := h.Service.GetAll()
+func (h *BucketHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	buckets, err := h.Service.GetAll()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, caixinhas)
+	respondJSON(w, http.StatusOK, buckets)
 }
 
-func (h *CaixinhaHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (h *BucketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -65,9 +65,9 @@ func (h *CaixinhaHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	caixinha, err := h.Service.GetByID(id)
+	bucket, err := h.Service.GetByID(id)
 	if err != nil {
-		if errors.Is(err, services.ErrCaixinhaNotFound) {
+		if errors.Is(err, services.ErrBucketNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
@@ -76,10 +76,10 @@ func (h *CaixinhaHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, caixinha)
+	respondJSON(w, http.StatusOK, bucket)
 }
 
-func (h *CaixinhaHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *BucketHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -88,25 +88,25 @@ func (h *CaixinhaHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var caixinha models.Caixinha
-	err = json.NewDecoder(r.Body).Decode(&caixinha)
+	var bucket models.Bucket
+	err = json.NewDecoder(r.Body).Decode(&bucket)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	updated, err := h.Service.Update(id, caixinha)
+	updated, err := h.Service.Update(id, bucket)
 	if err != nil {
-		if errors.Is(err, services.ErrCaixinhaNotFound) {
+		if errors.Is(err, services.ErrBucketNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, services.ErrEmptyCaixinhaName) ||
-			errors.Is(err, services.ErrInvalidCaixinhaColor) {
+		if errors.Is(err, services.ErrEmptyBucketName) ||
+			errors.Is(err, services.ErrInvalidBucketColor) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		if errors.Is(err, services.ErrCaixinhaAlreadyExists) {
+		if errors.Is(err, services.ErrBucketAlreadyExists) {
 			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
@@ -118,7 +118,7 @@ func (h *CaixinhaHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updated)
 }
 
-func (h *CaixinhaHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *BucketHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
 	id, err := strconv.Atoi(idParam)
@@ -129,11 +129,11 @@ func (h *CaixinhaHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Service.Delete(id)
 	if err != nil {
-		if errors.Is(err, services.ErrCaixinhaNotFound) {
+		if errors.Is(err, services.ErrBucketNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, services.ErrCannotDeleteDefaultCaixinha) {
+		if errors.Is(err, services.ErrCannotDeleteDefaultBucket) {
 			respondError(w, http.StatusConflict, err.Error())
 			return
 		}

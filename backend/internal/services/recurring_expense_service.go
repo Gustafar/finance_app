@@ -38,8 +38,8 @@ func (s *RecurringExpenseService) validate(recurring models.RecurringExpense) er
 	if recurring.PaymentMethodID <= 0 {
 		return ErrEmptyPaymentMethod
 	}
-	if recurring.CaixinhaID <= 0 {
-		return ErrEmptyCaixinha
+	if recurring.BucketID <= 0 {
+		return ErrEmptyBucket
 	}
 	if recurring.BankID <= 0 {
 		return ErrEmptyBank
@@ -57,8 +57,8 @@ func recurringReferencedEntityError(err error) error {
 	if violatesConstraint(err, "fk_recurring_expenses_payment_method") {
 		return ErrPaymentMethodNotFound
 	}
-	if violatesConstraint(err, "fk_recurring_expenses_caixinha") {
-		return ErrCaixinhaNotFound
+	if violatesConstraint(err, "fk_recurring_expenses_bucket") {
+		return ErrBucketNotFound
 	}
 	if violatesConstraint(err, "fk_recurring_expenses_bank") {
 		return ErrBankNotFound

@@ -6,7 +6,7 @@ import Modal from './components/Modal'
 import CategoryManager from './components/CategoryManager'
 import PersonManager from './components/PersonManager'
 import PaymentMethodManager from './components/PaymentMethodManager'
-import CaixinhaManager from './components/CaixinhaManager'
+import BucketManager from './components/BucketManager'
 import BankManager from './components/BankManager'
 import DashboardPage from './pages/DashboardPage'
 import RecurringExpensesPage from './pages/RecurringExpensesPage'
@@ -24,7 +24,7 @@ function App() {
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
   const [isPeopleOpen, setIsPeopleOpen] = useState(false)
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false)
-  const [isCaixinhasOpen, setIsCaixinhasOpen] = useState(false)
+  const [isBucketsOpen, setIsBucketsOpen] = useState(false)
   const [isBanksOpen, setIsBanksOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
   const location = useLocation()
@@ -152,9 +152,9 @@ function App() {
           <button
             type="button"
             className="icon-btn icon-btn--header"
-            onClick={() => setIsCaixinhasOpen(true)}
-            aria-label="Caixinhas"
-            title="Caixinhas"
+            onClick={() => setIsBucketsOpen(true)}
+            aria-label="Envelopes"
+            title="Envelopes"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M1.5 5.5 8 2l6.5 3.5-6.5 3.5-6.5-3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -244,8 +244,8 @@ function App() {
         <PaymentMethodManager />
       </Modal>
 
-      <Modal isOpen={isCaixinhasOpen} onClose={() => setIsCaixinhasOpen(false)}>
-        <CaixinhaManager />
+      <Modal isOpen={isBucketsOpen} onClose={() => setIsBucketsOpen(false)}>
+        <BucketManager />
       </Modal>
 
       <Modal isOpen={isBanksOpen} onClose={() => setIsBanksOpen(false)}>

@@ -3,7 +3,7 @@ import { updateExpense } from '../api/expenses'
 import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
-import { useCaixinhas } from '../hooks/useCaixinhas'
+import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import ConfirmDialog from './ConfirmDialog'
@@ -12,7 +12,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
-  const { caixinhas, isLoading: isLoadingCaixinhas } = useCaixinhas()
+  const { buckets, isLoading: isLoadingBuckets } = useBuckets()
   const { banks, isLoading: isLoadingBanks } = useBanks()
 
   const [type, setType] = useState(expense.type)
@@ -21,7 +21,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [categoryId, setCategoryId] = useState(String(expense.category_id))
   const [personId, setPersonId] = useState(String(expense.person_id))
   const [paymentMethodId, setPaymentMethodId] = useState(String(expense.payment_method_id))
-  const [caixinhaId, setCaixinhaId] = useState(String(expense.caixinha_id))
+  const [bucketId, setBucketId] = useState(String(expense.bucket_id))
   const [bankId, setBankId] = useState(String(expense.bank_id))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -46,7 +46,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       category_id: Number(categoryId),
       person_id: Number(personId),
       payment_method_id: Number(paymentMethodId),
-      caixinha_id: Number(caixinhaId),
+      bucket_id: Number(bucketId),
       bank_id: Number(bankId),
       date: expense.date,
     }
@@ -158,16 +158,16 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
         </div>
 
         <div className="field">
-          <label htmlFor="edit-caixinha">Caixinha</label>
+          <label htmlFor="edit-bucket">Envelope</label>
           <select
-            id="edit-caixinha"
-            value={caixinhaId}
-            onChange={(e) => setCaixinhaId(e.target.value)}
+            id="edit-bucket"
+            value={bucketId}
+            onChange={(e) => setBucketId(e.target.value)}
             required
-            disabled={isLoadingCaixinhas}
+            disabled={isLoadingBuckets}
           >
             <option value="" disabled>Selecione…</option>
-            {caixinhas.map((c) => (
+            {buckets.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -194,7 +194,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={isSubmitting || noCategories || !categoryId || !personId || !paymentMethodId || !caixinhaId || !bankId}
+          disabled={isSubmitting || noCategories || !categoryId || !personId || !paymentMethodId || !bucketId || !bankId}
         >
           {isSubmitting ? 'Salvando…' : 'Salvar alterações'}
         </button>

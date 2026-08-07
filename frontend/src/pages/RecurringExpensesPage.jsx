@@ -5,7 +5,7 @@ import { useRecurringExpenses, sortByDay } from '../hooks/useRecurringExpenses'
 import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
-import { useCaixinhas } from '../hooks/useCaixinhas'
+import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES, TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import { formatCurrency } from '../utils/format'
@@ -20,7 +20,7 @@ const emptyForm = {
   category_id: '',
   person_id: '',
   payment_method_id: '',
-  caixinha_id: '',
+  bucket_id: '',
   bank_id: '',
 }
 
@@ -33,7 +33,7 @@ function toPayload(form) {
     category_id: Number(form.category_id),
     person_id: Number(form.person_id),
     payment_method_id: Number(form.payment_method_id),
-    caixinha_id: Number(form.caixinha_id),
+    bucket_id: Number(form.bucket_id),
     bank_id: Number(form.bank_id),
   }
 }
@@ -46,7 +46,7 @@ function isFormComplete(form) {
     form.category_id &&
     form.person_id &&
     form.payment_method_id &&
-    form.caixinha_id &&
+    form.bucket_id &&
     form.bank_id
   )
 }
@@ -55,7 +55,7 @@ function byId(list, id) {
   return list.find((item) => item.id === id)
 }
 
-function RecurringFields({ idPrefix, form, onChange, categories, people, paymentMethods, caixinhas, banks }) {
+function RecurringFields({ idPrefix, form, onChange, categories, people, paymentMethods, buckets, banks }) {
   return (
     <>
       <div className="field">
@@ -157,14 +157,14 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
           </select>
         </div>
         <div className="field">
-          <label htmlFor={`${idPrefix}-caixinha`}>Caixinha</label>
+          <label htmlFor={`${idPrefix}-bucket`}>Envelope</label>
           <select
-            id={`${idPrefix}-caixinha`}
-            value={form.caixinha_id}
-            onChange={(e) => onChange({ ...form, caixinha_id: e.target.value })}
+            id={`${idPrefix}-bucket`}
+            value={form.bucket_id}
+            onChange={(e) => onChange({ ...form, bucket_id: e.target.value })}
           >
             <option value="" disabled>Selecione…</option>
-            {caixinhas.map((c) => (
+            {buckets.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -193,7 +193,7 @@ function RecurringExpensesPage() {
   const { categories } = useCategories()
   const { people } = usePeople()
   const { paymentMethods } = usePaymentMethods()
-  const { caixinhas } = useCaixinhas()
+  const { buckets } = useBuckets()
   const { banks } = useBanks()
 
   const [form, setForm] = useState(emptyForm)
@@ -251,7 +251,7 @@ function RecurringExpensesPage() {
       category_id: String(recurring.category_id),
       person_id: String(recurring.person_id),
       payment_method_id: String(recurring.payment_method_id),
-      caixinha_id: String(recurring.caixinha_id),
+      bucket_id: String(recurring.bucket_id),
       bank_id: String(recurring.bank_id),
     })
     setRowError(null)
@@ -318,7 +318,7 @@ function RecurringExpensesPage() {
             categories={categories}
             people={people}
             paymentMethods={paymentMethods}
-            caixinhas={caixinhas}
+            buckets={buckets}
             banks={banks}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !isFormComplete(form)}>
@@ -392,7 +392,7 @@ function RecurringExpensesPage() {
                         categories={categories}
                         people={people}
                         paymentMethods={paymentMethods}
-                        caixinhas={caixinhas}
+                        buckets={buckets}
                         banks={banks}
                       />
                       <div className="entity-actions">
@@ -425,12 +425,12 @@ function RecurringExpensesPage() {
               const category = byId(categories, recurring.category_id)
               const person = byId(people, recurring.person_id)
               const paymentMethod = byId(paymentMethods, recurring.payment_method_id)
-              const caixinha = byId(caixinhas, recurring.caixinha_id)
+              const bucket = byId(buckets, recurring.bucket_id)
               const bank = byId(banks, recurring.bank_id)
               const categoryColor = paletteColor(category?.color)
               const personColor = paletteColor(person?.color)
               const paymentMethodColor = paletteColor(paymentMethod?.color)
-              const caixinhaColor = paletteColor(caixinha?.color)
+              const bucketColor = paletteColor(bucket?.color)
               const bankColor = paletteColor(bank?.color)
 
               return (
@@ -445,8 +445,8 @@ function RecurringExpensesPage() {
                     <span className="badge" style={{ background: paymentMethodColor.bg, color: paymentMethodColor.text }}>
                       {paymentMethod?.name ?? '—'}
                     </span>
-                    <span className="badge" style={{ background: caixinhaColor.bg, color: caixinhaColor.text }}>
-                      {caixinha?.name ?? '—'}
+                    <span className="badge" style={{ background: bucketColor.bg, color: bucketColor.text }}>
+                      {bucket?.name ?? '—'}
                     </span>
                     <span className="badge" style={{ background: bankColor.bg, color: bankColor.text }}>
                       {bank?.name ?? '—'}

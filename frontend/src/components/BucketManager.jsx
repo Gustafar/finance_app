@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { createCaixinha, updateCaixinha, deleteCaixinha } from '../api/caixinhas'
+import { createBucket, updateBucket, deleteBucket } from '../api/buckets'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
-import { useCaixinhas, sortByName } from '../hooks/useCaixinhas'
+import { useBuckets, sortByName } from '../hooks/useBuckets'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
 
-function CaixinhaManager() {
-  const { caixinhas, setCaixinhas, isLoading, error: loadError } = useCaixinhas()
+function BucketManager() {
+  const { buckets, setBuckets, isLoading, error: loadError } = useBuckets()
 
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(COLOR_KEYS[0])
@@ -30,23 +30,23 @@ function CaixinhaManager() {
     setCreateError(null)
     setIsCreating(true)
 
-    createCaixinha({ name, color: newColor })
+    createBucket({ name, color: newColor })
       .then((created) => {
-        setCaixinhas((prev) => sortByName([...prev, created]))
+        setBuckets((prev) => sortByName([...prev, created]))
         setNewName('')
         setNewColor(COLOR_KEYS[0])
       })
       .catch((error) => {
-        console.error('Erro ao criar caixinha:', error)
-        setCreateError('Não foi possível criar a caixinha. O nome já pode existir.')
+        console.error('Erro ao criar bucket:', error)
+        setCreateError('Não foi possível criar o Envelope. O nome já pode existir.')
       })
       .finally(() => setIsCreating(false))
   }
 
-  const startEditing = (caixinha) => {
-    setEditingId(caixinha.id)
-    setEditingName(caixinha.name)
-    setEditingColor(caixinha.color)
+  const startEditing = (bucket) => {
+    setEditingId(bucket.id)
+    setEditingName(bucket.name)
+    setEditingColor(bucket.color)
     setRowError(null)
   }
 
@@ -62,13 +62,13 @@ function CaixinhaManager() {
 
     setRowError(null)
 
-    updateCaixinha(id, { name, color: editingColor })
+    updateBucket(id, { name, color: editingColor })
       .then((updated) => {
-        setCaixinhas((prev) => sortByName(prev.map((caixinha) => (caixinha.id === id ? updated : caixinha))))
+        setBuckets((prev) => sortByName(prev.map((bucket) => (bucket.id === id ? updated : bucket))))
         cancelEditing()
       })
       .catch((error) => {
-        console.error('Erro ao atualizar caixinha:', error)
+        console.error('Erro ao atualizar bucket:', error)
         setRowError('Não foi possível salvar. O nome já pode existir.')
       })
   }
@@ -76,25 +76,25 @@ function CaixinhaManager() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deleteCaixinha(id)
+    deleteBucket(id)
       .then(() => {
-        setCaixinhas((prev) => prev.filter((caixinha) => caixinha.id !== id))
+        setBuckets((prev) => prev.filter((bucket) => bucket.id !== id))
       })
       .catch((error) => {
-        console.error('Erro ao excluir caixinha:', error)
-        setDeleteError('Não foi possível excluir a caixinha. Tente novamente.')
+        console.error('Erro ao excluir bucket:', error)
+        setDeleteError('Não foi possível excluir o Envelope. Tente novamente.')
       })
   }
 
   return (
     <div className="entity-manager">
-      <h2>Caixinhas</h2>
+      <h2>Envelopes</h2>
 
       <form className="entity-create-form" onSubmit={handleCreate}>
         <div className="entity-create-form-row">
           <input
             type="text"
-            placeholder="Nova caixinha"
+            placeholder="Novo Envelope"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
@@ -108,20 +108,20 @@ function CaixinhaManager() {
 
       {deleteError && <p className="form-error">{deleteError}</p>}
 
-      {isLoading && <p className="state-message">Carregando caixinhas…</p>}
+      {isLoading && <p className="state-message">Carregando Envelopes…</p>}
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
-      {!isLoading && !loadError && caixinhas.length === 0 && (
-        <p className="state-message">Nenhuma caixinha cadastrada ainda.</p>
+      {!isLoading && !loadError && buckets.length === 0 && (
+        <p className="state-message">Nenhum Envelope cadastrado ainda.</p>
       )}
 
-      {!isLoading && !loadError && caixinhas.length > 0 && (
+      {!isLoading && !loadError && buckets.length > 0 && (
         <ul className="entity-list">
-          {caixinhas.map((caixinha) => {
-            const color = paletteColor(caixinha.color)
-            const isEditing = editingId === caixinha.id
+          {buckets.map((bucket) => {
+            const color = paletteColor(bucket.color)
+            const isEditing = editingId === bucket.id
 
             return (
-              <li className="entity-row" key={caixinha.id}>
+              <li className="entity-row" key={bucket.id}>
                 <div className="entity-row-main">
                   {isEditing ? (
                     <>
@@ -136,7 +136,7 @@ function CaixinhaManager() {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => setPendingUpdateId(caixinha.id)}
+                          onClick={() => setPendingUpdateId(bucket.id)}
                           disabled={!editingName.trim()}
                         >
                           Salvar
@@ -162,15 +162,15 @@ function CaixinhaManager() {
                   ) : (
                     <>
                       <span className="badge" style={{ background: color.bg, color: color.text }}>
-                        {caixinha.name}
-                        {caixinha.is_default && ' (padrão)'}
+                        {bucket.name}
+                        {bucket.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
                         <button
                           type="button"
                           className="icon-btn"
-                          onClick={() => startEditing(caixinha)}
-                          aria-label="Editar caixinha"
+                          onClick={() => startEditing(bucket)}
+                          aria-label="Editar Envelope"
                           title="Editar"
                         >
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -183,12 +183,12 @@ function CaixinhaManager() {
                             />
                           </svg>
                         </button>
-                        {!caixinha.is_default && (
+                        {!bucket.is_default && (
                           <button
                             type="button"
                             className="icon-btn icon-btn--danger"
-                            onClick={() => setPendingDeleteId(caixinha.id)}
-                            aria-label="Excluir caixinha"
+                            onClick={() => setPendingDeleteId(bucket.id)}
+                            aria-label="Excluir Envelope"
                             title="Excluir"
                           >
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -217,7 +217,7 @@ function CaixinhaManager() {
       <ConfirmDialog
         isOpen={pendingUpdateId !== null}
         title="Salvar alterações"
-        message="Confirma as alterações nesta caixinha?"
+        message="Confirma as alterações neste Envelope?"
         confirmLabel="Salvar"
         onConfirm={() => {
           handleUpdate(pendingUpdateId)
@@ -228,8 +228,8 @@ function CaixinhaManager() {
 
       <ConfirmDialog
         isOpen={pendingDeleteId !== null}
-        title="Excluir caixinha"
-        message="Tem certeza que deseja excluir esta caixinha? Essa ação não pode ser desfeita."
+        title="Excluir Envelope"
+        message="Tem certeza que deseja excluir este Envelope? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
         onConfirm={() => {
@@ -242,4 +242,4 @@ function CaixinhaManager() {
   )
 }
 
-export default CaixinhaManager
+export default BucketManager

@@ -25,9 +25,7 @@ func isDuplicateEntry(err error) bool {
 	return mysqlErr != nil && mysqlErr.Number == mysqlErrDuplicateEntry
 }
 
-// violatesConstraint reports whether err is a foreign-key violation against
-// the named constraint, so callers can tell apart which referenced entity
-// (e.g. category vs. person) was invalid when an expense write fails.
+// violatesConstraint reports whether err is a FK violation of the named constraint.
 func violatesConstraint(err error, constraintName string) bool {
 	mysqlErr := asMySQLError(err)
 	return mysqlErr != nil && mysqlErr.Number == mysqlErrForeignKeyNoParent && strings.Contains(mysqlErr.Message, constraintName)

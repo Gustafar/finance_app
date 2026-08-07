@@ -38,9 +38,9 @@ func main() {
 	paymentMethodService := services.NewPaymentMethodService(paymentMethodRepo)
 	paymentMethodHandler := handlers.NewPaymentMethodHandler(paymentMethodService)
 
-	caixinhaRepo := repositories.NewCaixinhaRepository(db)
-	caixinhaService := services.NewCaixinhaService(caixinhaRepo)
-	caixinhaHandler := handlers.NewCaixinhaHandler(caixinhaService)
+	bucketRepo := repositories.NewBucketRepository(db)
+	bucketService := services.NewBucketService(bucketRepo)
+	bucketHandler := handlers.NewBucketHandler(bucketService)
 
 	bankRepo := repositories.NewBankRepository(db)
 	bankService := services.NewBankService(bankRepo)
@@ -79,11 +79,11 @@ func main() {
 	mux.HandleFunc("PUT /payment-methods/{id}", paymentMethodHandler.Update)
 	mux.HandleFunc("DELETE /payment-methods/{id}", paymentMethodHandler.Delete)
 
-	mux.HandleFunc("GET /caixinhas", caixinhaHandler.GetAll)
-	mux.HandleFunc("GET /caixinhas/{id}", caixinhaHandler.GetByID)
-	mux.HandleFunc("POST /caixinhas", caixinhaHandler.Create)
-	mux.HandleFunc("PUT /caixinhas/{id}", caixinhaHandler.Update)
-	mux.HandleFunc("DELETE /caixinhas/{id}", caixinhaHandler.Delete)
+	mux.HandleFunc("GET /buckets", bucketHandler.GetAll)
+	mux.HandleFunc("GET /buckets/{id}", bucketHandler.GetByID)
+	mux.HandleFunc("POST /buckets", bucketHandler.Create)
+	mux.HandleFunc("PUT /buckets/{id}", bucketHandler.Update)
+	mux.HandleFunc("DELETE /buckets/{id}", bucketHandler.Delete)
 
 	mux.HandleFunc("GET /banks", bankHandler.GetAll)
 	mux.HandleFunc("GET /banks/{id}", bankHandler.GetByID)

@@ -93,8 +93,7 @@ func (r *PersonRepository) Update(id int, person models.Person) (models.Person, 
 	return person, nil
 }
 
-// Delete removes a person after reassigning any expenses that reference them
-// to the default person, so deleting a person never orphans expense data.
+// Delete reassigns referencing expenses to the default person first, so deleting never orphans data.
 func (r *PersonRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()
 	if err != nil {

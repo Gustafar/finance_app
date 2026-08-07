@@ -7,28 +7,28 @@ async function parseJsonOrThrow(response) {
   return response.json()
 }
 
-export function fetchCaixinhas() {
-  return fetch(`${API_URL}/caixinhas`).then(parseJsonOrThrow)
+export function fetchBuckets() {
+  return fetch(`${API_URL}/buckets`).then(parseJsonOrThrow)
 }
 
-export function createCaixinha(caixinha) {
-  return fetch(`${API_URL}/caixinhas`, {
+export function createBucket(bucket) {
+  return fetch(`${API_URL}/buckets`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(caixinha),
+    body: JSON.stringify(bucket),
   }).then(parseJsonOrThrow)
 }
 
-export function updateCaixinha(id, caixinha) {
-  return fetch(`${API_URL}/caixinhas/${id}`, {
+export function updateBucket(id, bucket) {
+  return fetch(`${API_URL}/buckets/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(caixinha),
+    body: JSON.stringify(bucket),
   }).then(parseJsonOrThrow)
 }
 
-export function deleteCaixinha(id) {
-  return fetch(`${API_URL}/caixinhas/${id}`, { method: 'DELETE' }).then((response) => {
+export function deleteBucket(id) {
+  return fetch(`${API_URL}/buckets/${id}`, { method: 'DELETE' }).then((response) => {
     if (!response.ok) {
       throw new Error(`Requisição falhou com status ${response.status}`)
     }

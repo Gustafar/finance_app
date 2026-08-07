@@ -1,7 +1,6 @@
 package services
 
-// validColorKeys are the palette keys the frontend offers for categories and
-// people; kept in sync with frontend/src/utils/categoryColor.js.
+// validColorKeys must stay in sync with frontend/src/utils/categoryColor.js.
 var validColorKeys = map[string]bool{
 	"indigo":  true,
 	"emerald": true,

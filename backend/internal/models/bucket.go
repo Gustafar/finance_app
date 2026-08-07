@@ -1,6 +1,6 @@
 package models
 
-type Caixinha struct {
+type Bucket struct {
 	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	Color     string `json:"color"`
