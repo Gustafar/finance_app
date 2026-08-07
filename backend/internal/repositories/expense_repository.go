@@ -47,26 +47,22 @@ func scanExpense(row interface{ Scan(...any) error }) (models.Expense, error) {
 
 func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
 	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, bucket_id, bank_id, type, date, recurring_expense_id, investment_box_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
 
-	result, err := r.DB.Exec(
+	var id int
+	err := r.DB.QueryRow(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
 		expense.BucketID, expense.BankID, expense.Type, expense.Date, expense.RecurringExpenseID, expense.InvestmentBoxID,
-	)
+	).Scan(&id)
 	if err != nil {
 		return models.Expense{}, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return models.Expense{}, err
-	}
-
-	return r.GetByID(int(id))
+	return r.GetByID(id)
 }
 
 func (r *ExpenseRepository) GetByID(id int) (models.Expense, error) {
-	query := selectExpenseQuery + " WHERE e.id = ?"
+	query := selectExpenseQuery + " WHERE e.id = $1"
 
 	expense, err := scanExpense(r.DB.QueryRow(query, id))
 	if err != nil {
@@ -102,7 +98,7 @@ func (r *ExpenseRepository) GetAll() ([]models.Expense, error) {
 }
 
 func (r *ExpenseRepository) getByInstallmentPurchaseID(purchaseID int) ([]models.Expense, error) {
-	query := selectExpenseQuery + " WHERE e.installment_purchase_id = ? ORDER BY e.installment_number"
+	query := selectExpenseQuery + " WHERE e.installment_purchase_id = $1 ORDER BY e.installment_number"
 
 	rows, err := r.DB.Query(query, purchaseID)
 	if err != nil {
@@ -129,8 +125,8 @@ func (r *ExpenseRepository) getByInstallmentPurchaseID(purchaseID int) ([]models
 }
 
 func (r *ExpenseRepository) Update(id int, expense models.Expense) (models.Expense, error) {
-	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, person_id = ?, payment_method_id = ?, bucket_id = ?, bank_id = ?, type = ?, date = ?, investment_box_id = ?
-		WHERE id = ?`
+	query := `UPDATE expenses SET description = $1, amount = $2, category_id = $3, person_id = $4, payment_method_id = $5, bucket_id = $6, bank_id = $7, type = $8, date = $9, investment_box_id = $10
+		WHERE id = $11`
 
 	_, err := r.DB.Exec(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
@@ -156,24 +152,20 @@ func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.Installmen
 	}
 	defer tx.Rollback()
 
-	purchaseResult, err := tx.Exec(
+	var purchaseID int
+	err = tx.QueryRow(
 		`INSERT INTO installment_purchases (description, total_amount, purchase_date, installment_count, category_id, person_id, payment_method_id, bucket_id, bank_id)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
 		purchase.Description, purchase.TotalAmount, purchase.PurchaseDate, purchase.InstallmentCount,
 		purchase.CategoryID, purchase.PersonID, purchase.PaymentMethodID, purchase.BucketID, purchase.BankID,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	purchaseID, err := purchaseResult.LastInsertId()
+	).Scan(&purchaseID)
 	if err != nil {
 		return nil, err
 	}
 
 	insertExpense := `INSERT INTO expenses
 		(description, amount, category_id, person_id, payment_method_id, bucket_id, bank_id, type, date, installment_purchase_id, installment_number)
-		VALUES (?, ?, ?, ?, ?, ?, ?, 'expense', ?, ?, ?)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, 'expense', $8, $9, $10)`
 
 	for _, slice := range slices {
 		if _, err := tx.Exec(
@@ -188,11 +180,11 @@ func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.Installmen
 		return nil, err
 	}
 
-	return r.getByInstallmentPurchaseID(int(purchaseID))
+	return r.getByInstallmentPurchaseID(purchaseID)
 }
 
 func (r *ExpenseRepository) Delete(id int) error {
-	query := "DELETE FROM expenses WHERE id = ?"
+	query := "DELETE FROM expenses WHERE id = $1"
 
 	result, err := r.DB.Exec(query, id)
 	if err != nil {

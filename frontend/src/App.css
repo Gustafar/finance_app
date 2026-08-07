@@ -4,6 +4,35 @@
   flex-direction: column;
 }
 
+/* Login gate */
+
+.login-gate {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 320px;
+  max-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+}
+
+.login-brand {
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
 /* Topbar */
 
 .topbar {

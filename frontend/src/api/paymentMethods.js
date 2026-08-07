@@ -1,36 +1,17 @@
-const API_URL = 'http://localhost:9080'
-
-async function parseJsonOrThrow(response) {
-  if (!response.ok) {
-    throw new Error(`Requisição falhou com status ${response.status}`)
-  }
-  return response.json()
-}
+import { fetchJson } from './config'
 
 export function fetchPaymentMethods() {
-  return fetch(`${API_URL}/payment-methods`).then(parseJsonOrThrow)
+  return fetchJson('/payment-methods')
 }
 
 export function createPaymentMethod(paymentMethod) {
-  return fetch(`${API_URL}/payment-methods`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(paymentMethod),
-  }).then(parseJsonOrThrow)
+  return fetchJson('/payment-methods', { method: 'POST', body: JSON.stringify(paymentMethod) })
 }
 
 export function updatePaymentMethod(id, paymentMethod) {
-  return fetch(`${API_URL}/payment-methods/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(paymentMethod),
-  }).then(parseJsonOrThrow)
+  return fetchJson(`/payment-methods/${id}`, { method: 'PUT', body: JSON.stringify(paymentMethod) })
 }
 
 export function deletePaymentMethod(id) {
-  return fetch(`${API_URL}/payment-methods/${id}`, { method: 'DELETE' }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Requisição falhou com status ${response.status}`)
-    }
-  })
+  return fetchJson(`/payment-methods/${id}`, { method: 'DELETE' })
 }

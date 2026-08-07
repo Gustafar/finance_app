@@ -32,26 +32,22 @@ func scanRecurringExpense(row interface{ Scan(...any) error }) (models.Recurring
 
 func (r *RecurringExpenseRepository) Create(recurring models.RecurringExpense) (models.RecurringExpense, error) {
 	query := `INSERT INTO recurring_expenses (description, amount, type, day_of_month, category_id, person_id, payment_method_id, bucket_id, bank_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
 
-	result, err := r.DB.Exec(
+	var id int
+	err := r.DB.QueryRow(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
 		recurring.CategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.BucketID, recurring.BankID,
-	)
+	).Scan(&id)
 	if err != nil {
 		return models.RecurringExpense{}, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return models.RecurringExpense{}, err
-	}
-
-	return r.GetByID(int(id))
+	return r.GetByID(id)
 }
 
 func (r *RecurringExpenseRepository) GetByID(id int) (models.RecurringExpense, error) {
-	query := selectRecurringExpenseQuery + " WHERE id = ?"
+	query := selectRecurringExpenseQuery + " WHERE id = $1"
 
 	recurring, err := scanRecurringExpense(r.DB.QueryRow(query, id))
 	if err != nil {
@@ -90,8 +86,8 @@ func (r *RecurringExpenseRepository) GetAll() ([]models.RecurringExpense, error)
 
 func (r *RecurringExpenseRepository) Update(id int, recurring models.RecurringExpense) (models.RecurringExpense, error) {
 	query := `UPDATE recurring_expenses
-		SET description = ?, amount = ?, type = ?, day_of_month = ?, category_id = ?, person_id = ?, payment_method_id = ?, bucket_id = ?, bank_id = ?
-		WHERE id = ?`
+		SET description = $1, amount = $2, type = $3, day_of_month = $4, category_id = $5, person_id = $6, payment_method_id = $7, bucket_id = $8, bank_id = $9
+		WHERE id = $10`
 
 	_, err := r.DB.Exec(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
@@ -105,7 +101,7 @@ func (r *RecurringExpenseRepository) Update(id int, recurring models.RecurringEx
 }
 
 func (r *RecurringExpenseRepository) Delete(id int) error {
-	result, err := r.DB.Exec("DELETE FROM recurring_expenses WHERE id = ?", id)
+	result, err := r.DB.Exec("DELETE FROM recurring_expenses WHERE id = $1", id)
 	if err != nil {
 		return err
 	}
@@ -123,6 +119,6 @@ func (r *RecurringExpenseRepository) Delete(id int) error {
 }
 
 func (r *RecurringExpenseRepository) MarkGenerated(id, year, month int) error {
-	_, err := r.DB.Exec("UPDATE recurring_expenses SET last_generated_year = ?, last_generated_month = ? WHERE id = ?", year, month, id)
+	_, err := r.DB.Exec("UPDATE recurring_expenses SET last_generated_year = $1, last_generated_month = $2 WHERE id = $3", year, month, id)
 	return err
 }

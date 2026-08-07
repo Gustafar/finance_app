@@ -1,44 +1,21 @@
-const API_URL = 'http://localhost:9080'
-
-async function parseJsonOrThrow(response) {
-  if (!response.ok) {
-    throw new Error(`Requisição falhou com status ${response.status}`)
-  }
-  return response.json()
-}
+import { fetchJson } from './config'
 
 export function fetchExpenses() {
-  return fetch(`${API_URL}/expenses`).then(parseJsonOrThrow)
+  return fetchJson('/expenses')
 }
 
 export function createExpense(expense) {
-  return fetch(`${API_URL}/expenses`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(expense),
-  }).then(parseJsonOrThrow)
+  return fetchJson('/expenses', { method: 'POST', body: JSON.stringify(expense) })
 }
 
 export function createInstallmentPurchase(purchase) {
-  return fetch(`${API_URL}/expenses/installments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(purchase),
-  }).then(parseJsonOrThrow)
+  return fetchJson('/expenses/installments', { method: 'POST', body: JSON.stringify(purchase) })
 }
 
 export function updateExpense(id, expense) {
-  return fetch(`${API_URL}/expenses/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(expense),
-  }).then(parseJsonOrThrow)
+  return fetchJson(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(expense) })
 }
 
 export function deleteExpense(id) {
-  return fetch(`${API_URL}/expenses/${id}`, { method: 'DELETE' }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Requisição falhou com status ${response.status}`)
-    }
-  })
+  return fetchJson(`/expenses/${id}`, { method: 'DELETE' })
 }

@@ -15,24 +15,18 @@ func NewBankRepository(db *sql.DB) *BankRepository {
 }
 
 func (r *BankRepository) Create(bank models.Bank) (models.Bank, error) {
-	query := "INSERT INTO banks (name, color) VALUES (?, ?)"
+	query := "INSERT INTO banks (name, color) VALUES ($1, $2) RETURNING id"
 
-	result, err := r.DB.Exec(query, bank.Name, bank.Color)
+	err := r.DB.QueryRow(query, bank.Name, bank.Color).Scan(&bank.ID)
 	if err != nil {
 		return models.Bank{}, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return models.Bank{}, err
-	}
-
-	bank.ID = int(id)
 	return bank, nil
 }
 
 func (r *BankRepository) GetByID(id int) (models.Bank, error) {
-	query := "SELECT id, name, color, is_default FROM banks WHERE id = ?"
+	query := "SELECT id, name, color, is_default FROM banks WHERE id = $1"
 
 	var bank models.Bank
 	err := r.DB.QueryRow(query, id).Scan(&bank.ID, &bank.Name, &bank.Color, &bank.IsDefault)
@@ -73,7 +67,7 @@ func (r *BankRepository) GetAll() ([]models.Bank, error) {
 }
 
 func (r *BankRepository) Update(id int, bank models.Bank) (models.Bank, error) {
-	query := "UPDATE banks SET name = ?, color = ? WHERE id = ?"
+	query := "UPDATE banks SET name = $1, color = $2 WHERE id = $3"
 
 	result, err := r.DB.Exec(query, bank.Name, bank.Color, id)
 	if err != nil {
@@ -107,19 +101,19 @@ func (r *BankRepository) Delete(id int) error {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE expenses SET bank_id = ? WHERE bank_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE expenses SET bank_id = $1 WHERE bank_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE installment_purchases SET bank_id = ? WHERE bank_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE installment_purchases SET bank_id = $1 WHERE bank_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE recurring_expenses SET bank_id = ? WHERE bank_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE recurring_expenses SET bank_id = $1 WHERE bank_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	result, err := tx.Exec("DELETE FROM banks WHERE id = ?", id)
+	result, err := tx.Exec("DELETE FROM banks WHERE id = $1", id)
 	if err != nil {
 		return err
 	}

@@ -15,24 +15,18 @@ func NewBucketRepository(db *sql.DB) *BucketRepository {
 }
 
 func (r *BucketRepository) Create(bucket models.Bucket) (models.Bucket, error) {
-	query := "INSERT INTO buckets (name, color) VALUES (?, ?)"
+	query := "INSERT INTO buckets (name, color) VALUES ($1, $2) RETURNING id"
 
-	result, err := r.DB.Exec(query, bucket.Name, bucket.Color)
+	err := r.DB.QueryRow(query, bucket.Name, bucket.Color).Scan(&bucket.ID)
 	if err != nil {
 		return models.Bucket{}, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return models.Bucket{}, err
-	}
-
-	bucket.ID = int(id)
 	return bucket, nil
 }
 
 func (r *BucketRepository) GetByID(id int) (models.Bucket, error) {
-	query := "SELECT id, name, color, is_default FROM buckets WHERE id = ?"
+	query := "SELECT id, name, color, is_default FROM buckets WHERE id = $1"
 
 	var bucket models.Bucket
 	err := r.DB.QueryRow(query, id).Scan(&bucket.ID, &bucket.Name, &bucket.Color, &bucket.IsDefault)
@@ -73,7 +67,7 @@ func (r *BucketRepository) GetAll() ([]models.Bucket, error) {
 }
 
 func (r *BucketRepository) Update(id int, bucket models.Bucket) (models.Bucket, error) {
-	query := "UPDATE buckets SET name = ?, color = ? WHERE id = ?"
+	query := "UPDATE buckets SET name = $1, color = $2 WHERE id = $3"
 
 	result, err := r.DB.Exec(query, bucket.Name, bucket.Color, id)
 	if err != nil {
@@ -107,19 +101,19 @@ func (r *BucketRepository) Delete(id int) error {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE expenses SET bucket_id = ? WHERE bucket_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE expenses SET bucket_id = $1 WHERE bucket_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE installment_purchases SET bucket_id = ? WHERE bucket_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE installment_purchases SET bucket_id = $1 WHERE bucket_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE recurring_expenses SET bucket_id = ? WHERE bucket_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE recurring_expenses SET bucket_id = $1 WHERE bucket_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	result, err := tx.Exec("DELETE FROM buckets WHERE id = ?", id)
+	result, err := tx.Exec("DELETE FROM buckets WHERE id = $1", id)
 	if err != nil {
 		return err
 	}

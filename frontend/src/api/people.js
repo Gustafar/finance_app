@@ -1,36 +1,17 @@
-const API_URL = 'http://localhost:9080'
-
-async function parseJsonOrThrow(response) {
-  if (!response.ok) {
-    throw new Error(`Requisição falhou com status ${response.status}`)
-  }
-  return response.json()
-}
+import { fetchJson } from './config'
 
 export function fetchPeople() {
-  return fetch(`${API_URL}/people`).then(parseJsonOrThrow)
+  return fetchJson('/people')
 }
 
 export function createPerson(person) {
-  return fetch(`${API_URL}/people`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(person),
-  }).then(parseJsonOrThrow)
+  return fetchJson('/people', { method: 'POST', body: JSON.stringify(person) })
 }
 
 export function updatePerson(id, person) {
-  return fetch(`${API_URL}/people/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(person),
-  }).then(parseJsonOrThrow)
+  return fetchJson(`/people/${id}`, { method: 'PUT', body: JSON.stringify(person) })
 }
 
 export function deletePerson(id) {
-  return fetch(`${API_URL}/people/${id}`, { method: 'DELETE' }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Requisição falhou com status ${response.status}`)
-    }
-  })
+  return fetchJson(`/people/${id}`, { method: 'DELETE' })
 }

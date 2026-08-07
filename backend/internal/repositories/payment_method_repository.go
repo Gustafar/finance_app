@@ -15,24 +15,18 @@ func NewPaymentMethodRepository(db *sql.DB) *PaymentMethodRepository {
 }
 
 func (r *PaymentMethodRepository) Create(paymentMethod models.PaymentMethod) (models.PaymentMethod, error) {
-	query := "INSERT INTO payment_methods (name, color) VALUES (?, ?)"
+	query := "INSERT INTO payment_methods (name, color) VALUES ($1, $2) RETURNING id"
 
-	result, err := r.DB.Exec(query, paymentMethod.Name, paymentMethod.Color)
+	err := r.DB.QueryRow(query, paymentMethod.Name, paymentMethod.Color).Scan(&paymentMethod.ID)
 	if err != nil {
 		return models.PaymentMethod{}, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return models.PaymentMethod{}, err
-	}
-
-	paymentMethod.ID = int(id)
 	return paymentMethod, nil
 }
 
 func (r *PaymentMethodRepository) GetByID(id int) (models.PaymentMethod, error) {
-	query := "SELECT id, name, color, is_default FROM payment_methods WHERE id = ?"
+	query := "SELECT id, name, color, is_default FROM payment_methods WHERE id = $1"
 
 	var paymentMethod models.PaymentMethod
 	err := r.DB.QueryRow(query, id).Scan(&paymentMethod.ID, &paymentMethod.Name, &paymentMethod.Color, &paymentMethod.IsDefault)
@@ -73,7 +67,7 @@ func (r *PaymentMethodRepository) GetAll() ([]models.PaymentMethod, error) {
 }
 
 func (r *PaymentMethodRepository) Update(id int, paymentMethod models.PaymentMethod) (models.PaymentMethod, error) {
-	query := "UPDATE payment_methods SET name = ?, color = ? WHERE id = ?"
+	query := "UPDATE payment_methods SET name = $1, color = $2 WHERE id = $3"
 
 	result, err := r.DB.Exec(query, paymentMethod.Name, paymentMethod.Color, id)
 	if err != nil {
@@ -107,19 +101,19 @@ func (r *PaymentMethodRepository) Delete(id int) error {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE expenses SET payment_method_id = ? WHERE payment_method_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE expenses SET payment_method_id = $1 WHERE payment_method_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE installment_purchases SET payment_method_id = ? WHERE payment_method_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE installment_purchases SET payment_method_id = $1 WHERE payment_method_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE recurring_expenses SET payment_method_id = ? WHERE payment_method_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE recurring_expenses SET payment_method_id = $1 WHERE payment_method_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	result, err := tx.Exec("DELETE FROM payment_methods WHERE id = ?", id)
+	result, err := tx.Exec("DELETE FROM payment_methods WHERE id = $1", id)
 	if err != nil {
 		return err
 	}

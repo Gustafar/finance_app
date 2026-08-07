@@ -15,24 +15,18 @@ func NewPersonRepository(db *sql.DB) *PersonRepository {
 }
 
 func (r *PersonRepository) Create(person models.Person) (models.Person, error) {
-	query := "INSERT INTO people (name, color) VALUES (?, ?)"
+	query := "INSERT INTO people (name, color) VALUES ($1, $2) RETURNING id"
 
-	result, err := r.DB.Exec(query, person.Name, person.Color)
+	err := r.DB.QueryRow(query, person.Name, person.Color).Scan(&person.ID)
 	if err != nil {
 		return models.Person{}, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return models.Person{}, err
-	}
-
-	person.ID = int(id)
 	return person, nil
 }
 
 func (r *PersonRepository) GetByID(id int) (models.Person, error) {
-	query := "SELECT id, name, color, is_default FROM people WHERE id = ?"
+	query := "SELECT id, name, color, is_default FROM people WHERE id = $1"
 
 	var person models.Person
 	err := r.DB.QueryRow(query, id).Scan(&person.ID, &person.Name, &person.Color, &person.IsDefault)
@@ -73,7 +67,7 @@ func (r *PersonRepository) GetAll() ([]models.Person, error) {
 }
 
 func (r *PersonRepository) Update(id int, person models.Person) (models.Person, error) {
-	query := "UPDATE people SET name = ?, color = ? WHERE id = ?"
+	query := "UPDATE people SET name = $1, color = $2 WHERE id = $3"
 
 	result, err := r.DB.Exec(query, person.Name, person.Color, id)
 	if err != nil {
@@ -107,19 +101,19 @@ func (r *PersonRepository) Delete(id int) error {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE expenses SET person_id = ? WHERE person_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE expenses SET person_id = $1 WHERE person_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE installment_purchases SET person_id = ? WHERE person_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE installment_purchases SET person_id = $1 WHERE person_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE recurring_expenses SET person_id = ? WHERE person_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE recurring_expenses SET person_id = $1 WHERE person_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	result, err := tx.Exec("DELETE FROM people WHERE id = ?", id)
+	result, err := tx.Exec("DELETE FROM people WHERE id = $1", id)
 	if err != nil {
 		return err
 	}

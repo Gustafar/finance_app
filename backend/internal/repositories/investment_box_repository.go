@@ -15,24 +15,18 @@ func NewInvestmentBoxRepository(db *sql.DB) *InvestmentBoxRepository {
 }
 
 func (r *InvestmentBoxRepository) Create(box models.InvestmentBox) (models.InvestmentBox, error) {
-	query := "INSERT INTO investment_boxes (name, color) VALUES (?, ?)"
+	query := "INSERT INTO investment_boxes (name, color) VALUES ($1, $2) RETURNING id"
 
-	result, err := r.DB.Exec(query, box.Name, box.Color)
+	err := r.DB.QueryRow(query, box.Name, box.Color).Scan(&box.ID)
 	if err != nil {
 		return models.InvestmentBox{}, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return models.InvestmentBox{}, err
-	}
-
-	box.ID = int(id)
 	return box, nil
 }
 
 func (r *InvestmentBoxRepository) GetByID(id int) (models.InvestmentBox, error) {
-	query := "SELECT id, name, color, is_default FROM investment_boxes WHERE id = ?"
+	query := "SELECT id, name, color, is_default FROM investment_boxes WHERE id = $1"
 
 	var box models.InvestmentBox
 	err := r.DB.QueryRow(query, id).Scan(&box.ID, &box.Name, &box.Color, &box.IsDefault)
@@ -73,7 +67,7 @@ func (r *InvestmentBoxRepository) GetAll() ([]models.InvestmentBox, error) {
 }
 
 func (r *InvestmentBoxRepository) Update(id int, box models.InvestmentBox) (models.InvestmentBox, error) {
-	query := "UPDATE investment_boxes SET name = ?, color = ? WHERE id = ?"
+	query := "UPDATE investment_boxes SET name = $1, color = $2 WHERE id = $3"
 
 	result, err := r.DB.Exec(query, box.Name, box.Color, id)
 	if err != nil {
@@ -107,11 +101,11 @@ func (r *InvestmentBoxRepository) Delete(id int) error {
 		return err
 	}
 
-	if _, err := tx.Exec("UPDATE expenses SET investment_box_id = ? WHERE investment_box_id = ?", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE expenses SET investment_box_id = $1 WHERE investment_box_id = $2", defaultID, id); err != nil {
 		return err
 	}
 
-	result, err := tx.Exec("DELETE FROM investment_boxes WHERE id = ?", id)
+	result, err := tx.Exec("DELETE FROM investment_boxes WHERE id = $1", id)
 	if err != nil {
 		return err
 	}

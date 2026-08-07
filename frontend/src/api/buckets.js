@@ -1,36 +1,17 @@
-const API_URL = 'http://localhost:9080'
-
-async function parseJsonOrThrow(response) {
-  if (!response.ok) {
-    throw new Error(`Requisição falhou com status ${response.status}`)
-  }
-  return response.json()
-}
+import { fetchJson } from './config'
 
 export function fetchBuckets() {
-  return fetch(`${API_URL}/buckets`).then(parseJsonOrThrow)
+  return fetchJson('/buckets')
 }
 
 export function createBucket(bucket) {
-  return fetch(`${API_URL}/buckets`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bucket),
-  }).then(parseJsonOrThrow)
+  return fetchJson('/buckets', { method: 'POST', body: JSON.stringify(bucket) })
 }
 
 export function updateBucket(id, bucket) {
-  return fetch(`${API_URL}/buckets/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bucket),
-  }).then(parseJsonOrThrow)
+  return fetchJson(`/buckets/${id}`, { method: 'PUT', body: JSON.stringify(bucket) })
 }
 
 export function deleteBucket(id) {
-  return fetch(`${API_URL}/buckets/${id}`, { method: 'DELETE' }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Requisição falhou com status ${response.status}`)
-    }
-  })
+  return fetchJson(`/buckets/${id}`, { method: 'DELETE' })
 }

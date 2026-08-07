@@ -1,36 +1,17 @@
-const API_URL = 'http://localhost:9080'
-
-async function parseJsonOrThrow(response) {
-  if (!response.ok) {
-    throw new Error(`Requisição falhou com status ${response.status}`)
-  }
-  return response.json()
-}
+import { fetchJson } from './config'
 
 export function fetchBanks() {
-  return fetch(`${API_URL}/banks`).then(parseJsonOrThrow)
+  return fetchJson('/banks')
 }
 
 export function createBank(bank) {
-  return fetch(`${API_URL}/banks`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bank),
-  }).then(parseJsonOrThrow)
+  return fetchJson('/banks', { method: 'POST', body: JSON.stringify(bank) })
 }
 
 export function updateBank(id, bank) {
-  return fetch(`${API_URL}/banks/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bank),
-  }).then(parseJsonOrThrow)
+  return fetchJson(`/banks/${id}`, { method: 'PUT', body: JSON.stringify(bank) })
 }
 
 export function deleteBank(id) {
-  return fetch(`${API_URL}/banks/${id}`, { method: 'DELETE' }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Requisição falhou com status ${response.status}`)
-    }
-  })
+  return fetchJson(`/banks/${id}`, { method: 'DELETE' })
 }

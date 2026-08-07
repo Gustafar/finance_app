@@ -4,15 +4,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"finance_app/internal/database"
 	"finance_app/internal/handlers"
 	"finance_app/internal/middleware"
 	"finance_app/internal/repositories"
 	"finance_app/internal/services"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("Aviso: não encontrou arquivo .env, usando variáveis do sistema")
+	}
+
 	db := database.Connect()
 	defer db.Close()
 
@@ -51,6 +58,9 @@ func main() {
 	investmentBoxHandler := handlers.NewInvestmentBoxHandler(investmentBoxService)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /auth/status", handlers.AuthStatus)
+	mux.HandleFunc("POST /login", handlers.Login)
+
 	mux.HandleFunc("GET /expenses", expenseHandler.GetAll)
 	mux.HandleFunc("GET /expenses/{id}", expenseHandler.GetByID)
 	mux.HandleFunc("POST /expenses", expenseHandler.Create)
@@ -101,8 +111,13 @@ func main() {
 	mux.HandleFunc("PUT /investment-boxes/{id}", investmentBoxHandler.Update)
 	mux.HandleFunc("DELETE /investment-boxes/{id}", investmentBoxHandler.Delete)
 
-	handler := middleware.Logging(middleware.CORS(mux))
+	handler := middleware.Logging(middleware.CORS(middleware.RateLimit(middleware.RequireAuth(mux))))
 
-	fmt.Println("Servidor rodando na porta 9080...")
-	log.Fatal(http.ListenAndServe(":9080", handler))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9080"
+	}
+
+	fmt.Printf("Servidor rodando na porta %s...\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }

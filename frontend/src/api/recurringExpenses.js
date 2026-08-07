@@ -1,40 +1,21 @@
-const API_URL = 'http://localhost:9080'
-
-async function parseJsonOrThrow(response) {
-  if (!response.ok) {
-    throw new Error(`Requisição falhou com status ${response.status}`)
-  }
-  return response.json()
-}
+import { fetchJson } from './config'
 
 export function fetchRecurringExpenses() {
-  return fetch(`${API_URL}/recurring-expenses`).then(parseJsonOrThrow)
+  return fetchJson('/recurring-expenses')
 }
 
 export function createRecurringExpense(recurring) {
-  return fetch(`${API_URL}/recurring-expenses`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(recurring),
-  }).then(parseJsonOrThrow)
+  return fetchJson('/recurring-expenses', { method: 'POST', body: JSON.stringify(recurring) })
 }
 
 export function updateRecurringExpense(id, recurring) {
-  return fetch(`${API_URL}/recurring-expenses/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(recurring),
-  }).then(parseJsonOrThrow)
+  return fetchJson(`/recurring-expenses/${id}`, { method: 'PUT', body: JSON.stringify(recurring) })
 }
 
 export function deleteRecurringExpense(id) {
-  return fetch(`${API_URL}/recurring-expenses/${id}`, { method: 'DELETE' }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Requisição falhou com status ${response.status}`)
-    }
-  })
+  return fetchJson(`/recurring-expenses/${id}`, { method: 'DELETE' })
 }
 
 export function generateDueRecurringExpenses() {
-  return fetch(`${API_URL}/recurring-expenses/generate-due`, { method: 'POST' }).then(parseJsonOrThrow)
+  return fetchJson('/recurring-expenses/generate-due', { method: 'POST' })
 }

@@ -1,0 +1,9 @@
+DROP TABLE expenses;
+DROP TABLE recurring_expenses;
+DROP TABLE installment_purchases;
+DROP TABLE investment_boxes;
+DROP TABLE banks;
+DROP TABLE buckets;
+DROP TABLE payment_methods;
+DROP TABLE people;
+DROP TABLE categories;
