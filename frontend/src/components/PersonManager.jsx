@@ -3,6 +3,7 @@ import { createPerson, updatePerson, deletePerson } from '../api/people'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { usePeople, sortByName } from '../hooks/usePeople'
 import ColorSwatchPicker from './ColorSwatchPicker'
+import ConfirmDialog from './ConfirmDialog'
 
 function PersonManager() {
   const { people, setPeople, isLoading, error: loadError } = usePeople()
@@ -18,6 +19,8 @@ function PersonManager() {
   const [rowError, setRowError] = useState(null)
 
   const [deleteError, setDeleteError] = useState(null)
+  const [pendingUpdateId, setPendingUpdateId] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -133,7 +136,7 @@ function PersonManager() {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => handleUpdate(person.id)}
+                          onClick={() => setPendingUpdateId(person.id)}
                           disabled={!editingName.trim()}
                         >
                           Salvar
@@ -184,7 +187,7 @@ function PersonManager() {
                           <button
                             type="button"
                             className="icon-btn icon-btn--danger"
-                            onClick={() => handleDelete(person.id)}
+                            onClick={() => setPendingDeleteId(person.id)}
                             aria-label="Excluir responsável"
                             title="Excluir"
                           >
@@ -210,6 +213,31 @@ function PersonManager() {
           })}
         </ul>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingUpdateId !== null}
+        title="Salvar alterações"
+        message="Confirma as alterações neste responsável?"
+        confirmLabel="Salvar"
+        onConfirm={() => {
+          handleUpdate(pendingUpdateId)
+          setPendingUpdateId(null)
+        }}
+        onCancel={() => setPendingUpdateId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title="Excluir responsável"
+        message="Tem certeza que deseja excluir este responsável? Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          handleDelete(pendingDeleteId)
+          setPendingDeleteId(null)
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   )
 }

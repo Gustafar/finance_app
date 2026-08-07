@@ -10,6 +10,7 @@ import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES, TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import { formatCurrency } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
+import ConfirmDialog from '../components/ConfirmDialog'
 
 const emptyForm = {
   description: '',
@@ -204,6 +205,8 @@ function RecurringExpensesPage() {
   const [rowError, setRowError] = useState(null)
 
   const [deleteError, setDeleteError] = useState(null)
+  const [pendingUpdateId, setPendingUpdateId] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -396,7 +399,7 @@ function RecurringExpensesPage() {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => handleUpdate(recurring.id)}
+                          onClick={() => setPendingUpdateId(recurring.id)}
                           disabled={!isFormComplete(editForm)}
                         >
                           Salvar
@@ -481,7 +484,7 @@ function RecurringExpensesPage() {
                     <button
                       type="button"
                       className="icon-btn icon-btn--danger"
-                      onClick={() => handleDelete(recurring.id)}
+                      onClick={() => setPendingDeleteId(recurring.id)}
                       aria-label="Excluir gasto fixo"
                       title="Excluir"
                     >
@@ -502,6 +505,31 @@ function RecurringExpensesPage() {
           </ul>
         )}
       </section>
+
+      <ConfirmDialog
+        isOpen={pendingUpdateId !== null}
+        title="Salvar alterações"
+        message="Confirma as alterações neste gasto fixo?"
+        confirmLabel="Salvar"
+        onConfirm={() => {
+          handleUpdate(pendingUpdateId)
+          setPendingUpdateId(null)
+        }}
+        onCancel={() => setPendingUpdateId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title="Excluir gasto fixo"
+        message="Tem certeza que deseja excluir este gasto fixo? Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          handleDelete(pendingDeleteId)
+          setPendingDeleteId(null)
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </main>
   )
 }

@@ -3,6 +3,7 @@ import { createCategory, updateCategory, deleteCategory } from '../api/categorie
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useCategories, sortByName } from '../hooks/useCategories'
 import ColorSwatchPicker from './ColorSwatchPicker'
+import ConfirmDialog from './ConfirmDialog'
 
 function CategoryManager() {
   const { categories, setCategories, isLoading, error: loadError } = useCategories()
@@ -18,6 +19,8 @@ function CategoryManager() {
   const [rowError, setRowError] = useState(null)
 
   const [deleteError, setDeleteError] = useState(null)
+  const [pendingUpdateId, setPendingUpdateId] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -133,7 +136,7 @@ function CategoryManager() {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => handleUpdate(category.id)}
+                          onClick={() => setPendingUpdateId(category.id)}
                           disabled={!editingName.trim()}
                         >
                           Salvar
@@ -184,7 +187,7 @@ function CategoryManager() {
                           <button
                             type="button"
                             className="icon-btn icon-btn--danger"
-                            onClick={() => handleDelete(category.id)}
+                            onClick={() => setPendingDeleteId(category.id)}
                             aria-label="Excluir categoria"
                             title="Excluir"
                           >
@@ -210,6 +213,31 @@ function CategoryManager() {
           })}
         </ul>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingUpdateId !== null}
+        title="Salvar alterações"
+        message="Confirma as alterações nesta categoria?"
+        confirmLabel="Salvar"
+        onConfirm={() => {
+          handleUpdate(pendingUpdateId)
+          setPendingUpdateId(null)
+        }}
+        onCancel={() => setPendingUpdateId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title="Excluir categoria"
+        message="Tem certeza que deseja excluir esta categoria? Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          handleDelete(pendingDeleteId)
+          setPendingDeleteId(null)
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   )
 }

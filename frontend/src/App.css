@@ -201,6 +201,37 @@
   filter: brightness(0.95);
 }
 
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+/* Confirm dialog */
+
+.confirm-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 340px;
+  max-width: 100%;
+}
+
+.confirm-dialog-message {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* Expense list */
 
 .expense-list {

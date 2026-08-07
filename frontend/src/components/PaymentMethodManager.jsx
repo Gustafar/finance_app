@@ -3,6 +3,7 @@ import { createPaymentMethod, updatePaymentMethod, deletePaymentMethod } from '.
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { usePaymentMethods, sortByName } from '../hooks/usePaymentMethods'
 import ColorSwatchPicker from './ColorSwatchPicker'
+import ConfirmDialog from './ConfirmDialog'
 
 function PaymentMethodManager() {
   const { paymentMethods, setPaymentMethods, isLoading, error: loadError } = usePaymentMethods()
@@ -18,6 +19,8 @@ function PaymentMethodManager() {
   const [rowError, setRowError] = useState(null)
 
   const [deleteError, setDeleteError] = useState(null)
+  const [pendingUpdateId, setPendingUpdateId] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -135,7 +138,7 @@ function PaymentMethodManager() {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => handleUpdate(paymentMethod.id)}
+                          onClick={() => setPendingUpdateId(paymentMethod.id)}
                           disabled={!editingName.trim()}
                         >
                           Salvar
@@ -186,7 +189,7 @@ function PaymentMethodManager() {
                           <button
                             type="button"
                             className="icon-btn icon-btn--danger"
-                            onClick={() => handleDelete(paymentMethod.id)}
+                            onClick={() => setPendingDeleteId(paymentMethod.id)}
                             aria-label="Excluir método de pagamento"
                             title="Excluir"
                           >
@@ -212,6 +215,31 @@ function PaymentMethodManager() {
           })}
         </ul>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingUpdateId !== null}
+        title="Salvar alterações"
+        message="Confirma as alterações neste método de pagamento?"
+        confirmLabel="Salvar"
+        onConfirm={() => {
+          handleUpdate(pendingUpdateId)
+          setPendingUpdateId(null)
+        }}
+        onCancel={() => setPendingUpdateId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title="Excluir método de pagamento"
+        message="Tem certeza que deseja excluir este método de pagamento? Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          handleDelete(pendingDeleteId)
+          setPendingDeleteId(null)
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   )
 }

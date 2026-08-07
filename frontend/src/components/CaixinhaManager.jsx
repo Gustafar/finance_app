@@ -3,6 +3,7 @@ import { createCaixinha, updateCaixinha, deleteCaixinha } from '../api/caixinhas
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useCaixinhas, sortByName } from '../hooks/useCaixinhas'
 import ColorSwatchPicker from './ColorSwatchPicker'
+import ConfirmDialog from './ConfirmDialog'
 
 function CaixinhaManager() {
   const { caixinhas, setCaixinhas, isLoading, error: loadError } = useCaixinhas()
@@ -18,6 +19,8 @@ function CaixinhaManager() {
   const [rowError, setRowError] = useState(null)
 
   const [deleteError, setDeleteError] = useState(null)
+  const [pendingUpdateId, setPendingUpdateId] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -133,7 +136,7 @@ function CaixinhaManager() {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => handleUpdate(caixinha.id)}
+                          onClick={() => setPendingUpdateId(caixinha.id)}
                           disabled={!editingName.trim()}
                         >
                           Salvar
@@ -184,7 +187,7 @@ function CaixinhaManager() {
                           <button
                             type="button"
                             className="icon-btn icon-btn--danger"
-                            onClick={() => handleDelete(caixinha.id)}
+                            onClick={() => setPendingDeleteId(caixinha.id)}
                             aria-label="Excluir caixinha"
                             title="Excluir"
                           >
@@ -210,6 +213,31 @@ function CaixinhaManager() {
           })}
         </ul>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingUpdateId !== null}
+        title="Salvar alterações"
+        message="Confirma as alterações nesta caixinha?"
+        confirmLabel="Salvar"
+        onConfirm={() => {
+          handleUpdate(pendingUpdateId)
+          setPendingUpdateId(null)
+        }}
+        onCancel={() => setPendingUpdateId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title="Excluir caixinha"
+        message="Tem certeza que deseja excluir esta caixinha? Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          handleDelete(pendingDeleteId)
+          setPendingDeleteId(null)
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   )
 }
