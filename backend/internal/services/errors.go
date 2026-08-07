@@ -37,4 +37,8 @@ var (
 	ErrCaixinhaNotFound            = errors.New("caixinha not found")
 	ErrCaixinhaAlreadyExists       = errors.New("caixinha already exists")
 	ErrCannotDeleteDefaultCaixinha = errors.New("the default caixinha cannot be deleted")
+
+	ErrEmptyRecurringExpenseName  = errors.New("recurring expense description cannot be empty")
+	ErrInvalidRecurringExpenseDay = errors.New("day of month must be between 1 and 31")
+	ErrRecurringExpenseNotFound   = errors.New("recurring expense not found")
 )

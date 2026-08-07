@@ -18,7 +18,8 @@ func NewExpenseRepository(db *sql.DB) *ExpenseRepository {
 const selectExpenseQuery = `
 	SELECT e.id, e.description, e.amount, e.category_id, c.name, c.color, e.person_id, p.name, p.color,
 	       e.payment_method_id, m.name, m.color, e.caixinha_id, x.name, x.color, e.type, e.date,
-	       e.installment_purchase_id, e.installment_number, ip.installment_count, ip.total_amount, ip.purchase_date
+	       e.installment_purchase_id, e.installment_number, ip.installment_count, ip.total_amount, ip.purchase_date,
+	       e.recurring_expense_id
 	FROM expenses e
 	JOIN categories c ON c.id = e.category_id
 	JOIN people p ON p.id = e.person_id
@@ -36,17 +37,18 @@ func scanExpense(row interface{ Scan(...any) error }) (models.Expense, error) {
 		&expense.CaixinhaID, &expense.CaixinhaName, &expense.CaixinhaColor, &expense.Type, &expense.Date,
 		&expense.InstallmentPurchaseID, &expense.InstallmentNumber, &expense.InstallmentCount,
 		&expense.PurchaseTotalAmount, &expense.PurchaseDate,
+		&expense.RecurringExpenseID,
 	)
 	return expense, err
 }
 
 func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
-	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, caixinha_id, type, date)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, caixinha_id, type, date, recurring_expense_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.DB.Exec(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
-		expense.CaixinhaID, expense.Type, expense.Date,
+		expense.CaixinhaID, expense.Type, expense.Date, expense.RecurringExpenseID,
 	)
 	if err != nil {
 		return models.Expense{}, err

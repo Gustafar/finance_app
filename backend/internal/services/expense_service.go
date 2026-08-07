@@ -11,11 +11,12 @@ import (
 )
 
 type ExpenseService struct {
-	Repo *repositories.ExpenseRepository
+	Repo          *repositories.ExpenseRepository
+	RecurringRepo *repositories.RecurringExpenseRepository
 }
 
-func NewExpenseService(repo *repositories.ExpenseRepository) *ExpenseService {
-	return &ExpenseService{Repo: repo}
+func NewExpenseService(repo *repositories.ExpenseRepository, recurringRepo *repositories.RecurringExpenseRepository) *ExpenseService {
+	return &ExpenseService{Repo: repo, RecurringRepo: recurringRepo}
 }
 
 var validTransactionTypes = map[string]bool{
@@ -148,6 +149,71 @@ func addMonthsClamped(t time.Time, months int) time.Time {
 	}
 
 	return time.Date(firstOfTarget.Year(), firstOfTarget.Month(), day, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
+}
+
+// ApplyDueRecurringExpenses walks every recurring rule and, for each calendar
+// month between its last generated month (or its creation month, if it has
+// never generated one) and the current month, inserts the corresponding
+// expense and advances the rule's last-generated marker. Running this
+// multiple times in the same month is a no-op past the first call.
+func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
+	recurrences, err := s.RecurringRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC()
+	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	created := []models.Expense{}
+
+	for _, recurring := range recurrences {
+		cursor := time.Date(recurring.CreatedAt.Year(), recurring.CreatedAt.Month(), 1, 0, 0, 0, 0, time.UTC)
+		if recurring.LastGeneratedYear != nil && recurring.LastGeneratedMonth != nil {
+			cursor = time.Date(*recurring.LastGeneratedYear, time.Month(*recurring.LastGeneratedMonth), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0)
+		}
+
+		for !cursor.After(currentMonth) {
+			recurringID := recurring.ID
+
+			expense, err := s.Repo.Create(models.Expense{
+				Description:        recurring.Description,
+				Amount:             recurring.Amount,
+				Type:               recurring.Type,
+				CategoryID:         recurring.CategoryID,
+				PersonID:           recurring.PersonID,
+				PaymentMethodID:    recurring.PaymentMethodID,
+				CaixinhaID:         recurring.CaixinhaID,
+				Date:               dateForDay(cursor.Year(), cursor.Month(), recurring.DayOfMonth),
+				RecurringExpenseID: &recurringID,
+			})
+			if err != nil {
+				return created, err
+			}
+
+			if err := s.RecurringRepo.MarkGenerated(recurring.ID, cursor.Year(), int(cursor.Month())); err != nil {
+				return created, err
+			}
+
+			created = append(created, expense)
+			cursor = cursor.AddDate(0, 1, 0)
+		}
+	}
+
+	return created, nil
+}
+
+// dateForDay builds a date in the given year/month, clamping day to the
+// month's last day (e.g. day 31 in February becomes Feb 28/29).
+func dateForDay(year int, month time.Month, day int) time.Time {
+	firstOfMonth := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
+	lastDay := firstOfMonth.AddDate(0, 1, -1).Day()
+
+	if day > lastDay {
+		day = lastDay
+	}
+
+	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
 }
 
 func referencedEntityError(err error) error {

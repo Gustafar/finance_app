@@ -26,4 +26,6 @@ type Expense struct {
 	InstallmentCount      *int       `json:"installment_count,omitempty"`
 	PurchaseTotalAmount   *float64   `json:"purchase_total_amount,omitempty"`
 	PurchaseDate          *time.Time `json:"purchase_date,omitempty"`
+
+	RecurringExpenseID *int `json:"recurring_expense_id,omitempty"`
 }

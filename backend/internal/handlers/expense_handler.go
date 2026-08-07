@@ -104,6 +104,16 @@ func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Reque
 	respondJSON(w, http.StatusCreated, created)
 }
 
+func (h *ExpenseHandler) GenerateDueRecurring(w http.ResponseWriter, r *http.Request) {
+	created, err := h.Service.ApplyDueRecurringExpenses()
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, created)
+}
+
 func (h *ExpenseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	expenses, err := h.Service.GetAll()
 	if err != nil {

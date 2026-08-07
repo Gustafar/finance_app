@@ -19,8 +19,12 @@ func main() {
 	fmt.Println("Tudo certo, aplicação iniciada!")
 
 	expenseRepo := repositories.NewExpenseRepository(db)
-	expenseService := services.NewExpenseService(expenseRepo)
+	recurringExpenseRepo := repositories.NewRecurringExpenseRepository(db)
+	expenseService := services.NewExpenseService(expenseRepo, recurringExpenseRepo)
 	expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+	recurringExpenseService := services.NewRecurringExpenseService(recurringExpenseRepo)
+	recurringExpenseHandler := handlers.NewRecurringExpenseHandler(recurringExpenseService)
 
 	categoryRepo := repositories.NewCategoryRepository(db)
 	categoryService := services.NewCategoryService(categoryRepo)
@@ -45,6 +49,13 @@ func main() {
 	mux.HandleFunc("POST /expenses/installments", expenseHandler.CreateInstallments)
 	mux.HandleFunc("PUT /expenses/{id}", expenseHandler.Update)
 	mux.HandleFunc("DELETE /expenses/{id}", expenseHandler.Delete)
+
+	mux.HandleFunc("GET /recurring-expenses", recurringExpenseHandler.GetAll)
+	mux.HandleFunc("GET /recurring-expenses/{id}", recurringExpenseHandler.GetByID)
+	mux.HandleFunc("POST /recurring-expenses", recurringExpenseHandler.Create)
+	mux.HandleFunc("POST /recurring-expenses/generate-due", expenseHandler.GenerateDueRecurring)
+	mux.HandleFunc("PUT /recurring-expenses/{id}", recurringExpenseHandler.Update)
+	mux.HandleFunc("DELETE /recurring-expenses/{id}", recurringExpenseHandler.Delete)
 
 	mux.HandleFunc("GET /categories", categoryHandler.GetAll)
 	mux.HandleFunc("GET /categories/{id}", categoryHandler.GetByID)
