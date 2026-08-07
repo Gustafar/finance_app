@@ -7,6 +7,7 @@ import CategoryManager from './components/CategoryManager'
 import PersonManager from './components/PersonManager'
 import PaymentMethodManager from './components/PaymentMethodManager'
 import CaixinhaManager from './components/CaixinhaManager'
+import BankManager from './components/BankManager'
 import DashboardPage from './pages/DashboardPage'
 import RecurringExpensesPage from './pages/RecurringExpensesPage'
 import { fetchExpenses, deleteExpense } from './api/expenses'
@@ -24,6 +25,7 @@ function App() {
   const [isPeopleOpen, setIsPeopleOpen] = useState(false)
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false)
   const [isCaixinhasOpen, setIsCaixinhasOpen] = useState(false)
+  const [isBanksOpen, setIsBanksOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
   const location = useLocation()
 
@@ -160,6 +162,23 @@ function App() {
               <path d="M14.5 5.5V11L8 14.5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
             </svg>
           </button>
+          <button
+            type="button"
+            className="icon-btn icon-btn--header"
+            onClick={() => setIsBanksOpen(true)}
+            aria-label="Bancos"
+            title="Bancos"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M1.5 5.5 8 1.5l6.5 4M2.3 5.5V13M5.4 5.5V13M8 5.5V13M10.6 5.5V13M13.7 5.5V13M1.5 13h13"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
           <Link
             to="/gastos-fixos"
             className={`icon-btn icon-btn--header${location.pathname === '/gastos-fixos' ? ' icon-btn--active' : ''}`}
@@ -227,6 +246,10 @@ function App() {
 
       <Modal isOpen={isCaixinhasOpen} onClose={() => setIsCaixinhasOpen(false)}>
         <CaixinhaManager />
+      </Modal>
+
+      <Modal isOpen={isBanksOpen} onClose={() => setIsBanksOpen(false)}>
+        <BankManager />
       </Modal>
     </div>
   )

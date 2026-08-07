@@ -4,6 +4,7 @@ import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useCaixinhas } from '../hooks/useCaixinhas'
+import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 
 function ExpenseForm({ onExpenseCreated }) {
@@ -11,6 +12,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { caixinhas, isLoading: isLoadingCaixinhas } = useCaixinhas()
+  const { banks, isLoading: isLoadingBanks } = useBanks()
 
   const [type, setType] = useState('expense')
   const [isInstallment, setIsInstallment] = useState(false)
@@ -22,6 +24,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const [personId, setPersonId] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState('')
   const [caixinhaId, setCaixinhaId] = useState('')
+  const [bankId, setBankId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
@@ -41,6 +44,13 @@ function ExpenseForm({ onExpenseCreated }) {
 
   const effectiveCaixinhaId = caixinhaId || defaultCaixinhaId
 
+  const defaultBankId = useMemo(() => {
+    const defaultBank = banks.find((b) => b.is_default)
+    return defaultBank ? String(defaultBank.id) : banks[0] ? String(banks[0].id) : ''
+  }, [banks])
+
+  const effectiveBankId = bankId || defaultBankId
+
   const handleTypeChange = (nextType) => {
     setType(nextType)
     if (nextType !== 'expense') {
@@ -59,6 +69,7 @@ function ExpenseForm({ onExpenseCreated }) {
       person_id: Number(effectivePersonId),
       payment_method_id: Number(paymentMethodId),
       caixinha_id: Number(effectiveCaixinhaId),
+      bank_id: Number(effectiveBankId),
     }
 
     const request = isInstallment
@@ -267,6 +278,22 @@ function ExpenseForm({ onExpenseCreated }) {
         </select>
       </div>
 
+      <div className="field">
+        <label htmlFor="bank">Banco</label>
+        <select
+          id="bank"
+          value={effectiveBankId}
+          onChange={(e) => setBankId(e.target.value)}
+          required
+          disabled={isLoadingBanks}
+        >
+          <option value="" disabled>Selecione…</option>
+          {banks.map((b) => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+      </div>
+
       {noCategories && (
         <p className="form-error">Cadastre uma categoria em "Categorias" antes de adicionar despesas.</p>
       )}
@@ -283,6 +310,7 @@ function ExpenseForm({ onExpenseCreated }) {
           !effectivePersonId ||
           !paymentMethodId ||
           !effectiveCaixinhaId ||
+          !effectiveBankId ||
           isAmountMissing
         }
       >

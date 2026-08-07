@@ -41,6 +41,9 @@ func (s *RecurringExpenseService) validate(recurring models.RecurringExpense) er
 	if recurring.CaixinhaID <= 0 {
 		return ErrEmptyCaixinha
 	}
+	if recurring.BankID <= 0 {
+		return ErrEmptyBank
+	}
 	return nil
 }
 
@@ -56,6 +59,9 @@ func recurringReferencedEntityError(err error) error {
 	}
 	if violatesConstraint(err, "fk_recurring_expenses_caixinha") {
 		return ErrCaixinhaNotFound
+	}
+	if violatesConstraint(err, "fk_recurring_expenses_bank") {
+		return ErrBankNotFound
 	}
 	return nil
 }

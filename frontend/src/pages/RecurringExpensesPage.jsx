@@ -6,6 +6,7 @@ import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useCaixinhas } from '../hooks/useCaixinhas'
+import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES, TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import { formatCurrency } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
@@ -19,6 +20,7 @@ const emptyForm = {
   person_id: '',
   payment_method_id: '',
   caixinha_id: '',
+  bank_id: '',
 }
 
 function toPayload(form) {
@@ -31,6 +33,7 @@ function toPayload(form) {
     person_id: Number(form.person_id),
     payment_method_id: Number(form.payment_method_id),
     caixinha_id: Number(form.caixinha_id),
+    bank_id: Number(form.bank_id),
   }
 }
 
@@ -42,7 +45,8 @@ function isFormComplete(form) {
     form.category_id &&
     form.person_id &&
     form.payment_method_id &&
-    form.caixinha_id
+    form.caixinha_id &&
+    form.bank_id
   )
 }
 
@@ -50,7 +54,7 @@ function byId(list, id) {
   return list.find((item) => item.id === id)
 }
 
-function RecurringFields({ idPrefix, form, onChange, categories, people, paymentMethods, caixinhas }) {
+function RecurringFields({ idPrefix, form, onChange, categories, people, paymentMethods, caixinhas, banks }) {
   return (
     <>
       <div className="field">
@@ -165,6 +169,20 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
           </select>
         </div>
       </div>
+
+      <div className="field">
+        <label htmlFor={`${idPrefix}-bank`}>Banco</label>
+        <select
+          id={`${idPrefix}-bank`}
+          value={form.bank_id}
+          onChange={(e) => onChange({ ...form, bank_id: e.target.value })}
+        >
+          <option value="" disabled>Selecione…</option>
+          {banks.map((b) => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+      </div>
     </>
   )
 }
@@ -175,6 +193,7 @@ function RecurringExpensesPage() {
   const { people } = usePeople()
   const { paymentMethods } = usePaymentMethods()
   const { caixinhas } = useCaixinhas()
+  const { banks } = useBanks()
 
   const [form, setForm] = useState(emptyForm)
   const [isCreating, setIsCreating] = useState(false)
@@ -230,6 +249,7 @@ function RecurringExpensesPage() {
       person_id: String(recurring.person_id),
       payment_method_id: String(recurring.payment_method_id),
       caixinha_id: String(recurring.caixinha_id),
+      bank_id: String(recurring.bank_id),
     })
     setRowError(null)
   }
@@ -296,6 +316,7 @@ function RecurringExpensesPage() {
             people={people}
             paymentMethods={paymentMethods}
             caixinhas={caixinhas}
+            banks={banks}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !isFormComplete(form)}>
             Adicionar
@@ -369,6 +390,7 @@ function RecurringExpensesPage() {
                         people={people}
                         paymentMethods={paymentMethods}
                         caixinhas={caixinhas}
+                        banks={banks}
                       />
                       <div className="entity-actions">
                         <button
@@ -401,10 +423,12 @@ function RecurringExpensesPage() {
               const person = byId(people, recurring.person_id)
               const paymentMethod = byId(paymentMethods, recurring.payment_method_id)
               const caixinha = byId(caixinhas, recurring.caixinha_id)
+              const bank = byId(banks, recurring.bank_id)
               const categoryColor = paletteColor(category?.color)
               const personColor = paletteColor(person?.color)
               const paymentMethodColor = paletteColor(paymentMethod?.color)
               const caixinhaColor = paletteColor(caixinha?.color)
+              const bankColor = paletteColor(bank?.color)
 
               return (
                 <li className="expense-row" key={recurring.id}>
@@ -420,6 +444,9 @@ function RecurringExpensesPage() {
                     </span>
                     <span className="badge" style={{ background: caixinhaColor.bg, color: caixinhaColor.text }}>
                       {caixinha?.name ?? '—'}
+                    </span>
+                    <span className="badge" style={{ background: bankColor.bg, color: bankColor.text }}>
+                      {bank?.name ?? '—'}
                     </span>
                   </div>
 

@@ -18,6 +18,9 @@ type Expense struct {
 	CaixinhaID         int       `json:"caixinha_id"`
 	CaixinhaName       string    `json:"caixinha_name"`
 	CaixinhaColor      string    `json:"caixinha_color"`
+	BankID             int       `json:"bank_id"`
+	BankName           string    `json:"bank_name"`
+	BankColor          string    `json:"bank_color"`
 	Type               string    `json:"type"`
 	Date               time.Time `json:"date"`
 

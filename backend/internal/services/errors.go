@@ -8,6 +8,7 @@ var (
 	ErrEmptyPerson        = errors.New("person cannot be empty")
 	ErrEmptyPaymentMethod = errors.New("payment method cannot be empty")
 	ErrEmptyCaixinha      = errors.New("caixinha cannot be empty")
+	ErrEmptyBank          = errors.New("bank cannot be empty")
 	ErrEmptyDescription   = errors.New("description cannot be empty")
 	ErrExpenseNotFound    = errors.New("expense not found")
 	ErrInvalidType        = errors.New("type must be income, expense or investment")
@@ -37,6 +38,12 @@ var (
 	ErrCaixinhaNotFound            = errors.New("caixinha not found")
 	ErrCaixinhaAlreadyExists       = errors.New("caixinha already exists")
 	ErrCannotDeleteDefaultCaixinha = errors.New("the default caixinha cannot be deleted")
+
+	ErrEmptyBankName           = errors.New("bank name cannot be empty")
+	ErrInvalidBankColor        = errors.New("invalid bank color")
+	ErrBankNotFound            = errors.New("bank not found")
+	ErrBankAlreadyExists       = errors.New("bank already exists")
+	ErrCannotDeleteDefaultBank = errors.New("the default bank cannot be deleted")
 
 	ErrEmptyRecurringExpenseName  = errors.New("recurring expense description cannot be empty")
 	ErrInvalidRecurringExpenseDay = errors.New("day of month must be between 1 and 31")

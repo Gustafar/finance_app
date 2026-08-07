@@ -17,7 +17,7 @@ func NewExpenseRepository(db *sql.DB) *ExpenseRepository {
 
 const selectExpenseQuery = `
 	SELECT e.id, e.description, e.amount, e.category_id, c.name, c.color, e.person_id, p.name, p.color,
-	       e.payment_method_id, m.name, m.color, e.caixinha_id, x.name, x.color, e.type, e.date,
+	       e.payment_method_id, m.name, m.color, e.caixinha_id, x.name, x.color, e.bank_id, b.name, b.color, e.type, e.date,
 	       e.installment_purchase_id, e.installment_number, ip.installment_count, ip.total_amount, ip.purchase_date,
 	       e.recurring_expense_id
 	FROM expenses e
@@ -25,6 +25,7 @@ const selectExpenseQuery = `
 	JOIN people p ON p.id = e.person_id
 	JOIN payment_methods m ON m.id = e.payment_method_id
 	JOIN caixinhas x ON x.id = e.caixinha_id
+	JOIN banks b ON b.id = e.bank_id
 	LEFT JOIN installment_purchases ip ON ip.id = e.installment_purchase_id
 `
 
@@ -34,7 +35,8 @@ func scanExpense(row interface{ Scan(...any) error }) (models.Expense, error) {
 		&expense.ID, &expense.Description, &expense.Amount, &expense.CategoryID, &expense.CategoryName, &expense.CategoryColor,
 		&expense.PersonID, &expense.PersonName, &expense.PersonColor,
 		&expense.PaymentMethodID, &expense.PaymentMethodName, &expense.PaymentMethodColor,
-		&expense.CaixinhaID, &expense.CaixinhaName, &expense.CaixinhaColor, &expense.Type, &expense.Date,
+		&expense.CaixinhaID, &expense.CaixinhaName, &expense.CaixinhaColor,
+		&expense.BankID, &expense.BankName, &expense.BankColor, &expense.Type, &expense.Date,
 		&expense.InstallmentPurchaseID, &expense.InstallmentNumber, &expense.InstallmentCount,
 		&expense.PurchaseTotalAmount, &expense.PurchaseDate,
 		&expense.RecurringExpenseID,
@@ -43,12 +45,12 @@ func scanExpense(row interface{ Scan(...any) error }) (models.Expense, error) {
 }
 
 func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
-	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, caixinha_id, type, date, recurring_expense_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, caixinha_id, bank_id, type, date, recurring_expense_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.DB.Exec(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
-		expense.CaixinhaID, expense.Type, expense.Date, expense.RecurringExpenseID,
+		expense.CaixinhaID, expense.BankID, expense.Type, expense.Date, expense.RecurringExpenseID,
 	)
 	if err != nil {
 		return models.Expense{}, err
@@ -126,12 +128,12 @@ func (r *ExpenseRepository) getByInstallmentPurchaseID(purchaseID int) ([]models
 }
 
 func (r *ExpenseRepository) Update(id int, expense models.Expense) (models.Expense, error) {
-	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, person_id = ?, payment_method_id = ?, caixinha_id = ?, type = ?, date = ?
+	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, person_id = ?, payment_method_id = ?, caixinha_id = ?, bank_id = ?, type = ?, date = ?
 		WHERE id = ?`
 
 	_, err := r.DB.Exec(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
-		expense.CaixinhaID, expense.Type, expense.Date, id,
+		expense.CaixinhaID, expense.BankID, expense.Type, expense.Date, id,
 	)
 	if err != nil {
 		return models.Expense{}, err
@@ -154,10 +156,10 @@ func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.Installmen
 	defer tx.Rollback()
 
 	purchaseResult, err := tx.Exec(
-		`INSERT INTO installment_purchases (description, total_amount, purchase_date, installment_count, category_id, person_id, payment_method_id, caixinha_id)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO installment_purchases (description, total_amount, purchase_date, installment_count, category_id, person_id, payment_method_id, caixinha_id, bank_id)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		purchase.Description, purchase.TotalAmount, purchase.PurchaseDate, purchase.InstallmentCount,
-		purchase.CategoryID, purchase.PersonID, purchase.PaymentMethodID, purchase.CaixinhaID,
+		purchase.CategoryID, purchase.PersonID, purchase.PaymentMethodID, purchase.CaixinhaID, purchase.BankID,
 	)
 	if err != nil {
 		return nil, err
@@ -169,13 +171,13 @@ func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.Installmen
 	}
 
 	insertExpense := `INSERT INTO expenses
-		(description, amount, category_id, person_id, payment_method_id, caixinha_id, type, date, installment_purchase_id, installment_number)
-		VALUES (?, ?, ?, ?, ?, ?, 'expense', ?, ?, ?)`
+		(description, amount, category_id, person_id, payment_method_id, caixinha_id, bank_id, type, date, installment_purchase_id, installment_number)
+		VALUES (?, ?, ?, ?, ?, ?, ?, 'expense', ?, ?, ?)`
 
 	for _, slice := range slices {
 		if _, err := tx.Exec(
 			insertExpense, purchase.Description, slice.Amount, purchase.CategoryID, purchase.PersonID,
-			purchase.PaymentMethodID, purchase.CaixinhaID, slice.Date, purchaseID, slice.Number,
+			purchase.PaymentMethodID, purchase.CaixinhaID, purchase.BankID, slice.Date, purchaseID, slice.Number,
 		); err != nil {
 			return nil, err
 		}

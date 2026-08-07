@@ -42,6 +42,10 @@ func main() {
 	caixinhaService := services.NewCaixinhaService(caixinhaRepo)
 	caixinhaHandler := handlers.NewCaixinhaHandler(caixinhaService)
 
+	bankRepo := repositories.NewBankRepository(db)
+	bankService := services.NewBankService(bankRepo)
+	bankHandler := handlers.NewBankHandler(bankService)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /expenses", expenseHandler.GetAll)
 	mux.HandleFunc("GET /expenses/{id}", expenseHandler.GetByID)
@@ -80,6 +84,12 @@ func main() {
 	mux.HandleFunc("POST /caixinhas", caixinhaHandler.Create)
 	mux.HandleFunc("PUT /caixinhas/{id}", caixinhaHandler.Update)
 	mux.HandleFunc("DELETE /caixinhas/{id}", caixinhaHandler.Delete)
+
+	mux.HandleFunc("GET /banks", bankHandler.GetAll)
+	mux.HandleFunc("GET /banks/{id}", bankHandler.GetByID)
+	mux.HandleFunc("POST /banks", bankHandler.Create)
+	mux.HandleFunc("PUT /banks/{id}", bankHandler.Update)
+	mux.HandleFunc("DELETE /banks/{id}", bankHandler.Delete)
 
 	handler := middleware.Logging(middleware.CORS(mux))
 

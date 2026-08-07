@@ -12,4 +12,5 @@ type InstallmentPurchase struct {
 	PersonID         int       `json:"person_id"`
 	PaymentMethodID  int       `json:"payment_method_id"`
 	CaixinhaID       int       `json:"caixinha_id"`
+	BankID           int       `json:"bank_id"`
 }

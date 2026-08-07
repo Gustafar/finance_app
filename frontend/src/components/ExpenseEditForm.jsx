@@ -4,6 +4,7 @@ import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useCaixinhas } from '../hooks/useCaixinhas'
+import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 
 function ExpenseEditForm({ expense, onExpenseUpdated }) {
@@ -11,6 +12,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { caixinhas, isLoading: isLoadingCaixinhas } = useCaixinhas()
+  const { banks, isLoading: isLoadingBanks } = useBanks()
 
   const [type, setType] = useState(expense.type)
   const [description, setDescription] = useState(expense.description)
@@ -19,6 +21,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [personId, setPersonId] = useState(String(expense.person_id))
   const [paymentMethodId, setPaymentMethodId] = useState(String(expense.payment_method_id))
   const [caixinhaId, setCaixinhaId] = useState(String(expense.caixinha_id))
+  const [bankId, setBankId] = useState(String(expense.bank_id))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
@@ -37,6 +40,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       person_id: Number(personId),
       payment_method_id: Number(paymentMethodId),
       caixinha_id: Number(caixinhaId),
+      bank_id: Number(bankId),
       date: expense.date,
     }
 
@@ -161,12 +165,28 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
         </select>
       </div>
 
+      <div className="field">
+        <label htmlFor="edit-bank">Banco</label>
+        <select
+          id="edit-bank"
+          value={bankId}
+          onChange={(e) => setBankId(e.target.value)}
+          required
+          disabled={isLoadingBanks}
+        >
+          <option value="" disabled>Selecione…</option>
+          {banks.map((b) => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+      </div>
+
       {error && <p className="form-error">{error}</p>}
 
       <button
         type="submit"
         className="btn btn-primary"
-        disabled={isSubmitting || noCategories || !categoryId || !personId || !paymentMethodId || !caixinhaId}
+        disabled={isSubmitting || noCategories || !categoryId || !personId || !paymentMethodId || !caixinhaId || !bankId}
       >
         {isSubmitting ? 'Salvando…' : 'Salvar alterações'}
       </button>

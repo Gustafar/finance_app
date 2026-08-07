@@ -36,11 +36,13 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 			errors.Is(err, services.ErrEmptyPerson) ||
 			errors.Is(err, services.ErrEmptyPaymentMethod) ||
 			errors.Is(err, services.ErrEmptyCaixinha) ||
+			errors.Is(err, services.ErrEmptyBank) ||
 			errors.Is(err, services.ErrEmptyDescription) ||
 			errors.Is(err, services.ErrCategoryNotFound) ||
 			errors.Is(err, services.ErrPersonNotFound) ||
 			errors.Is(err, services.ErrPaymentMethodNotFound) ||
-			errors.Is(err, services.ErrCaixinhaNotFound) {
+			errors.Is(err, services.ErrCaixinhaNotFound) ||
+			errors.Is(err, services.ErrBankNotFound) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -60,6 +62,7 @@ type createInstallmentsRequest struct {
 	PersonID         int       `json:"person_id"`
 	PaymentMethodID  int       `json:"payment_method_id"`
 	CaixinhaID       int       `json:"caixinha_id"`
+	BankID           int       `json:"bank_id"`
 	PurchaseDate     time.Time `json:"purchase_date"`
 }
 
@@ -80,6 +83,7 @@ func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Reque
 		PersonID:         req.PersonID,
 		PaymentMethodID:  req.PaymentMethodID,
 		CaixinhaID:       req.CaixinhaID,
+		BankID:           req.BankID,
 	})
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidAmount) ||
@@ -88,11 +92,13 @@ func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Reque
 			errors.Is(err, services.ErrEmptyPerson) ||
 			errors.Is(err, services.ErrEmptyPaymentMethod) ||
 			errors.Is(err, services.ErrEmptyCaixinha) ||
+			errors.Is(err, services.ErrEmptyBank) ||
 			errors.Is(err, services.ErrEmptyDescription) ||
 			errors.Is(err, services.ErrCategoryNotFound) ||
 			errors.Is(err, services.ErrPersonNotFound) ||
 			errors.Is(err, services.ErrPaymentMethodNotFound) ||
-			errors.Is(err, services.ErrCaixinhaNotFound) {
+			errors.Is(err, services.ErrCaixinhaNotFound) ||
+			errors.Is(err, services.ErrBankNotFound) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -175,11 +181,13 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			errors.Is(err, services.ErrEmptyPerson) ||
 			errors.Is(err, services.ErrEmptyPaymentMethod) ||
 			errors.Is(err, services.ErrEmptyCaixinha) ||
+			errors.Is(err, services.ErrEmptyBank) ||
 			errors.Is(err, services.ErrEmptyDescription) ||
 			errors.Is(err, services.ErrCategoryNotFound) ||
 			errors.Is(err, services.ErrPersonNotFound) ||
 			errors.Is(err, services.ErrPaymentMethodNotFound) ||
-			errors.Is(err, services.ErrCaixinhaNotFound) {
+			errors.Is(err, services.ErrCaixinhaNotFound) ||
+			errors.Is(err, services.ErrBankNotFound) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}

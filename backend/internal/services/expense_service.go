@@ -49,6 +49,9 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.CaixinhaID <= 0 {
 		return ErrEmptyCaixinha
 	}
+	if expense.BankID <= 0 {
+		return ErrEmptyBank
+	}
 	if expense.Description == "" {
 		return ErrEmptyDescription
 	}
@@ -64,6 +67,7 @@ type InstallmentPurchaseInput struct {
 	PersonID         int
 	PaymentMethodID  int
 	CaixinhaID       int
+	BankID           int
 }
 
 func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInput) ([]models.Expense, error) {
@@ -85,6 +89,9 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 	if input.CaixinhaID <= 0 {
 		return nil, ErrEmptyCaixinha
 	}
+	if input.BankID <= 0 {
+		return nil, ErrEmptyBank
+	}
 	if input.Description == "" {
 		return nil, ErrEmptyDescription
 	}
@@ -98,6 +105,7 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 		PersonID:         input.PersonID,
 		PaymentMethodID:  input.PaymentMethodID,
 		CaixinhaID:       input.CaixinhaID,
+		BankID:           input.BankID,
 	}
 
 	created, err := s.Repo.CreateInstallmentPurchase(purchase, installmentSlices(input.TotalAmount, input.InstallmentCount, input.PurchaseDate))
@@ -184,6 +192,7 @@ func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
 				PersonID:           recurring.PersonID,
 				PaymentMethodID:    recurring.PaymentMethodID,
 				CaixinhaID:         recurring.CaixinhaID,
+				BankID:             recurring.BankID,
 				Date:               dateForDay(cursor.Year(), cursor.Month(), recurring.DayOfMonth),
 				RecurringExpenseID: &recurringID,
 			})
@@ -228,6 +237,9 @@ func referencedEntityError(err error) error {
 	}
 	if violatesConstraint(err, "fk_expenses_caixinha") {
 		return ErrCaixinhaNotFound
+	}
+	if violatesConstraint(err, "fk_expenses_bank") {
+		return ErrBankNotFound
 	}
 	return nil
 }

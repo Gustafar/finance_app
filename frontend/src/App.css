@@ -211,7 +211,7 @@
 
 .expense-row {
   display: grid;
-  grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   padding: 14px 24px;

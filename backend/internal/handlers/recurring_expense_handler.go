@@ -27,10 +27,12 @@ func badRequestOnValidationError(w http.ResponseWriter, err error) bool {
 		errors.Is(err, services.ErrEmptyPerson) ||
 		errors.Is(err, services.ErrEmptyPaymentMethod) ||
 		errors.Is(err, services.ErrEmptyCaixinha) ||
+		errors.Is(err, services.ErrEmptyBank) ||
 		errors.Is(err, services.ErrCategoryNotFound) ||
 		errors.Is(err, services.ErrPersonNotFound) ||
 		errors.Is(err, services.ErrPaymentMethodNotFound) ||
-		errors.Is(err, services.ErrCaixinhaNotFound) {
+		errors.Is(err, services.ErrCaixinhaNotFound) ||
+		errors.Is(err, services.ErrBankNotFound) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return true
 	}

@@ -15,7 +15,7 @@ func NewRecurringExpenseRepository(db *sql.DB) *RecurringExpenseRepository {
 }
 
 const selectRecurringExpenseQuery = `
-	SELECT id, description, amount, type, day_of_month, category_id, person_id, payment_method_id, caixinha_id,
+	SELECT id, description, amount, type, day_of_month, category_id, person_id, payment_method_id, caixinha_id, bank_id,
 	       last_generated_year, last_generated_month, created_at
 	FROM recurring_expenses
 `
@@ -24,19 +24,19 @@ func scanRecurringExpense(row interface{ Scan(...any) error }) (models.Recurring
 	var recurring models.RecurringExpense
 	err := row.Scan(
 		&recurring.ID, &recurring.Description, &recurring.Amount, &recurring.Type, &recurring.DayOfMonth,
-		&recurring.CategoryID, &recurring.PersonID, &recurring.PaymentMethodID, &recurring.CaixinhaID,
+		&recurring.CategoryID, &recurring.PersonID, &recurring.PaymentMethodID, &recurring.CaixinhaID, &recurring.BankID,
 		&recurring.LastGeneratedYear, &recurring.LastGeneratedMonth, &recurring.CreatedAt,
 	)
 	return recurring, err
 }
 
 func (r *RecurringExpenseRepository) Create(recurring models.RecurringExpense) (models.RecurringExpense, error) {
-	query := `INSERT INTO recurring_expenses (description, amount, type, day_of_month, category_id, person_id, payment_method_id, caixinha_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO recurring_expenses (description, amount, type, day_of_month, category_id, person_id, payment_method_id, caixinha_id, bank_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.DB.Exec(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
-		recurring.CategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.CaixinhaID,
+		recurring.CategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.CaixinhaID, recurring.BankID,
 	)
 	if err != nil {
 		return models.RecurringExpense{}, err
@@ -90,12 +90,12 @@ func (r *RecurringExpenseRepository) GetAll() ([]models.RecurringExpense, error)
 
 func (r *RecurringExpenseRepository) Update(id int, recurring models.RecurringExpense) (models.RecurringExpense, error) {
 	query := `UPDATE recurring_expenses
-		SET description = ?, amount = ?, type = ?, day_of_month = ?, category_id = ?, person_id = ?, payment_method_id = ?, caixinha_id = ?
+		SET description = ?, amount = ?, type = ?, day_of_month = ?, category_id = ?, person_id = ?, payment_method_id = ?, caixinha_id = ?, bank_id = ?
 		WHERE id = ?`
 
 	_, err := r.DB.Exec(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
-		recurring.CategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.CaixinhaID, id,
+		recurring.CategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.CaixinhaID, recurring.BankID, id,
 	)
 	if err != nil {
 		return models.RecurringExpense{}, err
