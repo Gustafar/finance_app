@@ -24,6 +24,10 @@ type Expense struct {
 	Type               string    `json:"type"`
 	Date               time.Time `json:"date"`
 
+	InvestmentBoxID    *int    `json:"investment_box_id,omitempty"`
+	InvestmentBoxName  *string `json:"investment_box_name,omitempty"`
+	InvestmentBoxColor *string `json:"investment_box_color,omitempty"`
+
 	InstallmentPurchaseID *int       `json:"installment_purchase_id,omitempty"`
 	InstallmentNumber     *int       `json:"installment_number,omitempty"`
 	InstallmentCount      *int       `json:"installment_count,omitempty"`

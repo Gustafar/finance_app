@@ -55,7 +55,18 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.Description == "" {
 		return ErrEmptyDescription
 	}
+	if expense.Type == "investment" && (expense.InvestmentBoxID == nil || *expense.InvestmentBoxID <= 0) {
+		return ErrEmptyInvestmentBox
+	}
 	return nil
+}
+
+// normalize clears the investment box on any non-investment transaction, since it only applies to that type.
+func normalizeExpense(expense models.Expense) models.Expense {
+	if expense.Type != "investment" {
+		expense.InvestmentBoxID = nil
+	}
+	return expense
 }
 
 type InstallmentPurchaseInput struct {
@@ -232,10 +243,14 @@ func referencedEntityError(err error) error {
 	if violatesConstraint(err, "fk_expenses_bank") {
 		return ErrBankNotFound
 	}
+	if violatesConstraint(err, "fk_expenses_investment_box") {
+		return ErrInvestmentBoxNotFound
+	}
 	return nil
 }
 
 func (s *ExpenseService) Create(expense models.Expense) (models.Expense, error) {
+	expense = normalizeExpense(expense)
 	if err := s.validate(expense); err != nil {
 		return models.Expense{}, err
 	}
@@ -268,6 +283,7 @@ func (s *ExpenseService) GetByID(id int) (models.Expense, error) {
 }
 
 func (s *ExpenseService) Update(id int, expense models.Expense) (models.Expense, error) {
+	expense = normalizeExpense(expense)
 	if err := s.validate(expense); err != nil {
 		return models.Expense{}, err
 	}

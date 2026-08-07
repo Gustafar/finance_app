@@ -19,7 +19,7 @@ const selectExpenseQuery = `
 	SELECT e.id, e.description, e.amount, e.category_id, c.name, c.color, e.person_id, p.name, p.color,
 	       e.payment_method_id, m.name, m.color, e.bucket_id, x.name, x.color, e.bank_id, b.name, b.color, e.type, e.date,
 	       e.installment_purchase_id, e.installment_number, ip.installment_count, ip.total_amount, ip.purchase_date,
-	       e.recurring_expense_id
+	       e.recurring_expense_id, e.investment_box_id, ib.name, ib.color
 	FROM expenses e
 	JOIN categories c ON c.id = e.category_id
 	JOIN people p ON p.id = e.person_id
@@ -27,6 +27,7 @@ const selectExpenseQuery = `
 	JOIN buckets x ON x.id = e.bucket_id
 	JOIN banks b ON b.id = e.bank_id
 	LEFT JOIN installment_purchases ip ON ip.id = e.installment_purchase_id
+	LEFT JOIN investment_boxes ib ON ib.id = e.investment_box_id
 `
 
 func scanExpense(row interface{ Scan(...any) error }) (models.Expense, error) {
@@ -39,18 +40,18 @@ func scanExpense(row interface{ Scan(...any) error }) (models.Expense, error) {
 		&expense.BankID, &expense.BankName, &expense.BankColor, &expense.Type, &expense.Date,
 		&expense.InstallmentPurchaseID, &expense.InstallmentNumber, &expense.InstallmentCount,
 		&expense.PurchaseTotalAmount, &expense.PurchaseDate,
-		&expense.RecurringExpenseID,
+		&expense.RecurringExpenseID, &expense.InvestmentBoxID, &expense.InvestmentBoxName, &expense.InvestmentBoxColor,
 	)
 	return expense, err
 }
 
 func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
-	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, bucket_id, bank_id, type, date, recurring_expense_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO expenses (description, amount, category_id, person_id, payment_method_id, bucket_id, bank_id, type, date, recurring_expense_id, investment_box_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.DB.Exec(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
-		expense.BucketID, expense.BankID, expense.Type, expense.Date, expense.RecurringExpenseID,
+		expense.BucketID, expense.BankID, expense.Type, expense.Date, expense.RecurringExpenseID, expense.InvestmentBoxID,
 	)
 	if err != nil {
 		return models.Expense{}, err
@@ -128,12 +129,12 @@ func (r *ExpenseRepository) getByInstallmentPurchaseID(purchaseID int) ([]models
 }
 
 func (r *ExpenseRepository) Update(id int, expense models.Expense) (models.Expense, error) {
-	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, person_id = ?, payment_method_id = ?, bucket_id = ?, bank_id = ?, type = ?, date = ?
+	query := `UPDATE expenses SET description = ?, amount = ?, category_id = ?, person_id = ?, payment_method_id = ?, bucket_id = ?, bank_id = ?, type = ?, date = ?, investment_box_id = ?
 		WHERE id = ?`
 
 	_, err := r.DB.Exec(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.PersonID, expense.PaymentMethodID,
-		expense.BucketID, expense.BankID, expense.Type, expense.Date, id,
+		expense.BucketID, expense.BankID, expense.Type, expense.Date, expense.InvestmentBoxID, id,
 	)
 	if err != nil {
 		return models.Expense{}, err

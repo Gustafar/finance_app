@@ -9,6 +9,7 @@ var (
 	ErrEmptyPaymentMethod = errors.New("payment method cannot be empty")
 	ErrEmptyBucket        = errors.New("bucket cannot be empty")
 	ErrEmptyBank          = errors.New("bank cannot be empty")
+	ErrEmptyInvestmentBox = errors.New("investment box cannot be empty for investment transactions")
 	ErrEmptyDescription   = errors.New("description cannot be empty")
 	ErrExpenseNotFound    = errors.New("expense not found")
 	ErrInvalidType        = errors.New("type must be income, expense or investment")
@@ -44,6 +45,12 @@ var (
 	ErrBankNotFound            = errors.New("bank not found")
 	ErrBankAlreadyExists       = errors.New("bank already exists")
 	ErrCannotDeleteDefaultBank = errors.New("the default bank cannot be deleted")
+
+	ErrEmptyInvestmentBoxName           = errors.New("investment box name cannot be empty")
+	ErrInvalidInvestmentBoxColor        = errors.New("invalid investment box color")
+	ErrInvestmentBoxNotFound            = errors.New("investment box not found")
+	ErrInvestmentBoxAlreadyExists       = errors.New("investment box already exists")
+	ErrCannotDeleteDefaultInvestmentBox = errors.New("the default investment box cannot be deleted")
 
 	ErrEmptyRecurringExpenseName  = errors.New("recurring expense description cannot be empty")
 	ErrInvalidRecurringExpenseDay = errors.New("day of month must be between 1 and 31")

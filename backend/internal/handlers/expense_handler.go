@@ -37,12 +37,14 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 			errors.Is(err, services.ErrEmptyPaymentMethod) ||
 			errors.Is(err, services.ErrEmptyBucket) ||
 			errors.Is(err, services.ErrEmptyBank) ||
+			errors.Is(err, services.ErrEmptyInvestmentBox) ||
 			errors.Is(err, services.ErrEmptyDescription) ||
 			errors.Is(err, services.ErrCategoryNotFound) ||
 			errors.Is(err, services.ErrPersonNotFound) ||
 			errors.Is(err, services.ErrPaymentMethodNotFound) ||
 			errors.Is(err, services.ErrBucketNotFound) ||
-			errors.Is(err, services.ErrBankNotFound) {
+			errors.Is(err, services.ErrBankNotFound) ||
+			errors.Is(err, services.ErrInvestmentBoxNotFound) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -182,12 +184,14 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			errors.Is(err, services.ErrEmptyPaymentMethod) ||
 			errors.Is(err, services.ErrEmptyBucket) ||
 			errors.Is(err, services.ErrEmptyBank) ||
+			errors.Is(err, services.ErrEmptyInvestmentBox) ||
 			errors.Is(err, services.ErrEmptyDescription) ||
 			errors.Is(err, services.ErrCategoryNotFound) ||
 			errors.Is(err, services.ErrPersonNotFound) ||
 			errors.Is(err, services.ErrPaymentMethodNotFound) ||
 			errors.Is(err, services.ErrBucketNotFound) ||
-			errors.Is(err, services.ErrBankNotFound) {
+			errors.Is(err, services.ErrBankNotFound) ||
+			errors.Is(err, services.ErrInvestmentBoxNotFound) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}

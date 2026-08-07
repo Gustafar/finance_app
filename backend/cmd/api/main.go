@@ -46,6 +46,10 @@ func main() {
 	bankService := services.NewBankService(bankRepo)
 	bankHandler := handlers.NewBankHandler(bankService)
 
+	investmentBoxRepo := repositories.NewInvestmentBoxRepository(db)
+	investmentBoxService := services.NewInvestmentBoxService(investmentBoxRepo)
+	investmentBoxHandler := handlers.NewInvestmentBoxHandler(investmentBoxService)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /expenses", expenseHandler.GetAll)
 	mux.HandleFunc("GET /expenses/{id}", expenseHandler.GetByID)
@@ -90,6 +94,12 @@ func main() {
 	mux.HandleFunc("POST /banks", bankHandler.Create)
 	mux.HandleFunc("PUT /banks/{id}", bankHandler.Update)
 	mux.HandleFunc("DELETE /banks/{id}", bankHandler.Delete)
+
+	mux.HandleFunc("GET /investment-boxes", investmentBoxHandler.GetAll)
+	mux.HandleFunc("GET /investment-boxes/{id}", investmentBoxHandler.GetByID)
+	mux.HandleFunc("POST /investment-boxes", investmentBoxHandler.Create)
+	mux.HandleFunc("PUT /investment-boxes/{id}", investmentBoxHandler.Update)
+	mux.HandleFunc("DELETE /investment-boxes/{id}", investmentBoxHandler.Delete)
 
 	handler := middleware.Logging(middleware.CORS(mux))
 
