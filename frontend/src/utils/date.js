@@ -64,6 +64,16 @@ export function formatDateInputValue(value) {
   return `${day}/${month}/${year}`
 }
 
+export function clampDayOfMonth(value) {
+  const digitsOnly = value.replace(/[^\d]/g, '')
+  if (digitsOnly === '') return ''
+
+  const num = Number(digitsOnly)
+  if (num > 31) return '31'
+  if (num < 1) return '1'
+  return String(num)
+}
+
 export function lastMonths(count, endMonth = currentYearMonth()) {
   const months = []
   for (let i = count - 1; i >= 0; i -= 1) {

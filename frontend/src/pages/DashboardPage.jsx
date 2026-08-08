@@ -2,6 +2,7 @@ import ExpenseList from '../components/ExpenseList'
 import SummaryCard from '../components/SummaryCard'
 import FilterButton from '../components/FilterButton'
 import MonthPicker from '../components/MonthPicker'
+import RefreshButton from '../components/RefreshButton'
 import { formatCurrency } from '../utils/format'
 
 function DashboardPage({
@@ -19,6 +20,8 @@ function DashboardPage({
   onAddClick,
   onEditExpense,
   onDeleteExpense,
+  onRefresh,
+  isRefreshing,
 }) {
   return (
     <main className="container">
@@ -55,7 +58,10 @@ function DashboardPage({
           </button>
         </div>
 
-        <FilterButton onClick={onOpenFilters} active={hasActiveFilters} />
+        <div className="dashboard-toolbar-actions">
+          <RefreshButton onClick={onRefresh} isRefreshing={isRefreshing} />
+          <FilterButton onClick={onOpenFilters} active={hasActiveFilters} />
+        </div>
       </div>
 
       <section className="summary-grid">

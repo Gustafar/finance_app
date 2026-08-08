@@ -9,6 +9,7 @@ import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES, TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import { formatCurrency } from '../utils/format'
+import { clampDayOfMonth } from '../utils/date'
 import { paletteColor } from '../utils/categoryColor'
 import ConfirmDialog from '../components/ConfirmDialog'
 import LoadingBar from '../components/LoadingBar'
@@ -59,7 +60,9 @@ function byId(list, id) {
   return list.find((item) => item.id === id)
 }
 
-function RecurringFields({ idPrefix, form, onChange, categories, people, paymentMethods, buckets, banks }) {
+function RecurringFields({ idPrefix, form, onChange, categories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
+  const errCls = (invalid) => `field${attemptedSubmit && invalid ? ' field--error' : ''}`
+
   return (
     <>
       <div className="field">
@@ -80,7 +83,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
         </div>
       </div>
 
-      <div className="field">
+      <div className={errCls(!form.description.trim())}>
         <label htmlFor={`${idPrefix}-description`}>Descrição</label>
         <input
           id={`${idPrefix}-description`}
@@ -92,7 +95,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
       </div>
 
       <div className="field-row">
-        <div className="field">
+        <div className={errCls(!form.amount)}>
           <label htmlFor={`${idPrefix}-amount`}>Valor</label>
           <input
             id={`${idPrefix}-amount`}
@@ -104,7 +107,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
             onChange={(e) => onChange({ ...form, amount: e.target.value })}
           />
         </div>
-        <div className="field">
+        <div className={errCls(!form.day_of_month)}>
           <label htmlFor={`${idPrefix}-day`}>Dia do mês</label>
           <input
             id={`${idPrefix}-day`}
@@ -112,13 +115,13 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
             min="1"
             max="31"
             value={form.day_of_month}
-            onChange={(e) => onChange({ ...form, day_of_month: e.target.value })}
+            onChange={(e) => onChange({ ...form, day_of_month: clampDayOfMonth(e.target.value) })}
           />
         </div>
       </div>
 
       <div className="field-row">
-        <div className="field">
+        <div className={errCls(!form.category_id)}>
           <label htmlFor={`${idPrefix}-category`}>Categoria</label>
           <select
             id={`${idPrefix}-category`}
@@ -131,7 +134,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
             ))}
           </select>
         </div>
-        <div className="field">
+        <div className={errCls(!form.person_id)}>
           <label htmlFor={`${idPrefix}-person`}>Responsável</label>
           <select
             id={`${idPrefix}-person`}
@@ -147,7 +150,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
       </div>
 
       <div className="field-row">
-        <div className="field">
+        <div className={errCls(!form.payment_method_id)}>
           <label htmlFor={`${idPrefix}-payment-method`}>Método de pagamento</label>
           <select
             id={`${idPrefix}-payment-method`}
@@ -160,7 +163,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
             ))}
           </select>
         </div>
-        <div className="field">
+        <div className={errCls(!form.bucket_id)}>
           <label htmlFor={`${idPrefix}-bucket`}>Envelope</label>
           <select
             id={`${idPrefix}-bucket`}
@@ -175,7 +178,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
         </div>
       </div>
 
-      <div className="field">
+      <div className={errCls(!form.bank_id)}>
         <label htmlFor={`${idPrefix}-bank`}>Banco</label>
         <select
           id={`${idPrefix}-bank`}
@@ -205,10 +208,12 @@ function RecurringExpensesPage() {
   const [createError, setCreateError] = useState(null)
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
   const [createMode, setCreateMode] = useState('single')
+  const [createAttemptedSubmit, setCreateAttemptedSubmit] = useState(false)
 
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState(emptyForm)
   const [rowError, setRowError] = useState(null)
+  const [editAttemptedSubmit, setEditAttemptedSubmit] = useState(false)
 
   const [deleteError, setDeleteError] = useState(null)
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
@@ -239,6 +244,7 @@ function RecurringExpensesPage() {
 
   const handleCreate = (e) => {
     e.preventDefault()
+    setCreateAttemptedSubmit(true)
     if (!isFormComplete(form)) return
 
     setCreateError(null)
@@ -248,6 +254,7 @@ function RecurringExpensesPage() {
       .then((created) => {
         setRecurrences((prev) => sortByDay([...prev, created]))
         setForm(emptyForm)
+        setCreateAttemptedSubmit(false)
       })
       .catch((error) => {
         console.error('Erro ao criar gasto fixo:', error)
@@ -270,11 +277,13 @@ function RecurringExpensesPage() {
       bank_id: String(recurring.bank_id),
     })
     setRowError(null)
+    setEditAttemptedSubmit(false)
   }
 
   const cancelEditing = () => {
     setEditingId(null)
     setRowError(null)
+    setEditAttemptedSubmit(false)
   }
 
   const handleUpdate = (id) => {
@@ -378,8 +387,12 @@ function RecurringExpensesPage() {
                     paymentMethods={paymentMethods}
                     buckets={buckets}
                     banks={banks}
+                    attemptedSubmit={createAttemptedSubmit}
                   />
-                  <button type="submit" className="btn btn-primary" disabled={isCreating || !isFormComplete(form)}>
+                  {createAttemptedSubmit && !isFormComplete(form) && (
+                    <p className="form-error">Preencha os campos destacados antes de continuar.</p>
+                  )}
+                  <button type="submit" className="btn btn-primary" disabled={isCreating}>
                     Adicionar
                   </button>
                   {createError && <p className="form-error">{createError}</p>}
@@ -435,13 +448,20 @@ function RecurringExpensesPage() {
                         paymentMethods={paymentMethods}
                         buckets={buckets}
                         banks={banks}
+                        attemptedSubmit={editAttemptedSubmit}
                       />
+                      {editAttemptedSubmit && !isFormComplete(editForm) && (
+                        <p className="form-error">Preencha os campos destacados antes de continuar.</p>
+                      )}
                       <div className="entity-actions">
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => setPendingUpdateId(recurring.id)}
-                          disabled={!isFormComplete(editForm)}
+                          onClick={() => {
+                            setEditAttemptedSubmit(true)
+                            if (!isFormComplete(editForm)) return
+                            setPendingUpdateId(recurring.id)
+                          }}
                         >
                           Salvar
                         </button>

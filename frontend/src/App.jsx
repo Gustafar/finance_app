@@ -3,6 +3,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import AddExpenseModal from './components/AddExpenseModal'
 import ExpenseEditForm from './components/ExpenseEditForm'
 import FilterDialog from './components/FilterDialog'
+import ThemeToggle from './components/ThemeToggle'
 import Modal from './components/Modal'
 import Drawer from './components/Drawer'
 import LoadingBar from './components/LoadingBar'
@@ -23,6 +24,7 @@ import { fetchBuckets } from './api/buckets'
 import { fetchBanks } from './api/banks'
 import { currentYearMonth, sameYearMonth, shiftMonth } from './utils/date'
 import { EMPTY_FILTERS, hasActiveFilters, matchesFilters } from './utils/filters'
+import { useTheme } from './hooks/useTheme'
 import './App.css'
 
 const ChartsPage = lazy(() => import('./pages/ChartsPage'))
@@ -30,6 +32,7 @@ const ChartsPage = lazy(() => import('./pages/ChartsPage'))
 function App() {
   const [expenses, setExpenses] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const [editingExpense, setEditingExpense] = useState(null)
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -48,14 +51,23 @@ function App() {
   const [buckets, setBuckets] = useState([])
   const [banks, setBanks] = useState([])
   const location = useLocation()
+  const { theme, cycleTheme } = useTheme()
 
   const loadExpenses = () => {
     return fetchExpenses()
-      .then(setExpenses)
+      .then((data) => {
+        setExpenses(data)
+        setLoadError(null)
+      })
       .catch((error) => {
         console.error('Erro ao buscar despesas:', error)
         setLoadError('Não foi possível carregar as despesas.')
       })
+  }
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    loadExpenses().finally(() => setIsRefreshing(false))
   }
 
   useEffect(() => {
@@ -292,6 +304,7 @@ function App() {
                 <path d="M10.5 4.5H14V8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </Link>
+            <ThemeToggle theme={theme} onToggle={cycleTheme} />
           </div>
 
           <button
@@ -447,6 +460,8 @@ function App() {
           </svg>
           Investimentos
         </Link>
+
+        <ThemeToggle theme={theme} onToggle={cycleTheme} variant="drawer" />
       </Drawer>
 
       <Routes>
@@ -468,6 +483,8 @@ function App() {
               onAddClick={() => setIsAddOpen(true)}
               onEditExpense={setEditingExpense}
               onDeleteExpense={handleDelete}
+              onRefresh={handleRefresh}
+              isRefreshing={isRefreshing}
             />
           }
         />

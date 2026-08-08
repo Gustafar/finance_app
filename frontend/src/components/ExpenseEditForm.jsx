@@ -31,6 +31,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
   const noCategories = !isLoadingCategories && categories.length === 0
 
@@ -41,8 +42,22 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
   const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
 
+  const isFormInvalid =
+    !description.trim() ||
+    !amount ||
+    !categoryId ||
+    !personId ||
+    !paymentMethodId ||
+    !bucketId ||
+    !bankId ||
+    (type === 'investment' && !effectiveInvestmentBoxId)
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    setAttemptedSubmit(true)
+
+    if (noCategories || isFormInvalid) return
+
     setShowConfirm(true)
   }
 
@@ -96,7 +111,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </div>
         </div>
 
-        <div className="field">
+        <div className={`field${attemptedSubmit && !description.trim() ? ' field--error' : ''}`}>
           <label htmlFor="edit-description">Descrição</label>
           <input
             id="edit-description"
@@ -108,7 +123,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
         </div>
 
         <div className="field-row">
-          <div className="field">
+          <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
             <label htmlFor="edit-amount">Valor</label>
             <input
               id="edit-amount"
@@ -121,7 +136,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
             />
           </div>
 
-          <div className="field">
+          <div className={`field${attemptedSubmit && !categoryId ? ' field--error' : ''}`}>
             <label htmlFor="edit-category">Categoria</label>
             <select
               id="edit-category"
@@ -138,7 +153,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </div>
         </div>
 
-        <div className="field">
+        <div className={`field${attemptedSubmit && !personId ? ' field--error' : ''}`}>
           <label htmlFor="edit-person">Responsável</label>
           <select
             id="edit-person"
@@ -154,7 +169,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </select>
         </div>
 
-        <div className="field">
+        <div className={`field${attemptedSubmit && !paymentMethodId ? ' field--error' : ''}`}>
           <label htmlFor="edit-payment-method">Método de pagamento</label>
           <select
             id="edit-payment-method"
@@ -170,7 +185,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </select>
         </div>
 
-        <div className="field">
+        <div className={`field${attemptedSubmit && !bucketId ? ' field--error' : ''}`}>
           <label htmlFor="edit-bucket">Envelope</label>
           <select
             id="edit-bucket"
@@ -186,7 +201,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </select>
         </div>
 
-        <div className="field">
+        <div className={`field${attemptedSubmit && !bankId ? ' field--error' : ''}`}>
           <label htmlFor="edit-bank">Banco</label>
           <select
             id="edit-bank"
@@ -203,7 +218,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
         </div>
 
         {type === 'investment' && (
-          <div className="field">
+          <div className={`field${attemptedSubmit && !effectiveInvestmentBoxId ? ' field--error' : ''}`}>
             <label htmlFor="edit-investment-box">Caixinha de investimento</label>
             <select
               id="edit-investment-box"
@@ -220,22 +235,13 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </div>
         )}
 
+        {attemptedSubmit && isFormInvalid && (
+          <p className="form-error">Preencha os campos destacados antes de continuar.</p>
+        )}
+
         {error && <p className="form-error">{error}</p>}
 
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={
-            isSubmitting ||
-            noCategories ||
-            !categoryId ||
-            !personId ||
-            !paymentMethodId ||
-            !bucketId ||
-            !bankId ||
-            (type === 'investment' && !effectiveInvestmentBoxId)
-          }
-        >
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting || noCategories}>
           {isSubmitting ? 'Salvando…' : 'Salvar alterações'}
         </button>
       </form>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createRecurringExpensesBulk } from '../api/recurringExpenses'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
+import { clampDayOfMonth } from '../utils/date'
 
 // Fixed left-to-right order pasted spreadsheet columns are mapped to, starting from whichever
 // cell was focused when the paste happened. Matches RecurringFields' own field order.
@@ -40,7 +41,7 @@ function makeEmptyRow() {
 }
 
 function parsePastedDayOfMonth(text) {
-  return text.trim().replace(/[^\d]/g, '')
+  return clampDayOfMonth(text.trim())
 }
 
 function parseCellForColumn(columnKey, text, lookups) {
@@ -294,7 +295,7 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                       min="1"
                       max="31"
                       value={row.dayOfMonth}
-                      onChange={(e) => updateRow(index, { dayOfMonth: e.target.value })}
+                      onChange={(e) => updateRow(index, { dayOfMonth: clampDayOfMonth(e.target.value) })}
                       onPaste={pasteHandler(index, 'dayOfMonth')}
                     />
                   </td>

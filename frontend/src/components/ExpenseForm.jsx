@@ -33,6 +33,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const [investmentBoxId, setInvestmentBoxId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
   const noCategories = !isLoadingCategories && categories.length === 0
 
@@ -71,8 +72,25 @@ function ExpenseForm({ onExpenseCreated }) {
     }
   }
 
+  const isAmountMissing = isInstallment ? !totalAmount || !installmentCount : !amount
+
+  const isFormInvalid =
+    !description.trim() ||
+    !date ||
+    !categoryId ||
+    !effectivePersonId ||
+    !paymentMethodId ||
+    !effectiveBucketId ||
+    !effectiveBankId ||
+    (type === 'investment' && !effectiveInvestmentBoxId) ||
+    isAmountMissing
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    setAttemptedSubmit(true)
+
+    if (noCategories || isFormInvalid) return
+
     setError(null)
     setIsSubmitting(true)
 
@@ -111,6 +129,7 @@ function ExpenseForm({ onExpenseCreated }) {
         setCategoryId('')
         setInvestmentBoxId('')
         setIsInstallment(false)
+        setAttemptedSubmit(false)
       })
       .catch((err) => {
         console.error('Erro ao criar transação:', err)
@@ -118,8 +137,6 @@ function ExpenseForm({ onExpenseCreated }) {
       })
       .finally(() => setIsSubmitting(false))
   }
-
-  const isAmountMissing = isInstallment ? !totalAmount || !installmentCount : !amount
 
   return (
     <form className="expense-form" onSubmit={handleSubmit}>
@@ -141,7 +158,7 @@ function ExpenseForm({ onExpenseCreated }) {
         </div>
       </div>
 
-      <div className="field">
+      <div className={`field${attemptedSubmit && !description.trim() ? ' field--error' : ''}`}>
         <label htmlFor="description">Descrição</label>
         <input
           id="description"
@@ -167,7 +184,7 @@ function ExpenseForm({ onExpenseCreated }) {
       {isInstallment ? (
         <>
           <div className="field-row">
-            <div className="field">
+            <div className={`field${attemptedSubmit && !totalAmount ? ' field--error' : ''}`}>
               <label htmlFor="total-amount">Valor total</label>
               <input
                 id="total-amount"
@@ -180,7 +197,7 @@ function ExpenseForm({ onExpenseCreated }) {
                 required
               />
             </div>
-            <div className="field">
+            <div className={`field${attemptedSubmit && !installmentCount ? ' field--error' : ''}`}>
               <label htmlFor="installment-count">Nº de parcelas</label>
               <input
                 id="installment-count"
@@ -195,12 +212,12 @@ function ExpenseForm({ onExpenseCreated }) {
           </div>
 
           <div className="field-row">
-            <div className="field">
+            <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
               <label htmlFor="purchase-date">Data da compra</label>
               <DatePicker id="purchase-date" value={date} onChange={(e) => setDate(e.target.value)} required />
             </div>
 
-            <div className="field">
+            <div className={`field${attemptedSubmit && !categoryId ? ' field--error' : ''}`}>
               <label htmlFor="category">Categoria</label>
               <select
                 id="category"
@@ -219,7 +236,7 @@ function ExpenseForm({ onExpenseCreated }) {
         </>
       ) : (
         <div className="field-row">
-          <div className="field">
+          <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
             <label htmlFor="amount">Valor</label>
             <input
               id="amount"
@@ -233,12 +250,12 @@ function ExpenseForm({ onExpenseCreated }) {
             />
           </div>
 
-          <div className="field">
+          <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
             <label htmlFor="date">Data</label>
             <DatePicker id="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
 
-          <div className="field">
+          <div className={`field${attemptedSubmit && !categoryId ? ' field--error' : ''}`}>
             <label htmlFor="category">Categoria</label>
             <select
               id="category"
@@ -257,7 +274,7 @@ function ExpenseForm({ onExpenseCreated }) {
       )}
 
       <div className="field-row">
-        <div className="field">
+        <div className={`field${attemptedSubmit && !effectivePersonId ? ' field--error' : ''}`}>
           <label htmlFor="person">Responsável</label>
           <select
             id="person"
@@ -273,7 +290,7 @@ function ExpenseForm({ onExpenseCreated }) {
           </select>
         </div>
 
-        <div className="field">
+        <div className={`field${attemptedSubmit && !paymentMethodId ? ' field--error' : ''}`}>
           <label htmlFor="payment-method">Método de pagamento</label>
           <select
             id="payment-method"
@@ -291,7 +308,7 @@ function ExpenseForm({ onExpenseCreated }) {
       </div>
 
       <div className="field-row">
-        <div className="field">
+        <div className={`field${attemptedSubmit && !effectiveBucketId ? ' field--error' : ''}`}>
           <label htmlFor="bucket">Envelope</label>
           <select
             id="bucket"
@@ -307,7 +324,7 @@ function ExpenseForm({ onExpenseCreated }) {
           </select>
         </div>
 
-        <div className="field">
+        <div className={`field${attemptedSubmit && !effectiveBankId ? ' field--error' : ''}`}>
           <label htmlFor="bank">Banco</label>
           <select
             id="bank"
@@ -325,7 +342,7 @@ function ExpenseForm({ onExpenseCreated }) {
       </div>
 
       {type === 'investment' && (
-        <div className="field">
+        <div className={`field${attemptedSubmit && !effectiveInvestmentBoxId ? ' field--error' : ''}`}>
           <label htmlFor="investment-box">Caixinha de investimento</label>
           <select
             id="investment-box"
@@ -346,23 +363,13 @@ function ExpenseForm({ onExpenseCreated }) {
         <p className="form-error">Cadastre uma categoria em "Categorias" antes de adicionar despesas.</p>
       )}
 
+      {attemptedSubmit && isFormInvalid && (
+        <p className="form-error">Preencha os campos destacados antes de continuar.</p>
+      )}
+
       {error && <p className="form-error">{error}</p>}
 
-      <button
-        type="submit"
-        className="btn btn-primary"
-        disabled={
-          isSubmitting ||
-          noCategories ||
-          !categoryId ||
-          !effectivePersonId ||
-          !paymentMethodId ||
-          !effectiveBucketId ||
-          !effectiveBankId ||
-          (type === 'investment' && !effectiveInvestmentBoxId) ||
-          isAmountMissing
-        }
-      >
+      <button type="submit" className="btn btn-primary" disabled={isSubmitting || noCategories}>
         {isSubmitting ? 'Salvando…' : 'Adicionar transação'}
       </button>
     </form>
