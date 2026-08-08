@@ -11,6 +11,7 @@ import { TRANSACTION_TYPES, TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/trans
 import { formatCurrency } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
 import ConfirmDialog from '../components/ConfirmDialog'
+import LoadingBar from '../components/LoadingBar'
 
 const emptyForm = {
   description: '',
@@ -293,6 +294,8 @@ function RecurringExpensesPage() {
 
   return (
     <main className="container">
+      {isLoading && <LoadingBar />}
+
       <div className="page-header">
         <Link to="/" className="icon-btn" aria-label="Voltar" title="Voltar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

@@ -33,6 +33,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (min-width: 900px) {
+  :root {
+    zoom: 1.1;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #a1a1aa;

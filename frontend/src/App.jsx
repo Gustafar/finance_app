@@ -4,6 +4,7 @@ import ExpenseForm from './components/ExpenseForm'
 import ExpenseEditForm from './components/ExpenseEditForm'
 import Modal from './components/Modal'
 import Drawer from './components/Drawer'
+import LoadingBar from './components/LoadingBar'
 import CategoryManager from './components/CategoryManager'
 import PersonManager from './components/PersonManager'
 import PaymentMethodManager from './components/PaymentMethodManager'
@@ -155,6 +156,8 @@ function App() {
 
   return (
     <div className="page">
+      {isLoading && <LoadingBar />}
+
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark">R$</span>

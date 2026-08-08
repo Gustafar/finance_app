@@ -4,6 +4,7 @@ import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useCategories, sortByName } from '../hooks/useCategories'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
+import LoadingBar from './LoadingBar'
 
 function CategoryManager() {
   const { categories, setCategories, isLoading, error: loadError } = useCategories()
@@ -88,6 +89,7 @@ function CategoryManager() {
 
   return (
     <div className="entity-manager">
+      {isLoading && <LoadingBar variant="dialog" />}
       <h2>Categorias</h2>
 
       <form className="entity-create-form" onSubmit={handleCreate}>
@@ -108,7 +110,6 @@ function CategoryManager() {
 
       {deleteError && <p className="form-error">{deleteError}</p>}
 
-      {isLoading && <p className="state-message">Carregando categorias…</p>}
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
       {!isLoading && !loadError && categories.length === 0 && (
         <p className="state-message">Nenhuma categoria cadastrada ainda.</p>

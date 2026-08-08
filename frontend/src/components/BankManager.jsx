@@ -4,6 +4,7 @@ import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useBanks, sortByName } from '../hooks/useBanks'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
+import LoadingBar from './LoadingBar'
 
 function BankManager() {
   const { banks, setBanks, isLoading, error: loadError } = useBanks()
@@ -88,6 +89,7 @@ function BankManager() {
 
   return (
     <div className="entity-manager">
+      {isLoading && <LoadingBar variant="dialog" />}
       <h2>Bancos</h2>
 
       <form className="entity-create-form" onSubmit={handleCreate}>
@@ -108,7 +110,6 @@ function BankManager() {
 
       {deleteError && <p className="form-error">{deleteError}</p>}
 
-      {isLoading && <p className="state-message">Carregando bancos…</p>}
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
       {!isLoading && !loadError && banks.length === 0 && (
         <p className="state-message">Nenhum banco cadastrado ainda.</p>
