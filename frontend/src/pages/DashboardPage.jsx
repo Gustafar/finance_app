@@ -1,12 +1,13 @@
 import ExpenseList from '../components/ExpenseList'
 import SummaryCard from '../components/SummaryCard'
 import FilterButton from '../components/FilterButton'
+import MonthPicker from '../components/MonthPicker'
 import { formatCurrency } from '../utils/format'
-import { formatMonthLabel } from '../utils/date'
 
 function DashboardPage({
   selectedMonth,
   onShiftMonth,
+  onSelectMonth,
   periodFilterActive,
   summary,
   isLoading,
@@ -35,9 +36,11 @@ function DashboardPage({
               <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <span className="month-nav-label">
-            {periodFilterActive ? 'Período personalizado' : formatMonthLabel(selectedMonth)}
-          </span>
+          {periodFilterActive ? (
+            <span className="month-nav-label">Período personalizado</span>
+          ) : (
+            <MonthPicker value={selectedMonth} onChange={onSelectMonth} />
+          )}
           <button
             type="button"
             className="icon-btn"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import AddExpenseModal from './components/AddExpenseModal'
 import ExpenseEditForm from './components/ExpenseEditForm'
@@ -73,6 +73,18 @@ function App() {
     fetchBuckets().then(setBuckets).catch((error) => console.error('Erro ao buscar envelopes:', error))
     fetchBanks().then(setBanks).catch((error) => console.error('Erro ao buscar bancos:', error))
   }, [])
+
+  // Re-download the expense list every time the user navigates back to the home screen,
+  // skipping the very first mount (already covered by the effect above).
+  const isInitialMount = useRef(true)
+  useEffect(() => {
+    if (location.pathname !== '/') return
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    loadExpenses()
+  }, [location.pathname])
 
   const handleExpenseCreated = (created) => {
     const newExpenses = Array.isArray(created) ? created : [created]
@@ -444,6 +456,7 @@ function App() {
             <DashboardPage
               selectedMonth={selectedMonth}
               onShiftMonth={(delta) => setSelectedMonth((month) => shiftMonth(month, delta))}
+              onSelectMonth={setSelectedMonth}
               periodFilterActive={hasPeriodFilter}
               summary={summary}
               isLoading={isLoading}
