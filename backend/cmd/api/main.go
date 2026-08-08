@@ -72,6 +72,7 @@ func main() {
 	mux.HandleFunc("GET /recurring-expenses", recurringExpenseHandler.GetAll)
 	mux.HandleFunc("GET /recurring-expenses/{id}", recurringExpenseHandler.GetByID)
 	mux.HandleFunc("POST /recurring-expenses", recurringExpenseHandler.Create)
+	mux.HandleFunc("POST /recurring-expenses/bulk", recurringExpenseHandler.CreateBulk)
 	mux.HandleFunc("POST /recurring-expenses/generate-due", expenseHandler.GenerateDueRecurring)
 	mux.HandleFunc("PUT /recurring-expenses/{id}", recurringExpenseHandler.Update)
 	mux.HandleFunc("DELETE /recurring-expenses/{id}", recurringExpenseHandler.Delete)

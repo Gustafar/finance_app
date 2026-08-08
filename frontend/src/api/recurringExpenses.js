@@ -8,6 +8,10 @@ export function createRecurringExpense(recurring) {
   return fetchJson('/recurring-expenses', { method: 'POST', body: JSON.stringify(recurring) })
 }
 
+export function createRecurringExpensesBulk(rows) {
+  return fetchJson('/recurring-expenses/bulk', { method: 'POST', body: JSON.stringify({ rows }) })
+}
+
 export function updateRecurringExpense(id, recurring) {
   return fetchJson(`/recurring-expenses/${id}`, { method: 'PUT', body: JSON.stringify(recurring) })
 }

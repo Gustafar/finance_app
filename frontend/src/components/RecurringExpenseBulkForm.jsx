@@ -1,23 +1,15 @@
-import { useMemo, useState } from 'react'
-import { createExpensesBulk } from '../api/expenses'
-import { useCategories } from '../hooks/useCategories'
-import { usePeople } from '../hooks/usePeople'
-import { usePaymentMethods } from '../hooks/usePaymentMethods'
-import { useBuckets } from '../hooks/useBuckets'
-import { useBanks } from '../hooks/useBanks'
-import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
+import { useState } from 'react'
+import { createRecurringExpensesBulk } from '../api/recurringExpenses'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
-import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date'
 import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
-import DatePicker from './DatePicker'
 
 // Fixed left-to-right order pasted spreadsheet columns are mapped to, starting from whichever
-// cell was focused when the paste happened.
+// cell was focused when the paste happened. Matches RecurringFields' own field order.
 const PASTE_COLUMNS = [
-  'date',
+  'type',
   'description',
   'amount',
-  'type',
+  'dayOfMonth',
   'categoryId',
   'personId',
   'paymentMethodId',
@@ -32,34 +24,35 @@ let nextRowId = 1
 function makeEmptyRow() {
   return {
     id: nextRowId++,
-    date: '',
+    type: 'expense',
     description: '',
     amount: '',
-    type: 'expense',
+    dayOfMonth: '1',
     categoryId: '',
     personId: '',
     paymentMethodId: '',
     bucketId: '',
     bankId: '',
-    isInstallment: false,
-    installmentCount: '2',
-    investmentBoxId: '',
     selected: false,
     status: 'idle',
     error: null,
   }
 }
 
+function parsePastedDayOfMonth(text) {
+  return text.trim().replace(/[^\d]/g, '')
+}
+
 function parseCellForColumn(columnKey, text, lookups) {
   switch (columnKey) {
-    case 'date':
-      return { date: parseFlexibleDateInput(text) }
+    case 'type':
+      return { type: resolveType(text) || 'expense' }
     case 'description':
       return { description: text.trim() }
     case 'amount':
       return { amount: parsePastedAmount(text) }
-    case 'type':
-      return { type: resolveType(text) || 'expense' }
+    case 'dayOfMonth':
+      return { dayOfMonth: parsePastedDayOfMonth(text) }
     case 'categoryId':
       return { categoryId: resolveIdByName(lookups.categories, text) }
     case 'personId':
@@ -76,92 +69,47 @@ function parseCellForColumn(columnKey, text, lookups) {
 }
 
 function isRowBlank(row) {
-  return !row.description.trim() && !row.amount && !row.date
+  return !row.description.trim() && !row.amount
 }
 
-function isRowComplete(row, defaults) {
-  const effectivePersonId = row.personId || defaults.personId
-  const effectiveBucketId = row.bucketId || defaults.bucketId
-  const effectiveBankId = row.bankId || defaults.bankId
-  const effectiveInvestmentBoxId = row.investmentBoxId || defaults.investmentBoxId
+function isRowComplete(row) {
+  const day = Number(row.dayOfMonth)
 
-  const sharedOk =
+  return Boolean(
     row.description.trim() &&
-    row.categoryId &&
-    effectivePersonId &&
-    row.paymentMethodId &&
-    effectiveBucketId &&
-    effectiveBankId
-
-  if (!sharedOk) return false
-
-  if (row.isInstallment) {
-    const count = Number(row.installmentCount)
-    return Boolean(row.amount) && Number(row.amount) > 0 && count >= 2 && count <= 60 && Boolean(row.date)
-  }
-
-  if (row.type === 'investment' && !effectiveInvestmentBoxId) return false
-
-  return Boolean(row.amount) && Number(row.amount) > 0 && Boolean(row.date) && Boolean(row.type)
+      row.categoryId &&
+      row.personId &&
+      row.paymentMethodId &&
+      row.bucketId &&
+      row.bankId &&
+      row.amount &&
+      Number(row.amount) > 0 &&
+      row.dayOfMonth &&
+      day >= 1 &&
+      day <= 31 &&
+      row.type
+  )
 }
 
-function buildRowPayload(row, defaults) {
-  const shared = {
-    description: row.description.trim(),
-    category_id: Number(row.categoryId),
-    person_id: Number(row.personId || defaults.personId),
-    payment_method_id: Number(row.paymentMethodId),
-    bucket_id: Number(row.bucketId || defaults.bucketId),
-    bank_id: Number(row.bankId || defaults.bankId),
-  }
-
-  if (row.isInstallment) {
-    return {
-      is_installment: true,
-      ...shared,
-      total_amount: parseFloat(row.amount),
-      installment_count: Number(row.installmentCount),
-      purchase_date: dateInputValueToISOString(row.date),
-    }
-  }
-
+function buildRowPayload(row) {
   return {
-    is_installment: false,
-    ...shared,
+    description: row.description.trim(),
     amount: parseFloat(row.amount),
     type: row.type,
-    date: dateInputValueToISOString(row.date),
-    ...(row.type === 'investment' ? { investment_box_id: Number(row.investmentBoxId || defaults.investmentBoxId) } : {}),
+    day_of_month: Number(row.dayOfMonth),
+    category_id: Number(row.categoryId),
+    person_id: Number(row.personId),
+    payment_method_id: Number(row.paymentMethodId),
+    bucket_id: Number(row.bucketId),
+    bank_id: Number(row.bankId),
   }
 }
 
-function ExpenseBulkForm({ onExpensesCreated }) {
-  const { categories, isLoading: isLoadingCategories } = useCategories()
-  const { people, isLoading: isLoadingPeople } = usePeople()
-  const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
-  const { buckets, isLoading: isLoadingBuckets } = useBuckets()
-  const { banks, isLoading: isLoadingBanks } = useBanks()
-  const { investmentBoxes, isLoading: isLoadingInvestmentBoxes } = useInvestmentBoxes()
-
+function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets, banks, onRecurrencesCreated }) {
   const [rows, setRows] = useState(() => Array.from({ length: INITIAL_ROW_COUNT }, makeEmptyRow))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [summary, setSummary] = useState(null)
-
-  const noCategories = !isLoadingCategories && categories.length === 0
-
-  const defaults = useMemo(() => {
-    const defaultPerson = people.find((p) => p.is_default)
-    const defaultBucket = buckets.find((b) => b.is_default)
-    const defaultBank = banks.find((b) => b.is_default)
-    const defaultBox = investmentBoxes.find((b) => b.is_default)
-    return {
-      personId: defaultPerson ? String(defaultPerson.id) : people[0] ? String(people[0].id) : '',
-      bucketId: defaultBucket ? String(defaultBucket.id) : buckets[0] ? String(buckets[0].id) : '',
-      bankId: defaultBank ? String(defaultBank.id) : banks[0] ? String(banks[0].id) : '',
-      investmentBoxId: defaultBox ? String(defaultBox.id) : investmentBoxes[0] ? String(investmentBoxes[0].id) : '',
-    }
-  }, [people, buckets, banks, investmentBoxes])
 
   const lookups = { categories, people, paymentMethods, buckets, banks }
 
@@ -228,11 +176,11 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
     const nextRows = rows.map((row, index) => {
       if (isRowBlank(row)) return row
-      if (!isRowComplete(row, defaults)) {
+      if (!isRowComplete(row)) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
       }
       candidateIndices.push(index)
-      payloadRows.push(buildRowPayload(row, defaults))
+      payloadRows.push(buildRowPayload(row))
       return { ...row, status: 'idle', error: null }
     })
 
@@ -242,7 +190,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
     setIsSubmitting(true)
 
-    createExpensesBulk(payloadRows)
+    createRecurringExpensesBulk(payloadRows)
       .then(({ results, created }) => {
         const succeededIndices = new Set()
         const failedIndices = new Set()
@@ -263,23 +211,22 @@ function ExpenseBulkForm({ onExpensesCreated }) {
           return remaining.length > 0 ? remaining : [makeEmptyRow()]
         })
 
-        setSummary(`${succeededIndices.size} de ${results.length} transações salvas.`)
+        setSummary(`${succeededIndices.size} de ${results.length} gastos fixos salvos.`)
 
-        if (created.length > 0) onExpensesCreated(created)
+        if (created.length > 0) onRecurrencesCreated(created)
       })
       .catch((err) => {
-        console.error('Erro ao salvar transações em lote:', err)
-        setError('Não foi possível salvar as transações. Tente novamente.')
+        console.error('Erro ao salvar gastos fixos em lote:', err)
+        setError('Não foi possível salvar os gastos fixos. Tente novamente.')
       })
       .finally(() => setIsSubmitting(false))
   }
 
   return (
     <div className="bulk-grid-form">
-      <h2>Múltiplas transações</h2>
       <p className="bulk-grid-hint">
-        Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Descrição, Valor, Tipo, Categoria,
-        Responsável, Método de pagamento, Envelope, Banco.
+        Cole dados do Excel a partir da coluna Tipo — ordem das colunas: Tipo, Descrição, Valor, Dia do mês,
+        Categoria, Responsável, Método de pagamento, Envelope, Banco.
       </p>
 
       <div className="bulk-grid-scroll">
@@ -288,18 +235,15 @@ function ExpenseBulkForm({ onExpensesCreated }) {
             <thead>
               <tr>
                 <th></th>
-                <th>Data</th>
+                <th>Tipo</th>
                 <th>Descrição</th>
                 <th>Valor</th>
-                <th>Tipo</th>
+                <th>Dia do mês</th>
                 <th>Categoria</th>
                 <th>Responsável</th>
                 <th>Método de pagamento</th>
                 <th>Envelope</th>
                 <th>Banco</th>
-                <th>Parcelado</th>
-                <th>Parcelas</th>
-                <th>Caixinha</th>
               </tr>
             </thead>
             <tbody>
@@ -314,11 +258,15 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                     />
                   </td>
                   <td>
-                    <DatePicker
-                      value={row.date}
-                      onChange={(e) => updateRow(index, { date: e.target.value })}
-                      onPaste={pasteHandler(index, 'date')}
-                    />
+                    <select
+                      value={row.type}
+                      onChange={(e) => updateRow(index, { type: e.target.value })}
+                      onPaste={pasteHandler(index, 'type')}
+                    >
+                      {TRANSACTION_TYPES.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
                   </td>
                   <td>
                     <input
@@ -341,25 +289,20 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                     />
                   </td>
                   <td>
-                    <select
-                      value={row.type}
-                      onChange={(e) => {
-                        const nextType = e.target.value
-                        updateRow(index, nextType === 'expense' ? { type: nextType } : { type: nextType, isInstallment: false })
-                      }}
-                      onPaste={pasteHandler(index, 'type')}
-                    >
-                      {TRANSACTION_TYPES.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
+                    <input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={row.dayOfMonth}
+                      onChange={(e) => updateRow(index, { dayOfMonth: e.target.value })}
+                      onPaste={pasteHandler(index, 'dayOfMonth')}
+                    />
                   </td>
                   <td>
                     <select
                       value={row.categoryId}
                       onChange={(e) => updateRow(index, { categoryId: e.target.value })}
                       onPaste={pasteHandler(index, 'categoryId')}
-                      disabled={noCategories}
                     >
                       <option value="">Selecione…</option>
                       {categories.map((c) => (
@@ -369,10 +312,9 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   </td>
                   <td>
                     <select
-                      value={row.personId || defaults.personId}
+                      value={row.personId}
                       onChange={(e) => updateRow(index, { personId: e.target.value })}
                       onPaste={pasteHandler(index, 'personId')}
-                      disabled={isLoadingPeople}
                     >
                       <option value="">Selecione…</option>
                       {people.map((p) => (
@@ -385,7 +327,6 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                       value={row.paymentMethodId}
                       onChange={(e) => updateRow(index, { paymentMethodId: e.target.value })}
                       onPaste={pasteHandler(index, 'paymentMethodId')}
-                      disabled={isLoadingPaymentMethods}
                     >
                       <option value="">Selecione…</option>
                       {paymentMethods.map((m) => (
@@ -395,10 +336,9 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   </td>
                   <td>
                     <select
-                      value={row.bucketId || defaults.bucketId}
+                      value={row.bucketId}
                       onChange={(e) => updateRow(index, { bucketId: e.target.value })}
                       onPaste={pasteHandler(index, 'bucketId')}
-                      disabled={isLoadingBuckets}
                     >
                       <option value="">Selecione…</option>
                       {buckets.map((b) => (
@@ -408,44 +348,12 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   </td>
                   <td>
                     <select
-                      value={row.bankId || defaults.bankId}
+                      value={row.bankId}
                       onChange={(e) => updateRow(index, { bankId: e.target.value })}
                       onPaste={pasteHandler(index, 'bankId')}
-                      disabled={isLoadingBanks}
                     >
                       <option value="">Selecione…</option>
                       {banks.map((b) => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={row.isInstallment}
-                      onChange={(e) => updateRow(index, { isInstallment: e.target.checked })}
-                      disabled={row.type !== 'expense'}
-                      aria-label="Compra parcelada"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      min="2"
-                      max="60"
-                      value={row.installmentCount}
-                      onChange={(e) => updateRow(index, { installmentCount: e.target.value })}
-                      disabled={!row.isInstallment}
-                    />
-                  </td>
-                  <td>
-                    <select
-                      value={row.investmentBoxId || defaults.investmentBoxId}
-                      onChange={(e) => updateRow(index, { investmentBoxId: e.target.value })}
-                      disabled={row.type !== 'investment' || isLoadingInvestmentBoxes}
-                    >
-                      <option value="">Selecione…</option>
-                      {investmentBoxes.map((b) => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
@@ -461,10 +369,6 @@ function ExpenseBulkForm({ onExpensesCreated }) {
         <p className="form-error">Algumas linhas têm campos pendentes ou não puderam ser salvas — corrija as linhas destacadas.</p>
       )}
 
-      {noCategories && (
-        <p className="form-error">Cadastre uma categoria em "Categorias" antes de adicionar despesas.</p>
-      )}
-
       {error && <p className="form-error">{error}</p>}
       {summary && <p className="state-message" style={{ padding: 0, textAlign: 'left' }}>{summary}</p>}
 
@@ -475,12 +379,12 @@ function ExpenseBulkForm({ onExpensesCreated }) {
         <button type="button" className="btn btn-secondary" onClick={removeSelected} disabled={isSubmitting || !hasSelected}>
           Remover selecionadas
         </button>
-        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={isSubmitting || noCategories}>
-          {isSubmitting ? 'Salvando…' : 'Salvar transações'}
+        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? 'Salvando…' : 'Salvar gastos fixos'}
         </button>
       </div>
     </div>
   )
 }
 
-export default ExpenseBulkForm
+export default RecurringExpenseBulkForm

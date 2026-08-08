@@ -12,6 +12,7 @@ import { formatCurrency } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
 import ConfirmDialog from '../components/ConfirmDialog'
 import LoadingBar from '../components/LoadingBar'
+import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
 
 const emptyForm = {
   description: '',
@@ -201,6 +202,7 @@ function RecurringExpensesPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
+  const [createMode, setCreateMode] = useState('single')
 
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState(emptyForm)
@@ -332,22 +334,56 @@ function RecurringExpensesPage() {
 
         <div className={`collapsible${isCreateFormOpen ? ' collapsible--open' : ''}`}>
           <div className="collapsible-inner">
-            <form className="expense-form" onSubmit={handleCreate} style={{ width: 'auto', padding: '20px 24px' }}>
-              <RecurringFields
-                idPrefix="create"
-                form={form}
-                onChange={setForm}
-                categories={categories}
-                people={people}
-                paymentMethods={paymentMethods}
-                buckets={buckets}
-                banks={banks}
-              />
-              <button type="submit" className="btn btn-primary" disabled={isCreating || !isFormComplete(form)}>
-                Adicionar
-              </button>
-              {createError && <p className="form-error">{createError}</p>}
-            </form>
+            <div style={{ padding: '16px 24px 20px' }}>
+              <div className="type-toggle" role="tablist" aria-label="Modo de lançamento" style={{ marginBottom: 16 }}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={createMode === 'single'}
+                  className={`type-toggle-option${createMode === 'single' ? ' type-toggle-option--selected' : ''}`}
+                  onClick={() => setCreateMode('single')}
+                >
+                  Transação única
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={createMode === 'bulk'}
+                  className={`type-toggle-option${createMode === 'bulk' ? ' type-toggle-option--selected' : ''}`}
+                  onClick={() => setCreateMode('bulk')}
+                >
+                  Múltiplas transações
+                </button>
+              </div>
+
+              {createMode === 'single' ? (
+                <form className="expense-form" onSubmit={handleCreate} style={{ width: 'auto' }}>
+                  <RecurringFields
+                    idPrefix="create"
+                    form={form}
+                    onChange={setForm}
+                    categories={categories}
+                    people={people}
+                    paymentMethods={paymentMethods}
+                    buckets={buckets}
+                    banks={banks}
+                  />
+                  <button type="submit" className="btn btn-primary" disabled={isCreating || !isFormComplete(form)}>
+                    Adicionar
+                  </button>
+                  {createError && <p className="form-error">{createError}</p>}
+                </form>
+              ) : (
+                <RecurringExpenseBulkForm
+                  categories={categories}
+                  people={people}
+                  paymentMethods={paymentMethods}
+                  buckets={buckets}
+                  banks={banks}
+                  onRecurrencesCreated={(created) => setRecurrences((prev) => sortByDay([...prev, ...created]))}
+                />
+              )}
+            </div>
           </div>
         </div>
       </section>

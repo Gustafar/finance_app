@@ -82,6 +82,25 @@ func (s *RecurringExpenseService) Create(recurring models.RecurringExpense) (mod
 	return created, nil
 }
 
+type RecurringBulkRowResult struct {
+	Row     int
+	Created models.RecurringExpense
+	Err     error
+}
+
+// CreateBulk inserts each row independently, continuing past failures so valid rows still get
+// created; the caller inspects each result to know which rows need fixing and resubmitting.
+func (s *RecurringExpenseService) CreateBulk(rows []models.RecurringExpense) []RecurringBulkRowResult {
+	results := make([]RecurringBulkRowResult, len(rows))
+
+	for i, row := range rows {
+		created, err := s.Create(row)
+		results[i] = RecurringBulkRowResult{Row: i, Created: created, Err: err}
+	}
+
+	return results
+}
+
 func (s *RecurringExpenseService) GetAll() ([]models.RecurringExpense, error) {
 	return s.Repo.GetAll()
 }
