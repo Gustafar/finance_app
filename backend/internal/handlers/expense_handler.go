@@ -19,6 +19,27 @@ func NewExpenseHandler(service *services.ExpenseService) *ExpenseHandler {
 	return &ExpenseHandler{Service: service}
 }
 
+// isClientValidationError reports whether err is a known domain validation error (400) as opposed
+// to an unexpected failure (500). Shared by Create, Update, CreateInstallments and CreateBulk.
+func isClientValidationError(err error) bool {
+	return errors.Is(err, services.ErrInvalidAmount) ||
+		errors.Is(err, services.ErrInvalidType) ||
+		errors.Is(err, services.ErrInvalidInstallmentCount) ||
+		errors.Is(err, services.ErrEmptyCategory) ||
+		errors.Is(err, services.ErrEmptyPerson) ||
+		errors.Is(err, services.ErrEmptyPaymentMethod) ||
+		errors.Is(err, services.ErrEmptyBucket) ||
+		errors.Is(err, services.ErrEmptyBank) ||
+		errors.Is(err, services.ErrEmptyInvestmentBox) ||
+		errors.Is(err, services.ErrEmptyDescription) ||
+		errors.Is(err, services.ErrCategoryNotFound) ||
+		errors.Is(err, services.ErrPersonNotFound) ||
+		errors.Is(err, services.ErrPaymentMethodNotFound) ||
+		errors.Is(err, services.ErrBucketNotFound) ||
+		errors.Is(err, services.ErrBankNotFound) ||
+		errors.Is(err, services.ErrInvestmentBoxNotFound)
+}
+
 func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var expense models.Expense
 
@@ -30,21 +51,7 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	criada, err := h.Service.Create(expense)
 	if err != nil {
-		if errors.Is(err, services.ErrInvalidAmount) ||
-			errors.Is(err, services.ErrInvalidType) ||
-			errors.Is(err, services.ErrEmptyCategory) ||
-			errors.Is(err, services.ErrEmptyPerson) ||
-			errors.Is(err, services.ErrEmptyPaymentMethod) ||
-			errors.Is(err, services.ErrEmptyBucket) ||
-			errors.Is(err, services.ErrEmptyBank) ||
-			errors.Is(err, services.ErrEmptyInvestmentBox) ||
-			errors.Is(err, services.ErrEmptyDescription) ||
-			errors.Is(err, services.ErrCategoryNotFound) ||
-			errors.Is(err, services.ErrPersonNotFound) ||
-			errors.Is(err, services.ErrPaymentMethodNotFound) ||
-			errors.Is(err, services.ErrBucketNotFound) ||
-			errors.Is(err, services.ErrBankNotFound) ||
-			errors.Is(err, services.ErrInvestmentBoxNotFound) {
+		if isClientValidationError(err) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -88,19 +95,7 @@ func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Reque
 		BankID:           req.BankID,
 	})
 	if err != nil {
-		if errors.Is(err, services.ErrInvalidAmount) ||
-			errors.Is(err, services.ErrInvalidInstallmentCount) ||
-			errors.Is(err, services.ErrEmptyCategory) ||
-			errors.Is(err, services.ErrEmptyPerson) ||
-			errors.Is(err, services.ErrEmptyPaymentMethod) ||
-			errors.Is(err, services.ErrEmptyBucket) ||
-			errors.Is(err, services.ErrEmptyBank) ||
-			errors.Is(err, services.ErrEmptyDescription) ||
-			errors.Is(err, services.ErrCategoryNotFound) ||
-			errors.Is(err, services.ErrPersonNotFound) ||
-			errors.Is(err, services.ErrPaymentMethodNotFound) ||
-			errors.Is(err, services.ErrBucketNotFound) ||
-			errors.Is(err, services.ErrBankNotFound) {
+		if isClientValidationError(err) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -110,6 +105,102 @@ func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Reque
 	}
 
 	respondJSON(w, http.StatusCreated, created)
+}
+
+// bulkExpenseRow accepts either a plain expense (IsInstallment false) or an installment purchase
+// (IsInstallment true), sharing category/person/payment method/bucket/bank across both shapes.
+type bulkExpenseRow struct {
+	IsInstallment bool `json:"is_installment"`
+
+	Description     string    `json:"description"`
+	Amount          float64   `json:"amount"`
+	Type            string    `json:"type"`
+	Date            time.Time `json:"date"`
+	InvestmentBoxID *int      `json:"investment_box_id,omitempty"`
+
+	TotalAmount      float64   `json:"total_amount"`
+	InstallmentCount int       `json:"installment_count"`
+	PurchaseDate     time.Time `json:"purchase_date"`
+
+	CategoryID      int `json:"category_id"`
+	PersonID        int `json:"person_id"`
+	PaymentMethodID int `json:"payment_method_id"`
+	BucketID        int `json:"bucket_id"`
+	BankID          int `json:"bank_id"`
+}
+
+type bulkCreateRequest struct {
+	Rows []bulkExpenseRow `json:"rows"`
+}
+
+type bulkRowResponse struct {
+	Row   int    `json:"row"`
+	OK    bool   `json:"ok"`
+	Error string `json:"error,omitempty"`
+}
+
+type bulkCreateResponse struct {
+	Results []bulkRowResponse `json:"results"`
+	Created []models.Expense  `json:"created"`
+}
+
+func (h *ExpenseHandler) CreateBulk(w http.ResponseWriter, r *http.Request) {
+	var req bulkCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	rows := make([]services.BulkExpenseRow, len(req.Rows))
+	for i, row := range req.Rows {
+		if row.IsInstallment {
+			rows[i] = services.BulkExpenseRow{
+				IsInstallment: true,
+				Installment: services.InstallmentPurchaseInput{
+					Description:      row.Description,
+					TotalAmount:      row.TotalAmount,
+					InstallmentCount: row.InstallmentCount,
+					PurchaseDate:     row.PurchaseDate,
+					CategoryID:       row.CategoryID,
+					PersonID:         row.PersonID,
+					PaymentMethodID:  row.PaymentMethodID,
+					BucketID:         row.BucketID,
+					BankID:           row.BankID,
+				},
+			}
+			continue
+		}
+
+		rows[i] = services.BulkExpenseRow{
+			Expense: models.Expense{
+				Description:     row.Description,
+				Amount:          row.Amount,
+				Type:            row.Type,
+				Date:            row.Date,
+				CategoryID:      row.CategoryID,
+				PersonID:        row.PersonID,
+				PaymentMethodID: row.PaymentMethodID,
+				BucketID:        row.BucketID,
+				BankID:          row.BankID,
+				InvestmentBoxID: row.InvestmentBoxID,
+			},
+		}
+	}
+
+	outcomes := h.Service.CreateBulk(rows)
+
+	results := make([]bulkRowResponse, len(outcomes))
+	created := []models.Expense{}
+	for i, outcome := range outcomes {
+		if outcome.Err != nil {
+			results[i] = bulkRowResponse{Row: outcome.Row, OK: false, Error: outcome.Err.Error()}
+			continue
+		}
+		results[i] = bulkRowResponse{Row: outcome.Row, OK: true}
+		created = append(created, outcome.Created...)
+	}
+
+	respondJSON(w, http.StatusOK, bulkCreateResponse{Results: results, Created: created})
 }
 
 func (h *ExpenseHandler) GenerateDueRecurring(w http.ResponseWriter, r *http.Request) {
@@ -177,21 +268,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, services.ErrInvalidAmount) ||
-			errors.Is(err, services.ErrInvalidType) ||
-			errors.Is(err, services.ErrEmptyCategory) ||
-			errors.Is(err, services.ErrEmptyPerson) ||
-			errors.Is(err, services.ErrEmptyPaymentMethod) ||
-			errors.Is(err, services.ErrEmptyBucket) ||
-			errors.Is(err, services.ErrEmptyBank) ||
-			errors.Is(err, services.ErrEmptyInvestmentBox) ||
-			errors.Is(err, services.ErrEmptyDescription) ||
-			errors.Is(err, services.ErrCategoryNotFound) ||
-			errors.Is(err, services.ErrPersonNotFound) ||
-			errors.Is(err, services.ErrPaymentMethodNotFound) ||
-			errors.Is(err, services.ErrBucketNotFound) ||
-			errors.Is(err, services.ErrBankNotFound) ||
-			errors.Is(err, services.ErrInvestmentBoxNotFound) {
+		if isClientValidationError(err) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}

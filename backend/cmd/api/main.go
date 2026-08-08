@@ -65,6 +65,7 @@ func main() {
 	mux.HandleFunc("GET /expenses/{id}", expenseHandler.GetByID)
 	mux.HandleFunc("POST /expenses", expenseHandler.Create)
 	mux.HandleFunc("POST /expenses/installments", expenseHandler.CreateInstallments)
+	mux.HandleFunc("POST /expenses/bulk", expenseHandler.CreateBulk)
 	mux.HandleFunc("PUT /expenses/{id}", expenseHandler.Update)
 	mux.HandleFunc("DELETE /expenses/{id}", expenseHandler.Delete)
 

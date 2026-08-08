@@ -1,3 +1,5 @@
+import DatePicker from './DatePicker'
+
 function FilterBar({ filters, onChange, categories, people, paymentMethods, buckets, banks }) {
   const handleField = (field) => (event) => {
     onChange({ ...filters, [field]: event.target.value })
@@ -88,12 +90,12 @@ function FilterBar({ filters, onChange, categories, people, paymentMethods, buck
 
       <div className="filter-field">
         <label htmlFor="filter-date-from">Período de</label>
-        <input id="filter-date-from" type="date" value={filters.dateFrom} onChange={handleField('dateFrom')} />
+        <DatePicker id="filter-date-from" value={filters.dateFrom} onChange={handleField('dateFrom')} />
       </div>
 
       <div className="filter-field">
         <label htmlFor="filter-date-to">até</label>
-        <input id="filter-date-to" type="date" value={filters.dateTo} onChange={handleField('dateTo')} />
+        <DatePicker id="filter-date-to" value={filters.dateTo} onChange={handleField('dateTo')} />
       </div>
 
       {hasActiveFilters && (

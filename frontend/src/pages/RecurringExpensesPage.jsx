@@ -200,6 +200,7 @@ function RecurringExpensesPage() {
   const [form, setForm] = useState(emptyForm)
   const [isCreating, setIsCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
 
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState(emptyForm)
@@ -306,29 +307,49 @@ function RecurringExpensesPage() {
       </div>
 
       <section className="panel">
-        <div className="panel-header">
-          <h2>Novo gasto fixo</h2>
-          <p className="state-message" style={{ padding: 0, textAlign: 'left' }}>
-            Repetem todo mês no dia configurado — aparecem automaticamente na próxima vez que você abrir o app.
-          </p>
-        </div>
+        <button
+          type="button"
+          className="panel-header panel-header--toggle"
+          onClick={() => setIsCreateFormOpen((open) => !open)}
+          aria-expanded={isCreateFormOpen}
+        >
+          <span>
+            <h2>Novo gasto fixo</h2>
+            <p className="state-message" style={{ padding: 0, textAlign: 'left' }}>
+              Repetem todo mês no dia configurado — aparecem automaticamente na próxima vez que você abrir o app.
+            </p>
+          </span>
+          <svg
+            className={`panel-header-chevron${isCreateFormOpen ? ' panel-header-chevron--open' : ''}`}
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+          >
+            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
 
-        <form className="expense-form" onSubmit={handleCreate} style={{ width: 'auto', padding: '20px 24px' }}>
-          <RecurringFields
-            idPrefix="create"
-            form={form}
-            onChange={setForm}
-            categories={categories}
-            people={people}
-            paymentMethods={paymentMethods}
-            buckets={buckets}
-            banks={banks}
-          />
-          <button type="submit" className="btn btn-primary" disabled={isCreating || !isFormComplete(form)}>
-            Adicionar
-          </button>
-          {createError && <p className="form-error">{createError}</p>}
-        </form>
+        <div className={`collapsible${isCreateFormOpen ? ' collapsible--open' : ''}`}>
+          <div className="collapsible-inner">
+            <form className="expense-form" onSubmit={handleCreate} style={{ width: 'auto', padding: '20px 24px' }}>
+              <RecurringFields
+                idPrefix="create"
+                form={form}
+                onChange={setForm}
+                categories={categories}
+                people={people}
+                paymentMethods={paymentMethods}
+                buckets={buckets}
+                banks={banks}
+              />
+              <button type="submit" className="btn btn-primary" disabled={isCreating || !isFormComplete(form)}>
+                Adicionar
+              </button>
+              {createError && <p className="form-error">{createError}</p>}
+            </form>
+          </div>
+        </div>
       </section>
 
       <section className="panel">

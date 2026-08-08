@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { createExpense, createInstallmentPurchase } from '../api/expenses'
+import DatePicker from './DatePicker'
 import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
@@ -198,13 +199,7 @@ function ExpenseForm({ onExpenseCreated }) {
           <div className="field-row">
             <div className="field">
               <label htmlFor="purchase-date">Data da compra</label>
-              <input
-                id="purchase-date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
+              <DatePicker id="purchase-date" value={date} onChange={(e) => setDate(e.target.value)} required />
             </div>
 
             <div className="field">
@@ -242,13 +237,7 @@ function ExpenseForm({ onExpenseCreated }) {
 
           <div className="field">
             <label htmlFor="date">Data</label>
-            <input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
+            <DatePicker id="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
 
           <div className="field">

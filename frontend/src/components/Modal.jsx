@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-function Modal({ isOpen, onClose, children }) {
+function Modal({ isOpen, onClose, children, contentClassName }) {
   useEffect(() => {
     if (!isOpen) return
 
@@ -16,7 +16,10 @@ function Modal({ isOpen, onClose, children }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={contentClassName ? `modal-content ${contentClassName}` : 'modal-content'}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

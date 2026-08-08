@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
-import ExpenseForm from './components/ExpenseForm'
+import AddExpenseModal from './components/AddExpenseModal'
 import ExpenseEditForm from './components/ExpenseEditForm'
 import Modal from './components/Modal'
 import Drawer from './components/Drawer'
@@ -85,6 +85,10 @@ function App() {
     const newExpenses = Array.isArray(created) ? created : [created]
     setExpenses((prevExpenses) => [...prevExpenses, ...newExpenses])
     setIsAddOpen(false)
+  }
+
+  const handleExpensesCreated = (created) => {
+    setExpenses((prevExpenses) => [...prevExpenses, ...created])
   }
 
   const handleDelete = (id) => {
@@ -497,9 +501,12 @@ function App() {
         />
       </Routes>
 
-      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)}>
-        <ExpenseForm onExpenseCreated={handleExpenseCreated} />
-      </Modal>
+      <AddExpenseModal
+        isOpen={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        onExpenseCreated={handleExpenseCreated}
+        onExpensesCreated={handleExpensesCreated}
+      />
 
       <Modal isOpen={editingExpense !== null} onClose={() => setEditingExpense(null)}>
         {editingExpense && (
