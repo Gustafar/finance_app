@@ -123,8 +123,6 @@ function ExpenseForm({ onExpenseCreated }) {
 
   return (
     <form className="expense-form" onSubmit={handleSubmit}>
-      <h2>Nova transação</h2>
-
       <div className="field">
         <label>Tipo</label>
         <div className="type-toggle" role="radiogroup" aria-label="Tipo de transação">

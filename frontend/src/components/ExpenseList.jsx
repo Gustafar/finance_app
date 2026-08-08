@@ -7,6 +7,16 @@ import ConfirmDialog from './ConfirmDialog'
 function ExpenseList({ expenses, onDelete, onEdit }) {
   const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [expandedIds, setExpandedIds] = useState(() => new Set())
+
+  const toggleExpanded = (id) => {
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   return (
     <>
@@ -18,8 +28,13 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
           const bucketColor = paletteColor(expense.bucket_color)
           const bankColor = paletteColor(expense.bank_color)
           const amountConfig = TRANSACTION_TYPE_AMOUNT_STYLE[expense.type] ?? TRANSACTION_TYPE_AMOUNT_STYLE.expense
+          const isExpanded = expandedIds.has(expense.id)
           return (
-            <li className="expense-row" key={expense.id}>
+            <li
+              className={`expense-row${isExpanded ? ' expense-row--expanded' : ''}`}
+              key={expense.id}
+              onClick={() => toggleExpanded(expense.id)}
+            >
               <div className="expense-badges">
                 <span
                   className="badge badge--category"
@@ -78,7 +93,10 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
                 <button
                   type="button"
                   className="icon-btn"
-                  onClick={() => onEdit(expense)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit(expense)
+                  }}
                   aria-label="Editar despesa"
                   title="Editar"
                 >
@@ -95,7 +113,10 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
                 <button
                   type="button"
                   className="icon-btn icon-btn--danger"
-                  onClick={() => setPendingDeleteId(expense.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPendingDeleteId(expense.id)
+                  }}
                   aria-label="Excluir despesa"
                   title="Excluir"
                 >

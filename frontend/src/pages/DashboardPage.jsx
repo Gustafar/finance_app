@@ -1,6 +1,6 @@
 import ExpenseList from '../components/ExpenseList'
 import SummaryCard from '../components/SummaryCard'
-import FilterBar from '../components/FilterBar'
+import FilterButton from '../components/FilterButton'
 import { formatCurrency } from '../utils/format'
 import { formatMonthLabel } from '../utils/date'
 
@@ -13,47 +13,46 @@ function DashboardPage({
   loadError,
   expenses,
   filteredExpenses,
-  filters,
-  onFiltersChange,
-  categories,
-  people,
-  paymentMethods,
-  buckets,
-  banks,
+  onOpenFilters,
+  hasActiveFilters,
   onAddClick,
   onEditExpense,
   onDeleteExpense,
 }) {
   return (
     <main className="container">
-      <div className="month-nav">
-        <button
-          type="button"
-          className="icon-btn"
-          onClick={() => onShiftMonth(-1)}
-          disabled={periodFilterActive}
-          aria-label="Mês anterior"
-          title="Mês anterior"
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <span className="month-nav-label">
-          {periodFilterActive ? 'Período personalizado' : formatMonthLabel(selectedMonth)}
-        </span>
-        <button
-          type="button"
-          className="icon-btn"
-          onClick={() => onShiftMonth(1)}
-          disabled={periodFilterActive}
-          aria-label="Próximo mês"
-          title="Próximo mês"
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+      <div className="dashboard-toolbar">
+        <div className="month-nav">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => onShiftMonth(-1)}
+            disabled={periodFilterActive}
+            aria-label="Mês anterior"
+            title="Mês anterior"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <span className="month-nav-label">
+            {periodFilterActive ? 'Período personalizado' : formatMonthLabel(selectedMonth)}
+          </span>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => onShiftMonth(1)}
+            disabled={periodFilterActive}
+            aria-label="Próximo mês"
+            title="Próximo mês"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        <FilterButton onClick={onOpenFilters} active={hasActiveFilters} />
       </div>
 
       <section className="summary-grid">
@@ -66,16 +65,6 @@ function DashboardPage({
           sub={summary.count > 0 ? formatCurrency(summary.topCategoryAmount) : null}
         />
       </section>
-
-      <FilterBar
-        filters={filters}
-        onChange={onFiltersChange}
-        categories={categories}
-        people={people}
-        paymentMethods={paymentMethods}
-        buckets={buckets}
-        banks={banks}
-      />
 
       <section className="panel">
         <div className="panel-header">

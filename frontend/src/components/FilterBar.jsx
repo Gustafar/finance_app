@@ -5,27 +5,6 @@ function FilterBar({ filters, onChange, categories, people, paymentMethods, buck
     onChange({ ...filters, [field]: event.target.value })
   }
 
-  const hasActiveFilters =
-    filters.categoryId ||
-    filters.personId ||
-    filters.paymentMethodId ||
-    filters.bucketId ||
-    filters.bankId ||
-    filters.dateFrom ||
-    filters.dateTo
-
-  const handleClear = () => {
-    onChange({
-      categoryId: '',
-      personId: '',
-      paymentMethodId: '',
-      bucketId: '',
-      bankId: '',
-      dateFrom: '',
-      dateTo: '',
-    })
-  }
-
   return (
     <div className="filter-bar">
       <div className="filter-field">
@@ -97,12 +76,6 @@ function FilterBar({ filters, onChange, categories, people, paymentMethods, buck
         <label htmlFor="filter-date-to">até</label>
         <DatePicker id="filter-date-to" value={filters.dateTo} onChange={handleField('dateTo')} />
       </div>
-
-      {hasActiveFilters && (
-        <button type="button" className="btn btn-secondary filter-clear" onClick={handleClear}>
-          Limpar filtros
-        </button>
-      )}
     </div>
   )
 }
