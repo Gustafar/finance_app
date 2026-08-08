@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
-import ExpenseForm from './components/ExpenseForm'
+import AddExpenseModal from './components/AddExpenseModal'
 import ExpenseEditForm from './components/ExpenseEditForm'
 import Modal from './components/Modal'
 import Drawer from './components/Drawer'
+import LoadingBar from './components/LoadingBar'
 import CategoryManager from './components/CategoryManager'
 import PersonManager from './components/PersonManager'
 import PaymentMethodManager from './components/PaymentMethodManager'
@@ -86,6 +87,10 @@ function App() {
     setIsAddOpen(false)
   }
 
+  const handleExpensesCreated = (created) => {
+    setExpenses((prevExpenses) => [...prevExpenses, ...created])
+  }
+
   const handleDelete = (id) => {
     deleteExpense(id)
       .then(() => {
@@ -155,6 +160,8 @@ function App() {
 
   return (
     <div className="page">
+      {isLoading && <LoadingBar />}
+
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark">R$</span>
@@ -494,9 +501,12 @@ function App() {
         />
       </Routes>
 
-      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)}>
-        <ExpenseForm onExpenseCreated={handleExpenseCreated} />
-      </Modal>
+      <AddExpenseModal
+        isOpen={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        onExpenseCreated={handleExpenseCreated}
+        onExpensesCreated={handleExpensesCreated}
+      />
 
       <Modal isOpen={editingExpense !== null} onClose={() => setEditingExpense(null)}>
         {editingExpense && (

@@ -60,6 +60,44 @@ func (h *RecurringExpenseHandler) Create(w http.ResponseWriter, r *http.Request)
 	respondJSON(w, http.StatusCreated, created)
 }
 
+type recurringBulkCreateRequest struct {
+	Rows []models.RecurringExpense `json:"rows"`
+}
+
+type recurringBulkRowResponse struct {
+	Row   int    `json:"row"`
+	OK    bool   `json:"ok"`
+	Error string `json:"error,omitempty"`
+}
+
+type recurringBulkCreateResponse struct {
+	Results []recurringBulkRowResponse `json:"results"`
+	Created []models.RecurringExpense  `json:"created"`
+}
+
+func (h *RecurringExpenseHandler) CreateBulk(w http.ResponseWriter, r *http.Request) {
+	var req recurringBulkCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	outcomes := h.Service.CreateBulk(req.Rows)
+
+	results := make([]recurringBulkRowResponse, len(outcomes))
+	created := []models.RecurringExpense{}
+	for i, outcome := range outcomes {
+		if outcome.Err != nil {
+			results[i] = recurringBulkRowResponse{Row: outcome.Row, OK: false, Error: outcome.Err.Error()}
+			continue
+		}
+		results[i] = recurringBulkRowResponse{Row: outcome.Row, OK: true}
+		created = append(created, outcome.Created)
+	}
+
+	respondJSON(w, http.StatusOK, recurringBulkCreateResponse{Results: results, Created: created})
+}
+
 func (h *RecurringExpenseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	recurrences, err := h.Service.GetAll()
 	if err != nil {

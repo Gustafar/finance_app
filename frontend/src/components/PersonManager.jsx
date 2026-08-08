@@ -4,6 +4,7 @@ import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { usePeople, sortByName } from '../hooks/usePeople'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
+import LoadingBar from './LoadingBar'
 
 function PersonManager() {
   const { people, setPeople, isLoading, error: loadError } = usePeople()
@@ -88,6 +89,7 @@ function PersonManager() {
 
   return (
     <div className="entity-manager">
+      {isLoading && <LoadingBar variant="dialog" />}
       <h2>Responsáveis</h2>
 
       <form className="entity-create-form" onSubmit={handleCreate}>
@@ -108,7 +110,6 @@ function PersonManager() {
 
       {deleteError && <p className="form-error">{deleteError}</p>}
 
-      {isLoading && <p className="state-message">Carregando responsáveis…</p>}
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
       {!isLoading && !loadError && people.length === 0 && (
         <p className="state-message">Nenhum responsável cadastrado ainda.</p>

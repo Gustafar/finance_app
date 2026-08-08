@@ -249,6 +249,42 @@ func referencedEntityError(err error) error {
 	return nil
 }
 
+// BulkExpenseRow is one row of a multi-row entry: either a plain expense or an installment purchase.
+type BulkExpenseRow struct {
+	IsInstallment bool
+	Expense       models.Expense
+	Installment   InstallmentPurchaseInput
+}
+
+type BulkRowResult struct {
+	Row     int
+	Created []models.Expense
+	Err     error
+}
+
+// CreateBulk inserts each row independently, continuing past failures so valid rows still get
+// created; the caller inspects each result to know which rows need fixing and resubmitting.
+func (s *ExpenseService) CreateBulk(rows []BulkExpenseRow) []BulkRowResult {
+	results := make([]BulkRowResult, len(rows))
+
+	for i, row := range rows {
+		if row.IsInstallment {
+			created, err := s.CreateInstallmentPurchase(row.Installment)
+			results[i] = BulkRowResult{Row: i, Created: created, Err: err}
+			continue
+		}
+
+		created, err := s.Create(row.Expense)
+		if err != nil {
+			results[i] = BulkRowResult{Row: i, Err: err}
+			continue
+		}
+		results[i] = BulkRowResult{Row: i, Created: []models.Expense{created}}
+	}
+
+	return results
+}
+
 func (s *ExpenseService) Create(expense models.Expense) (models.Expense, error) {
 	expense = normalizeExpense(expense)
 	if err := s.validate(expense); err != nil {

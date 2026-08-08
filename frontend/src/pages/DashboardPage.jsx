@@ -60,7 +60,6 @@ function DashboardPage({
         <SummaryCard label="Total gasto" value={formatCurrency(summary.totalExpense)} tone="expense" />
         <SummaryCard label="Total recebido" value={formatCurrency(summary.totalIncome)} tone="income" />
         <SummaryCard label="Total investido" value={formatCurrency(summary.totalInvestment)} tone="investment" />
-        <SummaryCard label="Transações no mês" value={summary.count} />
         <SummaryCard
           label="Maior categoria"
           value={summary.topCategory}

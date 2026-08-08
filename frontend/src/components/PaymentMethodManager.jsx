@@ -4,6 +4,7 @@ import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { usePaymentMethods, sortByName } from '../hooks/usePaymentMethods'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
+import LoadingBar from './LoadingBar'
 
 function PaymentMethodManager() {
   const { paymentMethods, setPaymentMethods, isLoading, error: loadError } = usePaymentMethods()
@@ -90,6 +91,7 @@ function PaymentMethodManager() {
 
   return (
     <div className="entity-manager">
+      {isLoading && <LoadingBar variant="dialog" />}
       <h2>Métodos de pagamento</h2>
 
       <form className="entity-create-form" onSubmit={handleCreate}>
@@ -110,7 +112,6 @@ function PaymentMethodManager() {
 
       {deleteError && <p className="form-error">{deleteError}</p>}
 
-      {isLoading && <p className="state-message">Carregando métodos de pagamento…</p>}
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
       {!isLoading && !loadError && paymentMethods.length === 0 && (
         <p className="state-message">Nenhum método de pagamento cadastrado ainda.</p>

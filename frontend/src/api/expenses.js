@@ -12,6 +12,10 @@ export function createInstallmentPurchase(purchase) {
   return fetchJson('/expenses/installments', { method: 'POST', body: JSON.stringify(purchase) })
 }
 
+export function createExpensesBulk(rows) {
+  return fetchJson('/expenses/bulk', { method: 'POST', body: JSON.stringify({ rows }) })
+}
+
 export function updateExpense(id, expense) {
   return fetchJson(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(expense) })
 }

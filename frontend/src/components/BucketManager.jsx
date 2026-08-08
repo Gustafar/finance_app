@@ -4,6 +4,7 @@ import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useBuckets, sortByName } from '../hooks/useBuckets'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
+import LoadingBar from './LoadingBar'
 
 function BucketManager() {
   const { buckets, setBuckets, isLoading, error: loadError } = useBuckets()
@@ -88,6 +89,7 @@ function BucketManager() {
 
   return (
     <div className="entity-manager">
+      {isLoading && <LoadingBar variant="dialog" />}
       <h2>Envelopes</h2>
 
       <form className="entity-create-form" onSubmit={handleCreate}>
@@ -108,7 +110,6 @@ function BucketManager() {
 
       {deleteError && <p className="form-error">{deleteError}</p>}
 
-      {isLoading && <p className="state-message">Carregando Envelopes…</p>}
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
       {!isLoading && !loadError && buckets.length === 0 && (
         <p className="state-message">Nenhum Envelope cadastrado ainda.</p>
