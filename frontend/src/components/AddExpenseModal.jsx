@@ -13,6 +13,8 @@ function AddExpenseModal({ isOpen, onClose, onExpenseCreated, onExpensesCreated 
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} contentClassName={mode === 'bulk' ? 'modal-content--scrollable-body' : undefined}>
+      <h2 className="modal-title">Nova despesa</h2>
+
       <div className="type-toggle add-expense-tabs" role="tablist" aria-label="Modo de lançamento">
         <button
           type="button"

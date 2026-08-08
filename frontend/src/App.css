@@ -154,7 +154,7 @@
 
 @media (max-width: 640px) {
   .summary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -183,6 +183,16 @@
 
 /* Month navigation */
 
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-toolbar .month-nav {
+  flex: 1;
+}
+
 .month-nav {
   display: flex;
   align-items: center;
@@ -198,6 +208,34 @@
   color: var(--text-h);
 }
 
+/* Filter trigger button */
+
+.filter-trigger-btn {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.filter-trigger-btn--active {
+  background: var(--primary-bg);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filter-trigger-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 1.5px solid var(--surface);
+}
+
+.page-header-filter-btn {
+  margin-left: auto;
+}
+
 /* Filter bar */
 
 .filter-bar {
@@ -205,10 +243,6 @@
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 8px;
-  padding: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
 }
 
 .filter-field {
@@ -261,14 +295,11 @@
   border-color: var(--primary);
 }
 
-.filter-bar .filter-clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 30px;
-  padding: 0 10px;
-  font-size: 12px;
-  white-space: nowrap;
+.filter-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 @media (max-width: 720px) {
@@ -350,6 +381,13 @@
   color: inherit;
   cursor: pointer;
   transition: background 0.15s ease;
+}
+
+.panel-header--actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .panel-header--toggle:hover {
@@ -758,9 +796,12 @@
   color: var(--primary);
 }
 
+.modal-title {
+  margin: 0 46px 16px 0;
+}
+
 .add-expense-tabs {
   margin-bottom: 16px;
-  padding-right: 46px;
 }
 
 .bulk-grid-form {
@@ -772,7 +813,6 @@
   min-height: 0;
 }
 
-.bulk-grid-form > h2,
 .bulk-grid-hint,
 .bulk-grid-actions {
   flex-shrink: 0;
@@ -1113,6 +1153,10 @@
   border-bottom: none;
 }
 
+.entity-row--inline-edit {
+  padding: 14px 24px;
+}
+
 .entity-row-main {
   display: flex;
   align-items: center;
@@ -1176,6 +1220,7 @@
   width: min(1000px, 100%);
 }
 
+.modal-content--scrollable-body .modal-title,
 .modal-content--scrollable-body .add-expense-tabs {
   flex-shrink: 0;
 }
@@ -1290,34 +1335,47 @@
 
 @media (max-width: 860px) {
   .expense-row {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
     grid-template-areas:
-      'badges actions'
-      'main main'
-      'amount amount';
-    row-gap: 8px;
+      'main amount actions'
+      'tags tags tags';
+    row-gap: 4px;
+    align-items: center;
+    padding: 12px 24px;
+    cursor: pointer;
   }
 
   .expense-badges {
-    grid-area: badges;
-    display: flex;
+    grid-area: tags;
+    display: none;
     flex-wrap: wrap;
     gap: 6px;
+    margin-top: 6px;
+  }
+
+  .expense-row--expanded .expense-badges {
+    display: flex;
   }
 
   .expense-actions {
     grid-area: actions;
     justify-self: end;
-    align-self: start;
   }
 
   .expense-main {
     grid-area: main;
+    min-width: 0;
+  }
+
+  .expense-description {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
   }
 
   .expense-amount {
     grid-area: amount;
-    justify-self: start;
+    justify-self: end;
   }
 
   .field-row {

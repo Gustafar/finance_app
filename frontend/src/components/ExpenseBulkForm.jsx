@@ -276,7 +276,6 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
   return (
     <div className="bulk-grid-form">
-      <h2>Múltiplas transações</h2>
       <p className="bulk-grid-hint">
         Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Descrição, Valor, Tipo, Categoria,
         Responsável, Método de pagamento, Envelope, Banco.

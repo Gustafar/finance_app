@@ -12,6 +12,8 @@ import { formatCurrency } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
 import ConfirmDialog from '../components/ConfirmDialog'
 import LoadingBar from '../components/LoadingBar'
+import Modal from '../components/Modal'
+import FilterButton from '../components/FilterButton'
 import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
 
 const emptyForm = {
@@ -215,6 +217,15 @@ function RecurringExpensesPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+
+  const hasActiveFilters = search.trim() !== '' || typeFilter !== 'all' || categoryFilter !== 'all'
+
+  const handleClearFilters = () => {
+    setSearch('')
+    setTypeFilter('all')
+    setCategoryFilter('all')
+  }
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -389,39 +400,9 @@ function RecurringExpensesPage() {
       </section>
 
       <section className="panel">
-        <div className="panel-header">
+        <div className="panel-header panel-header--actions">
           <h2>Gastos fixos cadastrados</h2>
-        </div>
-
-        <div className="field-row" style={{ padding: '16px 24px 0' }}>
-          <div className="field">
-            <label htmlFor="filter-search">Buscar</label>
-            <input
-              id="filter-search"
-              type="text"
-              placeholder="Descrição…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="filter-type">Tipo</label>
-            <select id="filter-type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-              <option value="all">Todos</option>
-              {TRANSACTION_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="filter-category">Categoria</label>
-            <select id="filter-category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-              <option value="all">Todas</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
+          <FilterButton onClick={() => setIsFiltersOpen(true)} active={hasActiveFilters} />
         </div>
 
         {deleteError && <p className="form-error" style={{ padding: '0 24px' }}>{deleteError}</p>}
@@ -443,7 +424,7 @@ function RecurringExpensesPage() {
 
               if (isEditing) {
                 return (
-                  <li className="entity-row" key={recurring.id}>
+                  <li className="entity-row entity-row--inline-edit" key={recurring.id}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                       <RecurringFields
                         idPrefix={`edit-${recurring.id}`}
@@ -565,6 +546,49 @@ function RecurringExpensesPage() {
           </ul>
         )}
       </section>
+
+      <Modal isOpen={isFiltersOpen} onClose={() => setIsFiltersOpen(false)}>
+        <h2 className="modal-title">Filtros</h2>
+
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="filter-search">Buscar</label>
+            <input
+              id="filter-search"
+              type="text"
+              placeholder="Descrição…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="filter-type">Tipo</label>
+            <select id="filter-type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="all">Todos</option>
+              {TRANSACTION_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="filter-category">Categoria</label>
+            <select id="filter-category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+              <option value="all">Todas</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="filter-dialog-actions">
+            <button type="button" className="btn btn-secondary" onClick={handleClearFilters}>
+              Limpar filtros
+            </button>
+          </div>
+        )}
+      </Modal>
 
       <ConfirmDialog
         isOpen={pendingUpdateId !== null}

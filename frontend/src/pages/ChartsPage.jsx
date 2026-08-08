@@ -1,9 +1,19 @@
 import { Link } from 'react-router-dom'
 import MonthlyTrendChart from '../components/charts/MonthlyTrendChart'
 import BreakdownBarChart from '../components/charts/BreakdownBarChart'
+import FilterButton from '../components/FilterButton'
 import { formatMonthLabel } from '../utils/date'
 
-function ChartsPage({ expenses, filteredExpenses, isLoading, loadError, periodFilterActive, selectedMonth }) {
+function ChartsPage({
+  trendExpenses,
+  filteredExpenses,
+  isLoading,
+  loadError,
+  periodFilterActive,
+  selectedMonth,
+  onOpenFilters,
+  hasActiveFilters,
+}) {
   const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
 
   return (
@@ -15,6 +25,7 @@ function ChartsPage({ expenses, filteredExpenses, isLoading, loadError, periodFi
           </svg>
         </Link>
         <h1>Gráficos</h1>
+        <FilterButton onClick={onOpenFilters} active={hasActiveFilters} className="page-header-filter-btn" />
       </div>
 
       {isLoading && <p className="state-message">Carregando dados…</p>}
@@ -28,7 +39,7 @@ function ChartsPage({ expenses, filteredExpenses, isLoading, loadError, periodFi
               <p className="chart-caption">Despesas, receitas e investimentos nos últimos 6 meses.</p>
             </div>
             <div className="chart-body">
-              <MonthlyTrendChart expenses={expenses} />
+              <MonthlyTrendChart expenses={trendExpenses} />
             </div>
           </section>
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import AddExpenseModal from './components/AddExpenseModal'
 import ExpenseEditForm from './components/ExpenseEditForm'
+import FilterDialog from './components/FilterDialog'
 import Modal from './components/Modal'
 import Drawer from './components/Drawer'
 import LoadingBar from './components/LoadingBar'
@@ -21,19 +22,10 @@ import { fetchPaymentMethods } from './api/paymentMethods'
 import { fetchBuckets } from './api/buckets'
 import { fetchBanks } from './api/banks'
 import { currentYearMonth, sameYearMonth, shiftMonth } from './utils/date'
+import { EMPTY_FILTERS, hasActiveFilters, matchesFilters } from './utils/filters'
 import './App.css'
 
 const ChartsPage = lazy(() => import('./pages/ChartsPage'))
-
-const EMPTY_FILTERS = {
-  categoryId: '',
-  personId: '',
-  paymentMethodId: '',
-  bucketId: '',
-  bankId: '',
-  dateFrom: '',
-  dateTo: '',
-}
 
 function App() {
   const [expenses, setExpenses] = useState([])
@@ -41,6 +33,7 @@ function App() {
   const [loadError, setLoadError] = useState(null)
   const [editingExpense, setEditingExpense] = useState(null)
   const [isAddOpen, setIsAddOpen] = useState(false)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
   const [isPeopleOpen, setIsPeopleOpen] = useState(false)
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false)
@@ -109,6 +102,7 @@ function App() {
   }
 
   const hasPeriodFilter = Boolean(filters.dateFrom || filters.dateTo)
+  const filtersAreActive = hasActiveFilters(filters)
 
   const monthExpenses = useMemo(() => {
     if (hasPeriodFilter) {
@@ -123,16 +117,13 @@ function App() {
   }, [expenses, selectedMonth, hasPeriodFilter, filters.dateFrom, filters.dateTo])
 
   const filteredExpenses = useMemo(
-    () =>
-      monthExpenses.filter(
-        (expense) =>
-          (!filters.categoryId || expense.category_id === Number(filters.categoryId)) &&
-          (!filters.personId || expense.person_id === Number(filters.personId)) &&
-          (!filters.paymentMethodId || expense.payment_method_id === Number(filters.paymentMethodId)) &&
-          (!filters.bucketId || expense.bucket_id === Number(filters.bucketId)) &&
-          (!filters.bankId || expense.bank_id === Number(filters.bankId))
-      ),
-    [monthExpenses, filters.categoryId, filters.personId, filters.paymentMethodId, filters.bucketId, filters.bankId]
+    () => monthExpenses.filter((expense) => matchesFilters(expense, filters)),
+    [monthExpenses, filters]
+  )
+
+  const trendExpenses = useMemo(
+    () => expenses.filter((expense) => matchesFilters(expense, filters)),
+    [expenses, filters]
   )
 
   const summary = useMemo(() => {
@@ -459,13 +450,8 @@ function App() {
               loadError={loadError}
               expenses={expenses}
               filteredExpenses={filteredExpenses}
-              filters={filters}
-              onFiltersChange={setFilters}
-              categories={categories}
-              people={people}
-              paymentMethods={paymentMethods}
-              buckets={buckets}
-              banks={banks}
+              onOpenFilters={() => setIsFiltersOpen(true)}
+              hasActiveFilters={filtersAreActive}
               onAddClick={() => setIsAddOpen(true)}
               onEditExpense={setEditingExpense}
               onDeleteExpense={handleDelete}
@@ -478,12 +464,14 @@ function App() {
           element={
             <Suspense fallback={<main className="container"><p className="state-message">Carregando gráficos…</p></main>}>
               <ChartsPage
-                expenses={expenses}
+                trendExpenses={trendExpenses}
                 filteredExpenses={filteredExpenses}
                 isLoading={isLoading}
                 loadError={loadError}
                 periodFilterActive={hasPeriodFilter}
                 selectedMonth={selectedMonth}
+                onOpenFilters={() => setIsFiltersOpen(true)}
+                hasActiveFilters={filtersAreActive}
               />
             </Suspense>
           }
@@ -506,6 +494,18 @@ function App() {
         onClose={() => setIsAddOpen(false)}
         onExpenseCreated={handleExpenseCreated}
         onExpensesCreated={handleExpensesCreated}
+      />
+
+      <FilterDialog
+        isOpen={isFiltersOpen}
+        onClose={() => setIsFiltersOpen(false)}
+        filters={filters}
+        onChange={setFilters}
+        categories={categories}
+        people={people}
+        paymentMethods={paymentMethods}
+        buckets={buckets}
+        banks={banks}
       />
 
       <Modal isOpen={editingExpense !== null} onClose={() => setEditingExpense(null)}>
