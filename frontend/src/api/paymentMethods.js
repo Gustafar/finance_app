@@ -12,6 +12,10 @@ export function updatePaymentMethod(id, paymentMethod) {
   return fetchJson(`/payment-methods/${id}`, { method: 'PUT', body: JSON.stringify(paymentMethod) })
 }
 
+export function setDefaultPaymentMethod(id) {
+  return fetchJson(`/payment-methods/${id}/default`, { method: 'PUT' })
+}
+
 export function deletePaymentMethod(id) {
   return fetchJson(`/payment-methods/${id}`, { method: 'DELETE' })
 }

@@ -12,6 +12,10 @@ export function updateBank(id, bank) {
   return fetchJson(`/banks/${id}`, { method: 'PUT', body: JSON.stringify(bank) })
 }
 
+export function setDefaultBank(id) {
+  return fetchJson(`/banks/${id}/default`, { method: 'PUT' })
+}
+
 export function deleteBank(id) {
   return fetchJson(`/banks/${id}`, { method: 'DELETE' })
 }

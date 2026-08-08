@@ -118,6 +118,34 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updated)
 }
 
+func (h *CategoryHandler) SetDefault(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	if err := h.Service.SetDefault(id); err != nil {
+		if errors.Is(err, services.ErrCategoryNotFound) {
+			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	updated, err := h.Service.GetByID(id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, updated)
+}
+
 func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 

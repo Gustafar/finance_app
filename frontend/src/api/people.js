@@ -12,6 +12,10 @@ export function updatePerson(id, person) {
   return fetchJson(`/people/${id}`, { method: 'PUT', body: JSON.stringify(person) })
 }
 
+export function setDefaultPerson(id) {
+  return fetchJson(`/people/${id}/default`, { method: 'PUT' })
+}
+
 export function deletePerson(id) {
   return fetchJson(`/people/${id}`, { method: 'DELETE' })
 }

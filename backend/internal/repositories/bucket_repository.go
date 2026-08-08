@@ -87,6 +87,35 @@ func (r *BucketRepository) Update(id int, bucket models.Bucket) (models.Bucket, 
 	return bucket, nil
 }
 
+// SetDefault marks the given bucket as the sole default, unsetting any previous default.
+func (r *BucketRepository) SetDefault(id int) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("UPDATE buckets SET is_default = FALSE WHERE is_default = TRUE"); err != nil {
+		return err
+	}
+
+	result, err := tx.Exec("UPDATE buckets SET is_default = TRUE WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return tx.Commit()
+}
+
 // Delete reassigns referencing expenses to the default bucket first, so deleting never orphans data.
 func (r *BucketRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()

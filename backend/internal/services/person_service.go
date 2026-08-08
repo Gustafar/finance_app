@@ -77,6 +77,18 @@ func (s *PersonService) Update(id int, person models.Person) (models.Person, err
 	return updated, nil
 }
 
+func (s *PersonService) SetDefault(id int) error {
+	err := s.Repo.SetDefault(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrPersonNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (s *PersonService) Delete(id int) error {
 	person, err := s.Repo.GetByID(id)
 	if err != nil {

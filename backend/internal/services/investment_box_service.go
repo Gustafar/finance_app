@@ -77,6 +77,18 @@ func (s *InvestmentBoxService) Update(id int, box models.InvestmentBox) (models.
 	return updated, nil
 }
 
+func (s *InvestmentBoxService) SetDefault(id int) error {
+	err := s.Repo.SetDefault(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrInvestmentBoxNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (s *InvestmentBoxService) Delete(id int) error {
 	box, err := s.Repo.GetByID(id)
 	if err != nil {

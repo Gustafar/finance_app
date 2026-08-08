@@ -37,6 +37,20 @@ function ExpenseForm({ onExpenseCreated }) {
 
   const noCategories = !isLoadingCategories && categories.length === 0
 
+  const defaultCategoryId = useMemo(() => {
+    const defaultCategory = categories.find((c) => c.is_default)
+    return defaultCategory ? String(defaultCategory.id) : categories[0] ? String(categories[0].id) : ''
+  }, [categories])
+
+  const effectiveCategoryId = categoryId || defaultCategoryId
+
+  const defaultPaymentMethodId = useMemo(() => {
+    const defaultMethod = paymentMethods.find((m) => m.is_default)
+    return defaultMethod ? String(defaultMethod.id) : paymentMethods[0] ? String(paymentMethods[0].id) : ''
+  }, [paymentMethods])
+
+  const effectivePaymentMethodId = paymentMethodId || defaultPaymentMethodId
+
   const defaultPersonId = useMemo(() => {
     const defaultPerson = people.find((p) => p.is_default)
     return defaultPerson ? String(defaultPerson.id) : people[0] ? String(people[0].id) : ''
@@ -77,9 +91,9 @@ function ExpenseForm({ onExpenseCreated }) {
   const isFormInvalid =
     !description.trim() ||
     !date ||
-    !categoryId ||
+    !effectiveCategoryId ||
     !effectivePersonId ||
-    !paymentMethodId ||
+    !effectivePaymentMethodId ||
     !effectiveBucketId ||
     !effectiveBankId ||
     (type === 'investment' && !effectiveInvestmentBoxId) ||
@@ -96,9 +110,9 @@ function ExpenseForm({ onExpenseCreated }) {
 
     const shared = {
       description,
-      category_id: Number(categoryId),
+      category_id: Number(effectiveCategoryId),
       person_id: Number(effectivePersonId),
-      payment_method_id: Number(paymentMethodId),
+      payment_method_id: Number(effectivePaymentMethodId),
       bucket_id: Number(effectiveBucketId),
       bank_id: Number(effectiveBankId),
     }
@@ -217,11 +231,11 @@ function ExpenseForm({ onExpenseCreated }) {
               <DatePicker id="purchase-date" value={date} onChange={(e) => setDate(e.target.value)} required />
             </div>
 
-            <div className={`field${attemptedSubmit && !categoryId ? ' field--error' : ''}`}>
+            <div className={`field${attemptedSubmit && !effectiveCategoryId ? ' field--error' : ''}`}>
               <label htmlFor="category">Categoria</label>
               <select
                 id="category"
-                value={categoryId}
+                value={effectiveCategoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 required
                 disabled={noCategories}
@@ -255,11 +269,11 @@ function ExpenseForm({ onExpenseCreated }) {
             <DatePicker id="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
 
-          <div className={`field${attemptedSubmit && !categoryId ? ' field--error' : ''}`}>
+          <div className={`field${attemptedSubmit && !effectiveCategoryId ? ' field--error' : ''}`}>
             <label htmlFor="category">Categoria</label>
             <select
               id="category"
-              value={categoryId}
+              value={effectiveCategoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               required
               disabled={noCategories}
@@ -290,11 +304,11 @@ function ExpenseForm({ onExpenseCreated }) {
           </select>
         </div>
 
-        <div className={`field${attemptedSubmit && !paymentMethodId ? ' field--error' : ''}`}>
+        <div className={`field${attemptedSubmit && !effectivePaymentMethodId ? ' field--error' : ''}`}>
           <label htmlFor="payment-method">Método de pagamento</label>
           <select
             id="payment-method"
-            value={paymentMethodId}
+            value={effectivePaymentMethodId}
             onChange={(e) => setPaymentMethodId(e.target.value)}
             required
             disabled={isLoadingPaymentMethods}

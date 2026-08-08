@@ -77,6 +77,18 @@ func (s *CategoryService) Update(id int, category models.Category) (models.Categ
 	return updated, nil
 }
 
+func (s *CategoryService) SetDefault(id int) error {
+	err := s.Repo.SetDefault(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrCategoryNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (s *CategoryService) Delete(id int) error {
 	category, err := s.Repo.GetByID(id)
 	if err != nil {

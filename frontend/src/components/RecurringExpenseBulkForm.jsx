@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createRecurringExpensesBulk } from '../api/recurringExpenses'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
@@ -73,16 +73,21 @@ function isRowBlank(row) {
   return !row.description.trim() && !row.amount
 }
 
-function isRowComplete(row) {
+function isRowComplete(row, defaults) {
   const day = Number(row.dayOfMonth)
+  const effectiveCategoryId = row.categoryId || defaults.categoryId
+  const effectivePersonId = row.personId || defaults.personId
+  const effectivePaymentMethodId = row.paymentMethodId || defaults.paymentMethodId
+  const effectiveBucketId = row.bucketId || defaults.bucketId
+  const effectiveBankId = row.bankId || defaults.bankId
 
   return Boolean(
     row.description.trim() &&
-      row.categoryId &&
-      row.personId &&
-      row.paymentMethodId &&
-      row.bucketId &&
-      row.bankId &&
+      effectiveCategoryId &&
+      effectivePersonId &&
+      effectivePaymentMethodId &&
+      effectiveBucketId &&
+      effectiveBankId &&
       row.amount &&
       Number(row.amount) > 0 &&
       row.dayOfMonth &&
@@ -92,17 +97,17 @@ function isRowComplete(row) {
   )
 }
 
-function buildRowPayload(row) {
+function buildRowPayload(row, defaults) {
   return {
     description: row.description.trim(),
     amount: parseFloat(row.amount),
     type: row.type,
     day_of_month: Number(row.dayOfMonth),
-    category_id: Number(row.categoryId),
-    person_id: Number(row.personId),
-    payment_method_id: Number(row.paymentMethodId),
-    bucket_id: Number(row.bucketId),
-    bank_id: Number(row.bankId),
+    category_id: Number(row.categoryId || defaults.categoryId),
+    person_id: Number(row.personId || defaults.personId),
+    payment_method_id: Number(row.paymentMethodId || defaults.paymentMethodId),
+    bucket_id: Number(row.bucketId || defaults.bucketId),
+    bank_id: Number(row.bankId || defaults.bankId),
   }
 }
 
@@ -111,6 +116,25 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [summary, setSummary] = useState(null)
+
+  const defaults = useMemo(() => {
+    const defaultCategory = categories.find((c) => c.is_default)
+    const defaultPerson = people.find((p) => p.is_default)
+    const defaultPaymentMethod = paymentMethods.find((m) => m.is_default)
+    const defaultBucket = buckets.find((b) => b.is_default)
+    const defaultBank = banks.find((b) => b.is_default)
+    return {
+      categoryId: defaultCategory ? String(defaultCategory.id) : categories[0] ? String(categories[0].id) : '',
+      personId: defaultPerson ? String(defaultPerson.id) : people[0] ? String(people[0].id) : '',
+      paymentMethodId: defaultPaymentMethod
+        ? String(defaultPaymentMethod.id)
+        : paymentMethods[0]
+          ? String(paymentMethods[0].id)
+          : '',
+      bucketId: defaultBucket ? String(defaultBucket.id) : buckets[0] ? String(buckets[0].id) : '',
+      bankId: defaultBank ? String(defaultBank.id) : banks[0] ? String(banks[0].id) : '',
+    }
+  }, [categories, people, paymentMethods, buckets, banks])
 
   const lookups = { categories, people, paymentMethods, buckets, banks }
 
@@ -177,11 +201,11 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
 
     const nextRows = rows.map((row, index) => {
       if (isRowBlank(row)) return row
-      if (!isRowComplete(row)) {
+      if (!isRowComplete(row, defaults)) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
       }
       candidateIndices.push(index)
-      payloadRows.push(buildRowPayload(row))
+      payloadRows.push(buildRowPayload(row, defaults))
       return { ...row, status: 'idle', error: null }
     })
 
@@ -301,7 +325,7 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                   </td>
                   <td>
                     <select
-                      value={row.categoryId}
+                      value={row.categoryId || defaults.categoryId}
                       onChange={(e) => updateRow(index, { categoryId: e.target.value })}
                       onPaste={pasteHandler(index, 'categoryId')}
                     >
@@ -313,7 +337,7 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                   </td>
                   <td>
                     <select
-                      value={row.personId}
+                      value={row.personId || defaults.personId}
                       onChange={(e) => updateRow(index, { personId: e.target.value })}
                       onPaste={pasteHandler(index, 'personId')}
                     >
@@ -325,7 +349,7 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                   </td>
                   <td>
                     <select
-                      value={row.paymentMethodId}
+                      value={row.paymentMethodId || defaults.paymentMethodId}
                       onChange={(e) => updateRow(index, { paymentMethodId: e.target.value })}
                       onPaste={pasteHandler(index, 'paymentMethodId')}
                     >
@@ -337,7 +361,7 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                   </td>
                   <td>
                     <select
-                      value={row.bucketId}
+                      value={row.bucketId || defaults.bucketId}
                       onChange={(e) => updateRow(index, { bucketId: e.target.value })}
                       onPaste={pasteHandler(index, 'bucketId')}
                     >
@@ -349,7 +373,7 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                   </td>
                   <td>
                     <select
-                      value={row.bankId}
+                      value={row.bankId || defaults.bankId}
                       onChange={(e) => updateRow(index, { bankId: e.target.value })}
                       onPaste={pasteHandler(index, 'bankId')}
                     >

@@ -87,6 +87,35 @@ func (r *PersonRepository) Update(id int, person models.Person) (models.Person, 
 	return person, nil
 }
 
+// SetDefault marks the given person as the sole default, unsetting any previous default.
+func (r *PersonRepository) SetDefault(id int) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("UPDATE people SET is_default = FALSE WHERE is_default = TRUE"); err != nil {
+		return err
+	}
+
+	result, err := tx.Exec("UPDATE people SET is_default = TRUE WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return tx.Commit()
+}
+
 // Delete reassigns referencing expenses to the default person first, so deleting never orphans data.
 func (r *PersonRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()

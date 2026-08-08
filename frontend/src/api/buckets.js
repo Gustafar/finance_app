@@ -12,6 +12,10 @@ export function updateBucket(id, bucket) {
   return fetchJson(`/buckets/${id}`, { method: 'PUT', body: JSON.stringify(bucket) })
 }
 
+export function setDefaultBucket(id) {
+  return fetchJson(`/buckets/${id}/default`, { method: 'PUT' })
+}
+
 export function deleteBucket(id) {
   return fetchJson(`/buckets/${id}`, { method: 'DELETE' })
 }

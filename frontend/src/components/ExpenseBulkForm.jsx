@@ -80,16 +80,18 @@ function isRowBlank(row) {
 }
 
 function isRowComplete(row, defaults) {
+  const effectiveCategoryId = row.categoryId || defaults.categoryId
   const effectivePersonId = row.personId || defaults.personId
+  const effectivePaymentMethodId = row.paymentMethodId || defaults.paymentMethodId
   const effectiveBucketId = row.bucketId || defaults.bucketId
   const effectiveBankId = row.bankId || defaults.bankId
   const effectiveInvestmentBoxId = row.investmentBoxId || defaults.investmentBoxId
 
   const sharedOk =
     row.description.trim() &&
-    row.categoryId &&
+    effectiveCategoryId &&
     effectivePersonId &&
-    row.paymentMethodId &&
+    effectivePaymentMethodId &&
     effectiveBucketId &&
     effectiveBankId
 
@@ -108,9 +110,9 @@ function isRowComplete(row, defaults) {
 function buildRowPayload(row, defaults) {
   const shared = {
     description: row.description.trim(),
-    category_id: Number(row.categoryId),
+    category_id: Number(row.categoryId || defaults.categoryId),
     person_id: Number(row.personId || defaults.personId),
-    payment_method_id: Number(row.paymentMethodId),
+    payment_method_id: Number(row.paymentMethodId || defaults.paymentMethodId),
     bucket_id: Number(row.bucketId || defaults.bucketId),
     bank_id: Number(row.bankId || defaults.bankId),
   }
@@ -151,17 +153,25 @@ function ExpenseBulkForm({ onExpensesCreated }) {
   const noCategories = !isLoadingCategories && categories.length === 0
 
   const defaults = useMemo(() => {
+    const defaultCategory = categories.find((c) => c.is_default)
     const defaultPerson = people.find((p) => p.is_default)
+    const defaultPaymentMethod = paymentMethods.find((m) => m.is_default)
     const defaultBucket = buckets.find((b) => b.is_default)
     const defaultBank = banks.find((b) => b.is_default)
     const defaultBox = investmentBoxes.find((b) => b.is_default)
     return {
+      categoryId: defaultCategory ? String(defaultCategory.id) : categories[0] ? String(categories[0].id) : '',
       personId: defaultPerson ? String(defaultPerson.id) : people[0] ? String(people[0].id) : '',
+      paymentMethodId: defaultPaymentMethod
+        ? String(defaultPaymentMethod.id)
+        : paymentMethods[0]
+          ? String(paymentMethods[0].id)
+          : '',
       bucketId: defaultBucket ? String(defaultBucket.id) : buckets[0] ? String(buckets[0].id) : '',
       bankId: defaultBank ? String(defaultBank.id) : banks[0] ? String(banks[0].id) : '',
       investmentBoxId: defaultBox ? String(defaultBox.id) : investmentBoxes[0] ? String(investmentBoxes[0].id) : '',
     }
-  }, [people, buckets, banks, investmentBoxes])
+  }, [categories, people, paymentMethods, buckets, banks, investmentBoxes])
 
   const lookups = { categories, people, paymentMethods, buckets, banks }
 
@@ -355,7 +365,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   </td>
                   <td>
                     <select
-                      value={row.categoryId}
+                      value={row.categoryId || defaults.categoryId}
                       onChange={(e) => updateRow(index, { categoryId: e.target.value })}
                       onPaste={pasteHandler(index, 'categoryId')}
                       disabled={noCategories}
@@ -381,7 +391,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   </td>
                   <td>
                     <select
-                      value={row.paymentMethodId}
+                      value={row.paymentMethodId || defaults.paymentMethodId}
                       onChange={(e) => updateRow(index, { paymentMethodId: e.target.value })}
                       onPaste={pasteHandler(index, 'paymentMethodId')}
                       disabled={isLoadingPaymentMethods}

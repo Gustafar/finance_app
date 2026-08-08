@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createBucket, updateBucket, deleteBucket } from '../api/buckets'
+import { createBucket, updateBucket, deleteBucket, setDefaultBucket } from '../api/buckets'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useBuckets, sortByName } from '../hooks/useBuckets'
 import ColorSwatchPicker from './ColorSwatchPicker'
@@ -22,6 +22,7 @@ function BucketManager() {
   const [deleteError, setDeleteError] = useState(null)
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [defaultError, setDefaultError] = useState(null)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -74,6 +75,19 @@ function BucketManager() {
       })
   }
 
+  const handleSetDefault = (id) => {
+    setDefaultError(null)
+
+    setDefaultBucket(id)
+      .then(() => {
+        setBuckets((prev) => sortByName(prev.map((bucket) => ({ ...bucket, is_default: bucket.id === id }))))
+      })
+      .catch((error) => {
+        console.error('Erro ao definir Envelope padrão:', error)
+        setDefaultError('Não foi possível definir o Envelope padrão. Tente novamente.')
+      })
+  }
+
   const handleDelete = (id) => {
     setDeleteError(null)
 
@@ -109,6 +123,7 @@ function BucketManager() {
       {createError && <p className="form-error">{createError}</p>}
 
       {deleteError && <p className="form-error">{deleteError}</p>}
+      {defaultError && <p className="form-error">{defaultError}</p>}
 
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
       {!isLoading && !loadError && buckets.length === 0 && (
@@ -167,6 +182,24 @@ function BucketManager() {
                         {bucket.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
+                        {!bucket.is_default && (
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            onClick={() => handleSetDefault(bucket.id)}
+                            aria-label="Definir como padrão"
+                            title="Definir como padrão"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
+                                stroke="currentColor"
+                                strokeWidth="1.2"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="icon-btn"

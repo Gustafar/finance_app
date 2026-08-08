@@ -87,6 +87,35 @@ func (r *InvestmentBoxRepository) Update(id int, box models.InvestmentBox) (mode
 	return box, nil
 }
 
+// SetDefault marks the given investment box as the sole default, unsetting any previous default.
+func (r *InvestmentBoxRepository) SetDefault(id int) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("UPDATE investment_boxes SET is_default = FALSE WHERE is_default = TRUE"); err != nil {
+		return err
+	}
+
+	result, err := tx.Exec("UPDATE investment_boxes SET is_default = TRUE WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return tx.Commit()
+}
+
 // Delete reassigns referencing expenses to the default investment box first, so deleting never orphans data.
 func (r *InvestmentBoxRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()

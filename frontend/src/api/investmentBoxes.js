@@ -12,6 +12,10 @@ export function updateInvestmentBox(id, box) {
   return fetchJson(`/investment-boxes/${id}`, { method: 'PUT', body: JSON.stringify(box) })
 }
 
+export function setDefaultInvestmentBox(id) {
+  return fetchJson(`/investment-boxes/${id}/default`, { method: 'PUT' })
+}
+
 export function deleteInvestmentBox(id) {
   return fetchJson(`/investment-boxes/${id}`, { method: 'DELETE' })
 }

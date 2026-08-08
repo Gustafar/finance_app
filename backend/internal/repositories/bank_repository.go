@@ -87,6 +87,35 @@ func (r *BankRepository) Update(id int, bank models.Bank) (models.Bank, error) {
 	return bank, nil
 }
 
+// SetDefault marks the given bank as the sole default, unsetting any previous default.
+func (r *BankRepository) SetDefault(id int) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("UPDATE banks SET is_default = FALSE WHERE is_default = TRUE"); err != nil {
+		return err
+	}
+
+	result, err := tx.Exec("UPDATE banks SET is_default = TRUE WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return tx.Commit()
+}
+
 // Delete reassigns referencing expenses to the default bank first, so deleting never orphans data.
 func (r *BankRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()

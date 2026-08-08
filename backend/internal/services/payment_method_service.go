@@ -77,6 +77,18 @@ func (s *PaymentMethodService) Update(id int, paymentMethod models.PaymentMethod
 	return updated, nil
 }
 
+func (s *PaymentMethodService) SetDefault(id int) error {
+	err := s.Repo.SetDefault(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrPaymentMethodNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (s *PaymentMethodService) Delete(id int) error {
 	paymentMethod, err := s.Repo.GetByID(id)
 	if err != nil {

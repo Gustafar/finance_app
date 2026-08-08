@@ -77,6 +77,18 @@ func (s *BucketService) Update(id int, bucket models.Bucket) (models.Bucket, err
 	return updated, nil
 }
 
+func (s *BucketService) SetDefault(id int) error {
+	err := s.Repo.SetDefault(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrBucketNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (s *BucketService) Delete(id int) error {
 	bucket, err := s.Repo.GetByID(id)
 	if err != nil {

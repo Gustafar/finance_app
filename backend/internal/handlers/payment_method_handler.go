@@ -118,6 +118,34 @@ func (h *PaymentMethodHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updated)
 }
 
+func (h *PaymentMethodHandler) SetDefault(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	if err := h.Service.SetDefault(id); err != nil {
+		if errors.Is(err, services.ErrPaymentMethodNotFound) {
+			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	updated, err := h.Service.GetByID(id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, updated)
+}
+
 func (h *PaymentMethodHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 

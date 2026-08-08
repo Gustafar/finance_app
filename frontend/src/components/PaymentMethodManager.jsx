@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createPaymentMethod, updatePaymentMethod, deletePaymentMethod } from '../api/paymentMethods'
+import { createPaymentMethod, updatePaymentMethod, deletePaymentMethod, setDefaultPaymentMethod } from '../api/paymentMethods'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { usePaymentMethods, sortByName } from '../hooks/usePaymentMethods'
 import ColorSwatchPicker from './ColorSwatchPicker'
@@ -22,6 +22,7 @@ function PaymentMethodManager() {
   const [deleteError, setDeleteError] = useState(null)
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [defaultError, setDefaultError] = useState(null)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -76,6 +77,21 @@ function PaymentMethodManager() {
       })
   }
 
+  const handleSetDefault = (id) => {
+    setDefaultError(null)
+
+    setDefaultPaymentMethod(id)
+      .then(() => {
+        setPaymentMethods((prev) =>
+          sortByName(prev.map((paymentMethod) => ({ ...paymentMethod, is_default: paymentMethod.id === id })))
+        )
+      })
+      .catch((error) => {
+        console.error('Erro ao definir método de pagamento padrão:', error)
+        setDefaultError('Não foi possível definir o método de pagamento padrão. Tente novamente.')
+      })
+  }
+
   const handleDelete = (id) => {
     setDeleteError(null)
 
@@ -111,6 +127,7 @@ function PaymentMethodManager() {
       {createError && <p className="form-error">{createError}</p>}
 
       {deleteError && <p className="form-error">{deleteError}</p>}
+      {defaultError && <p className="form-error">{defaultError}</p>}
 
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
       {!isLoading && !loadError && paymentMethods.length === 0 && (
@@ -169,6 +186,24 @@ function PaymentMethodManager() {
                         {paymentMethod.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
+                        {!paymentMethod.is_default && (
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            onClick={() => handleSetDefault(paymentMethod.id)}
+                            aria-label="Definir como padrão"
+                            title="Definir como padrão"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
+                                stroke="currentColor"
+                                strokeWidth="1.2"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="icon-btn"

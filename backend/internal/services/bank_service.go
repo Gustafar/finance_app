@@ -77,6 +77,18 @@ func (s *BankService) Update(id int, bank models.Bank) (models.Bank, error) {
 	return updated, nil
 }
 
+func (s *BankService) SetDefault(id int) error {
+	err := s.Repo.SetDefault(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrBankNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (s *BankService) Delete(id int) error {
 	bank, err := s.Repo.GetByID(id)
 	if err != nil {

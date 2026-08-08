@@ -210,6 +210,34 @@ function RecurringExpensesPage() {
   const [createMode, setCreateMode] = useState('single')
   const [createAttemptedSubmit, setCreateAttemptedSubmit] = useState(false)
 
+  const createDefaults = useMemo(() => {
+    const defaultCategory = categories.find((c) => c.is_default)
+    const defaultPerson = people.find((p) => p.is_default)
+    const defaultPaymentMethod = paymentMethods.find((m) => m.is_default)
+    const defaultBucket = buckets.find((b) => b.is_default)
+    const defaultBank = banks.find((b) => b.is_default)
+    return {
+      category_id: defaultCategory ? String(defaultCategory.id) : categories[0] ? String(categories[0].id) : '',
+      person_id: defaultPerson ? String(defaultPerson.id) : people[0] ? String(people[0].id) : '',
+      payment_method_id: defaultPaymentMethod
+        ? String(defaultPaymentMethod.id)
+        : paymentMethods[0]
+          ? String(paymentMethods[0].id)
+          : '',
+      bucket_id: defaultBucket ? String(defaultBucket.id) : buckets[0] ? String(buckets[0].id) : '',
+      bank_id: defaultBank ? String(defaultBank.id) : banks[0] ? String(banks[0].id) : '',
+    }
+  }, [categories, people, paymentMethods, buckets, banks])
+
+  const effectiveCreateForm = {
+    ...form,
+    category_id: form.category_id || createDefaults.category_id,
+    person_id: form.person_id || createDefaults.person_id,
+    payment_method_id: form.payment_method_id || createDefaults.payment_method_id,
+    bucket_id: form.bucket_id || createDefaults.bucket_id,
+    bank_id: form.bank_id || createDefaults.bank_id,
+  }
+
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState(emptyForm)
   const [rowError, setRowError] = useState(null)
@@ -245,12 +273,12 @@ function RecurringExpensesPage() {
   const handleCreate = (e) => {
     e.preventDefault()
     setCreateAttemptedSubmit(true)
-    if (!isFormComplete(form)) return
+    if (!isFormComplete(effectiveCreateForm)) return
 
     setCreateError(null)
     setIsCreating(true)
 
-    createRecurringExpense(toPayload(form))
+    createRecurringExpense(toPayload(effectiveCreateForm))
       .then((created) => {
         setRecurrences((prev) => sortByDay([...prev, created]))
         setForm(emptyForm)
@@ -380,7 +408,7 @@ function RecurringExpensesPage() {
                 <form className="expense-form" onSubmit={handleCreate} style={{ width: 'auto' }}>
                   <RecurringFields
                     idPrefix="create"
-                    form={form}
+                    form={effectiveCreateForm}
                     onChange={setForm}
                     categories={categories}
                     people={people}
@@ -389,7 +417,7 @@ function RecurringExpensesPage() {
                     banks={banks}
                     attemptedSubmit={createAttemptedSubmit}
                   />
-                  {createAttemptedSubmit && !isFormComplete(form) && (
+                  {createAttemptedSubmit && !isFormComplete(effectiveCreateForm) && (
                     <p className="form-error">Preencha os campos destacados antes de continuar.</p>
                   )}
                   <button type="submit" className="btn btn-primary" disabled={isCreating}>

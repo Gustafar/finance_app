@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createInvestmentBox, updateInvestmentBox, deleteInvestmentBox } from '../api/investmentBoxes'
+import { createInvestmentBox, updateInvestmentBox, deleteInvestmentBox, setDefaultInvestmentBox } from '../api/investmentBoxes'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { sortByName } from '../hooks/useInvestmentBoxes'
 import ColorSwatchPicker from './ColorSwatchPicker'
@@ -19,6 +19,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
   const [deleteError, setDeleteError] = useState(null)
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [defaultError, setDefaultError] = useState(null)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -71,6 +72,19 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
       })
   }
 
+  const handleSetDefault = (id) => {
+    setDefaultError(null)
+
+    setDefaultInvestmentBox(id)
+      .then(() => {
+        setInvestmentBoxes((prev) => sortByName(prev.map((box) => ({ ...box, is_default: box.id === id }))))
+      })
+      .catch((error) => {
+        console.error('Erro ao definir caixinha padrão:', error)
+        setDefaultError('Não foi possível definir a caixinha padrão. Tente novamente.')
+      })
+  }
+
   const handleDelete = (id) => {
     setDeleteError(null)
 
@@ -106,6 +120,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
       {createError && <p className="form-error">{createError}</p>}
 
       {deleteError && <p className="form-error">{deleteError}</p>}
+      {defaultError && <p className="form-error">{defaultError}</p>}
 
       {isLoading && <p className="state-message">Carregando caixinhas…</p>}
       {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
@@ -165,6 +180,24 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
                         {box.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
+                        {!box.is_default && (
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            onClick={() => handleSetDefault(box.id)}
+                            aria-label="Definir como padrão"
+                            title="Definir como padrão"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
+                                stroke="currentColor"
+                                strokeWidth="1.2"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="icon-btn"
