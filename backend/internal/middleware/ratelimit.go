@@ -39,8 +39,10 @@ func (l *ipLimiter) allow(ip string) bool {
 var (
 	// ~5 attempts, then 1 every 3 minutes — blocks realistic password brute-forcing.
 	loginLimiter = newIPLimiter(rate.Every(3*time.Minute), 5)
-	// ~60/min sustained with a matching burst — just an abuse guard for the rest of the API.
-	generalLimiter = newIPLimiter(rate.Every(time.Second), 60)
+	// ~600/min sustained with a generous burst — just an abuse guard for the rest of the API.
+	// Burst needs headroom for a single page load: several lookup fetches, each doubled by
+	// React StrictMode in dev, across a couple of quick navigations.
+	generalLimiter = newIPLimiter(rate.Every(100*time.Millisecond), 200)
 )
 
 func RateLimit(next http.Handler) http.Handler {
