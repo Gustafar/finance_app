@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { createExpense, createInstallmentPurchase } from '../api/expenses'
 import DatePicker from './DatePicker'
+import LoadingBar from './LoadingBar'
 import { useCategories } from '../hooks/useCategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
@@ -36,6 +37,14 @@ function ExpenseForm({ onExpenseCreated }) {
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
   const noCategories = !isLoadingCategories && categories.length === 0
+
+  const isLoadingOptions =
+    isLoadingCategories ||
+    isLoadingPeople ||
+    isLoadingPaymentMethods ||
+    isLoadingBuckets ||
+    isLoadingBanks ||
+    isLoadingInvestmentBoxes
 
   const defaultCategoryId = useMemo(() => {
     const defaultCategory = categories.find((c) => c.is_default)
@@ -154,6 +163,8 @@ function ExpenseForm({ onExpenseCreated }) {
 
   return (
     <form className="expense-form" onSubmit={handleSubmit}>
+      {isLoadingOptions && <LoadingBar variant="dialog" />}
+
       <div className="field">
         <label>Tipo</label>
         <div className="type-toggle" role="radiogroup" aria-label="Tipo de transação">

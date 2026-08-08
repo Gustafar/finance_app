@@ -50,6 +50,7 @@ function App() {
   const [paymentMethods, setPaymentMethods] = useState([])
   const [buckets, setBuckets] = useState([])
   const [banks, setBanks] = useState([])
+  const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(true)
   const location = useLocation()
   const { theme, cycleTheme } = useTheme()
 
@@ -67,7 +68,11 @@ function App() {
 
   const handleRefresh = () => {
     setIsRefreshing(true)
-    loadExpenses().finally(() => setIsRefreshing(false))
+    generateDueRecurringExpenses()
+      .catch((error) => console.error('Erro ao gerar gastos fixos:', error))
+      .finally(() => {
+        loadExpenses().finally(() => setIsRefreshing(false))
+      })
   }
 
   useEffect(() => {
@@ -77,13 +82,15 @@ function App() {
         loadExpenses().finally(() => setIsLoading(false))
       })
 
-    fetchCategories().then(setCategories).catch((error) => console.error('Erro ao buscar categorias:', error))
-    fetchPeople().then(setPeople).catch((error) => console.error('Erro ao buscar responsáveis:', error))
-    fetchPaymentMethods()
-      .then(setPaymentMethods)
-      .catch((error) => console.error('Erro ao buscar métodos de pagamento:', error))
-    fetchBuckets().then(setBuckets).catch((error) => console.error('Erro ao buscar envelopes:', error))
-    fetchBanks().then(setBanks).catch((error) => console.error('Erro ao buscar bancos:', error))
+    Promise.all([
+      fetchCategories().then(setCategories).catch((error) => console.error('Erro ao buscar categorias:', error)),
+      fetchPeople().then(setPeople).catch((error) => console.error('Erro ao buscar responsáveis:', error)),
+      fetchPaymentMethods()
+        .then(setPaymentMethods)
+        .catch((error) => console.error('Erro ao buscar métodos de pagamento:', error)),
+      fetchBuckets().then(setBuckets).catch((error) => console.error('Erro ao buscar envelopes:', error)),
+      fetchBanks().then(setBanks).catch((error) => console.error('Erro ao buscar bancos:', error)),
+    ]).finally(() => setIsLoadingFilterOptions(false))
   }, [])
 
   // Re-download the expense list every time the user navigates back to the home screen,
@@ -536,6 +543,7 @@ function App() {
         paymentMethods={paymentMethods}
         buckets={buckets}
         banks={banks}
+        isLoading={isLoadingFilterOptions}
       />
 
       <Modal isOpen={editingExpense !== null} onClose={() => setEditingExpense(null)}>

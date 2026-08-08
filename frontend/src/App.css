@@ -136,7 +136,7 @@
 
 .container {
   width: 100%;
-  max-width: 960px;
+  max-width: 1024px;
   margin: 0 auto;
   padding: 32px 24px 64px;
   display: flex;
@@ -376,6 +376,86 @@
 .filter-field select:focus,
 .filter-field input:focus {
   border-color: var(--primary);
+}
+
+.multi-select {
+  position: relative;
+}
+
+.multi-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  height: 30px;
+  font-family: inherit;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 8px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.multi-select-trigger:hover {
+  border-color: var(--primary);
+}
+
+.multi-select-trigger--active {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.multi-select-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.multi-select-trigger svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.multi-select-popover {
+  width: 220px;
+  padding: 8px;
+}
+
+.multi-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text);
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.multi-select-option:hover {
+  background: var(--primary-bg);
+}
+
+.multi-select-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 6px;
+  text-align: center;
 }
 
 .filter-dialog-actions {
@@ -643,11 +723,24 @@
 }
 
 .installment-note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: 500;
+  color: var(--info);
+  white-space: normal;
+}
+
+.installment-note svg {
+  flex-shrink: 0;
+}
+
+.expense-amount-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
 }
 
 .expense-amount {
@@ -656,6 +749,14 @@
   color: var(--text-h);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.expense-amount-total {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--info);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .expense-amount--income {
@@ -1486,7 +1587,7 @@
     text-overflow: unset;
   }
 
-  .expense-amount {
+  .expense-amount-group {
     grid-area: amount;
     justify-self: end;
   }

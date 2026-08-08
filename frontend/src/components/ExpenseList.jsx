@@ -77,6 +77,10 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
                 <span className="expense-date">{formatDate(expense.date)}</span>
                 {expense.installment_count && (
                   <span className="installment-note">
+                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <rect x="1.5" y="3.5" width="13" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.3" />
+                      <path d="M1.5 6.5h13" stroke="currentColor" strokeWidth="1.3" />
+                    </svg>
                     Parcela {expense.installment_number}/{expense.installment_count} · Compra de{' '}
                     {formatCurrency(expense.purchase_total_amount)} em {formatDate(expense.purchase_date)}
                   </span>
@@ -84,10 +88,17 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
                 {expense.recurring_expense_id && <span className="installment-note">Fixo</span>}
               </div>
 
-              <span className={`expense-amount ${amountConfig.className}`}>
-                {amountConfig.prefix}
-                {formatCurrency(expense.amount)}
-              </span>
+              <div className="expense-amount-group">
+                <span className={`expense-amount ${amountConfig.className}`}>
+                  {amountConfig.prefix}
+                  {formatCurrency(expense.amount)}
+                </span>
+                {expense.installment_count && (
+                  <span className="expense-amount-total">
+                    Total {formatCurrency(expense.purchase_total_amount)}
+                  </span>
+                )}
+              </div>
 
               <div className="expense-actions">
                 <button

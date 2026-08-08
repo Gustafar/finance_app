@@ -196,12 +196,20 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
 }
 
 function RecurringExpensesPage() {
-  const { recurrences, setRecurrences, isLoading, error: loadError } = useRecurringExpenses()
-  const { categories } = useCategories()
-  const { people } = usePeople()
-  const { paymentMethods } = usePaymentMethods()
-  const { buckets } = useBuckets()
-  const { banks } = useBanks()
+  const { recurrences, setRecurrences, isLoading: isLoadingRecurrences, error: loadError } = useRecurringExpenses()
+  const { categories, isLoading: isLoadingCategories } = useCategories()
+  const { people, isLoading: isLoadingPeople } = usePeople()
+  const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
+  const { buckets, isLoading: isLoadingBuckets } = useBuckets()
+  const { banks, isLoading: isLoadingBanks } = useBanks()
+
+  const isLoading =
+    isLoadingRecurrences ||
+    isLoadingCategories ||
+    isLoadingPeople ||
+    isLoadingPaymentMethods ||
+    isLoadingBuckets ||
+    isLoadingBanks
 
   const [form, setForm] = useState(emptyForm)
   const [isCreating, setIsCreating] = useState(false)

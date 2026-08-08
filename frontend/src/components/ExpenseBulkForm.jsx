@@ -10,6 +10,7 @@ import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date'
 import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
 import DatePicker from './DatePicker'
+import LoadingBar from './LoadingBar'
 
 // Fixed left-to-right order pasted spreadsheet columns are mapped to, starting from whichever
 // cell was focused when the paste happened.
@@ -152,6 +153,14 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
   const noCategories = !isLoadingCategories && categories.length === 0
 
+  const isLoadingOptions =
+    isLoadingCategories ||
+    isLoadingPeople ||
+    isLoadingPaymentMethods ||
+    isLoadingBuckets ||
+    isLoadingBanks ||
+    isLoadingInvestmentBoxes
+
   const defaults = useMemo(() => {
     const defaultCategory = categories.find((c) => c.is_default)
     const defaultPerson = people.find((p) => p.is_default)
@@ -286,6 +295,8 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
   return (
     <div className="bulk-grid-form">
+      {isLoadingOptions && <LoadingBar variant="dialog" />}
+
       <p className="bulk-grid-hint">
         Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Descrição, Valor, Tipo, Categoria,
         Responsável, Método de pagamento, Envelope, Banco.

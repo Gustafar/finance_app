@@ -1,10 +1,13 @@
 import Modal from './Modal'
 import FilterBar from './FilterBar'
+import LoadingBar from './LoadingBar'
 import { EMPTY_FILTERS, hasActiveFilters } from '../utils/filters'
 
-function FilterDialog({ isOpen, onClose, filters, onChange, categories, people, paymentMethods, buckets, banks }) {
+function FilterDialog({ isOpen, onClose, filters, onChange, categories, people, paymentMethods, buckets, banks, isLoading }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
+      {isLoading && <LoadingBar variant="dialog" />}
+
       <h2 className="modal-title">Filtros</h2>
       <FilterBar
         filters={filters}

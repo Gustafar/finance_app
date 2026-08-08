@@ -1,70 +1,70 @@
 import DatePicker from './DatePicker'
+import MultiSelectField from './MultiSelectField'
 
 function FilterBar({ filters, onChange, categories, people, paymentMethods, buckets, banks }) {
   const handleField = (field) => (event) => {
     onChange({ ...filters, [field]: event.target.value })
   }
 
+  const handleMultiField = (field) => (value) => {
+    onChange({ ...filters, [field]: value })
+  }
+
   return (
     <div className="filter-bar">
       <div className="filter-field">
         <label htmlFor="filter-category">Categoria</label>
-        <select id="filter-category" value={filters.categoryId} onChange={handleField('categoryId')}>
-          <option value="">Todas</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        <MultiSelectField
+          id="filter-category"
+          allLabel="Todas"
+          options={categories}
+          selected={filters.categoryId}
+          onChange={handleMultiField('categoryId')}
+        />
       </div>
 
       <div className="filter-field">
         <label htmlFor="filter-person">Responsável</label>
-        <select id="filter-person" value={filters.personId} onChange={handleField('personId')}>
-          <option value="">Todos</option>
-          {people.map((person) => (
-            <option key={person.id} value={person.id}>
-              {person.name}
-            </option>
-          ))}
-        </select>
+        <MultiSelectField
+          id="filter-person"
+          allLabel="Todos"
+          options={people}
+          selected={filters.personId}
+          onChange={handleMultiField('personId')}
+        />
       </div>
 
       <div className="filter-field">
         <label htmlFor="filter-payment-method">Método de pagamento</label>
-        <select id="filter-payment-method" value={filters.paymentMethodId} onChange={handleField('paymentMethodId')}>
-          <option value="">Todos</option>
-          {paymentMethods.map((paymentMethod) => (
-            <option key={paymentMethod.id} value={paymentMethod.id}>
-              {paymentMethod.name}
-            </option>
-          ))}
-        </select>
+        <MultiSelectField
+          id="filter-payment-method"
+          allLabel="Todos"
+          options={paymentMethods}
+          selected={filters.paymentMethodId}
+          onChange={handleMultiField('paymentMethodId')}
+        />
       </div>
 
       <div className="filter-field">
         <label htmlFor="filter-bucket">Envelope</label>
-        <select id="filter-bucket" value={filters.bucketId} onChange={handleField('bucketId')}>
-          <option value="">Todos</option>
-          {buckets.map((bucket) => (
-            <option key={bucket.id} value={bucket.id}>
-              {bucket.name}
-            </option>
-          ))}
-        </select>
+        <MultiSelectField
+          id="filter-bucket"
+          allLabel="Todos"
+          options={buckets}
+          selected={filters.bucketId}
+          onChange={handleMultiField('bucketId')}
+        />
       </div>
 
       <div className="filter-field">
         <label htmlFor="filter-bank">Banco</label>
-        <select id="filter-bank" value={filters.bankId} onChange={handleField('bankId')}>
-          <option value="">Todos</option>
-          {banks.map((bank) => (
-            <option key={bank.id} value={bank.id}>
-              {bank.name}
-            </option>
-          ))}
-        </select>
+        <MultiSelectField
+          id="filter-bank"
+          allLabel="Todos"
+          options={banks}
+          selected={filters.bankId}
+          onChange={handleMultiField('bankId')}
+        />
       </div>
 
       <div className="filter-field">

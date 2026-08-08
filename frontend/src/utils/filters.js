@@ -1,20 +1,20 @@
 export const EMPTY_FILTERS = {
-  categoryId: '',
-  personId: '',
-  paymentMethodId: '',
-  bucketId: '',
-  bankId: '',
+  categoryId: [],
+  personId: [],
+  paymentMethodId: [],
+  bucketId: [],
+  bankId: [],
   dateFrom: '',
   dateTo: '',
 }
 
 export function hasActiveFilters(filters) {
   return Boolean(
-    filters.categoryId ||
-      filters.personId ||
-      filters.paymentMethodId ||
-      filters.bucketId ||
-      filters.bankId ||
+    filters.categoryId.length ||
+      filters.personId.length ||
+      filters.paymentMethodId.length ||
+      filters.bucketId.length ||
+      filters.bankId.length ||
       filters.dateFrom ||
       filters.dateTo,
   )
@@ -22,10 +22,10 @@ export function hasActiveFilters(filters) {
 
 export function matchesFilters(expense, filters) {
   return (
-    (!filters.categoryId || expense.category_id === Number(filters.categoryId)) &&
-    (!filters.personId || expense.person_id === Number(filters.personId)) &&
-    (!filters.paymentMethodId || expense.payment_method_id === Number(filters.paymentMethodId)) &&
-    (!filters.bucketId || expense.bucket_id === Number(filters.bucketId)) &&
-    (!filters.bankId || expense.bank_id === Number(filters.bankId))
+    (filters.categoryId.length === 0 || filters.categoryId.includes(String(expense.category_id))) &&
+    (filters.personId.length === 0 || filters.personId.includes(String(expense.person_id))) &&
+    (filters.paymentMethodId.length === 0 || filters.paymentMethodId.includes(String(expense.payment_method_id))) &&
+    (filters.bucketId.length === 0 || filters.bucketId.includes(String(expense.bucket_id))) &&
+    (filters.bankId.length === 0 || filters.bankId.includes(String(expense.bank_id)))
   )
 }

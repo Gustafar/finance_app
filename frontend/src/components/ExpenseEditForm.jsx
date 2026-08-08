@@ -8,6 +8,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import ConfirmDialog from './ConfirmDialog'
+import LoadingBar from './LoadingBar'
 
 function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
@@ -34,6 +35,14 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
   const noCategories = !isLoadingCategories && categories.length === 0
+
+  const isLoadingOptions =
+    isLoadingCategories ||
+    isLoadingPeople ||
+    isLoadingPaymentMethods ||
+    isLoadingBuckets ||
+    isLoadingBanks ||
+    isLoadingInvestmentBoxes
 
   const defaultInvestmentBoxId = useMemo(() => {
     const defaultBox = investmentBoxes.find((b) => b.is_default)
@@ -91,6 +100,8 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   return (
     <>
       <form className="expense-form" onSubmit={handleSubmit}>
+        {isLoadingOptions && <LoadingBar variant="dialog" />}
+
         <h2>Editar despesa</h2>
 
         <div className="field">

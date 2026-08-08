@@ -216,6 +216,8 @@ func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
 }
 
 // dateForDay clamps day to the given month's last day (e.g. 31 in February becomes 28/29).
+// Uses noon UTC rather than midnight so the date doesn't roll back a day once the frontend
+// renders it in a timezone behind UTC (e.g. Brazil, UTC-3).
 func dateForDay(year int, month time.Month, day int) time.Time {
 	firstOfMonth := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
 	lastDay := firstOfMonth.AddDate(0, 1, -1).Day()
@@ -224,7 +226,7 @@ func dateForDay(year int, month time.Month, day int) time.Time {
 		day = lastDay
 	}
 
-	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+	return time.Date(year, month, day, 12, 0, 0, 0, time.UTC)
 }
 
 func referencedEntityError(err error) error {
