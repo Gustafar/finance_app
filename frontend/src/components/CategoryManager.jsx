@@ -27,6 +27,7 @@ function CategoryManager() {
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [defaultError, setDefaultError] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -68,7 +69,7 @@ function CategoryManager() {
 
     setRowError(null)
 
-    updateCategory(id, { name, color: editingColor })
+    return updateCategory(id, { name, color: editingColor })
       .then((updated) => {
         setCategories((prev) => sortByName(prev.map((category) => (category.id === id ? updated : category))))
         cancelEditing()
@@ -95,7 +96,7 @@ function CategoryManager() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deleteCategory(id)
+    return deleteCategory(id)
       .then(() => {
         setCategories((prev) => prev.filter((category) => category.id !== id))
       })
@@ -119,7 +120,7 @@ function CategoryManager() {
             onChange={(e) => setNewName(e.target.value)}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim()}>
-            Adicionar
+            {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
@@ -286,9 +287,13 @@ function CategoryManager() {
         title="Salvar alterações"
         message="Confirma as alterações nesta categoria?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -299,9 +304,13 @@ function CategoryManager() {
         message="Tem certeza que deseja excluir esta categoria? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -312,10 +321,14 @@ function CategoryManager() {
         message={`Tem certeza que deseja excluir ${selectedIds.size} categoria${selectedIds.size === 1 ? '' : 's'}? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

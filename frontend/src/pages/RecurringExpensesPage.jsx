@@ -276,6 +276,7 @@ function RecurringExpensesPage() {
   const [deleteError, setDeleteError] = useState(null)
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
   const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
@@ -352,7 +353,7 @@ function RecurringExpensesPage() {
 
     setRowError(null)
 
-    updateRecurringExpense(id, toPayload(editForm))
+    return updateRecurringExpense(id, toPayload(editForm))
       .then((updated) => {
         setRecurrences((prev) => sortByDay(prev.map((r) => (r.id === id ? updated : r))))
         cancelEditing()
@@ -366,7 +367,7 @@ function RecurringExpensesPage() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deleteRecurringExpense(id)
+    return deleteRecurringExpense(id)
       .then(() => {
         setRecurrences((prev) => prev.filter((r) => r.id !== id))
       })
@@ -455,7 +456,7 @@ function RecurringExpensesPage() {
                     <p className="form-error">Preencha os campos destacados antes de continuar.</p>
                   )}
                   <button type="submit" className="btn btn-primary" disabled={isCreating}>
-                    Adicionar
+                    {isCreating ? 'Adicionando…' : 'Adicionar'}
                   </button>
                   {createError && <p className="form-error">{createError}</p>}
                 </form>
@@ -717,9 +718,13 @@ function RecurringExpensesPage() {
         title="Salvar alterações"
         message="Confirma as alterações neste gasto fixo?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -730,9 +735,13 @@ function RecurringExpensesPage() {
         message="Tem certeza que deseja excluir este gasto fixo? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -743,10 +752,14 @@ function RecurringExpensesPage() {
         message={`Tem certeza que deseja excluir ${selectedIds.size} gasto${selectedIds.size === 1 ? '' : 's'} fixo${selectedIds.size === 1 ? '' : 's'}? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

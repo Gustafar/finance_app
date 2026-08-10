@@ -10,6 +10,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const toggleExpanded = (id) => {
     setExpandedIds((current) => {
@@ -179,9 +180,13 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
         message="Tem certeza que deseja excluir esta transação? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isDeleting}
         onConfirm={() => {
-          onDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsDeleting(true)
+          onDelete(pendingDeleteId).finally(() => {
+            setIsDeleting(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -192,10 +197,14 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
         message={`Tem certeza que deseja excluir ${selectedIds.size} transaç${selectedIds.size === 1 ? 'ão' : 'ões'}? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isDeleting}
         onConfirm={() => {
-          selectedIds.forEach((id) => onDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsDeleting(true)
+          Promise.all([...selectedIds].map((id) => onDelete(id))).finally(() => {
+            setIsDeleting(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

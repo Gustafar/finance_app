@@ -118,7 +118,7 @@ function App() {
   }
 
   const handleDelete = (id) => {
-    deleteExpense(id)
+    return deleteExpense(id)
       .then(() => {
         setExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== id))
       })

@@ -27,6 +27,7 @@ function PersonManager() {
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [defaultError, setDefaultError] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -68,7 +69,7 @@ function PersonManager() {
 
     setRowError(null)
 
-    updatePerson(id, { name, color: editingColor })
+    return updatePerson(id, { name, color: editingColor })
       .then((updated) => {
         setPeople((prev) => sortByName(prev.map((person) => (person.id === id ? updated : person))))
         cancelEditing()
@@ -95,7 +96,7 @@ function PersonManager() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deletePerson(id)
+    return deletePerson(id)
       .then(() => {
         setPeople((prev) => prev.filter((person) => person.id !== id))
       })
@@ -119,7 +120,7 @@ function PersonManager() {
             onChange={(e) => setNewName(e.target.value)}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim()}>
-            Adicionar
+            {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
@@ -286,9 +287,13 @@ function PersonManager() {
         title="Salvar alterações"
         message="Confirma as alterações neste responsável?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -299,9 +304,13 @@ function PersonManager() {
         message="Tem certeza que deseja excluir este responsável? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -312,10 +321,14 @@ function PersonManager() {
         message={`Tem certeza que deseja excluir os ${selectedIds.size} responsáveis selecionados? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

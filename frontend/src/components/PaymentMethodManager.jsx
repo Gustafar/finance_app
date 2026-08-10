@@ -27,6 +27,7 @@ function PaymentMethodManager() {
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [defaultError, setDefaultError] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -68,7 +69,7 @@ function PaymentMethodManager() {
 
     setRowError(null)
 
-    updatePaymentMethod(id, { name, color: editingColor })
+    return updatePaymentMethod(id, { name, color: editingColor })
       .then((updated) => {
         setPaymentMethods((prev) =>
           sortByName(prev.map((paymentMethod) => (paymentMethod.id === id ? updated : paymentMethod)))
@@ -99,7 +100,7 @@ function PaymentMethodManager() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deletePaymentMethod(id)
+    return deletePaymentMethod(id)
       .then(() => {
         setPaymentMethods((prev) => prev.filter((paymentMethod) => paymentMethod.id !== id))
       })
@@ -123,7 +124,7 @@ function PaymentMethodManager() {
             onChange={(e) => setNewName(e.target.value)}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim()}>
-            Adicionar
+            {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
@@ -290,9 +291,13 @@ function PaymentMethodManager() {
         title="Salvar alterações"
         message="Confirma as alterações neste método de pagamento?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -303,9 +308,13 @@ function PaymentMethodManager() {
         message="Tem certeza que deseja excluir este método de pagamento? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -316,10 +325,14 @@ function PaymentMethodManager() {
         message={`Tem certeza que deseja excluir os ${selectedIds.size} métodos de pagamento selecionados? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

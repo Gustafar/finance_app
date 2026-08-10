@@ -25,6 +25,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [defaultError, setDefaultError] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -66,7 +67,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
 
     setRowError(null)
 
-    updateInvestmentBox(id, { name, color: editingColor })
+    return updateInvestmentBox(id, { name, color: editingColor })
       .then((updated) => {
         setInvestmentBoxes((prev) => sortByName(prev.map((box) => (box.id === id ? updated : box))))
         cancelEditing()
@@ -93,7 +94,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deleteInvestmentBox(id)
+    return deleteInvestmentBox(id)
       .then(() => {
         setInvestmentBoxes((prev) => prev.filter((box) => box.id !== id))
         onBoxDeleted?.()
@@ -117,7 +118,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
             onChange={(e) => setNewName(e.target.value)}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim()}>
-            Adicionar
+            {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
@@ -285,9 +286,13 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
         title="Salvar alterações"
         message="Confirma as alterações nesta caixinha?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -298,9 +303,13 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
         message="Tem certeza que deseja excluir esta caixinha? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -311,10 +320,14 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
         message={`Tem certeza que deseja excluir as ${selectedIds.size} caixinhas selecionadas? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

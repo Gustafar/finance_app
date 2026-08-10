@@ -27,6 +27,7 @@ function BankManager() {
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [defaultError, setDefaultError] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -68,7 +69,7 @@ function BankManager() {
 
     setRowError(null)
 
-    updateBank(id, { name, color: editingColor })
+    return updateBank(id, { name, color: editingColor })
       .then((updated) => {
         setBanks((prev) => sortByName(prev.map((bank) => (bank.id === id ? updated : bank))))
         cancelEditing()
@@ -95,7 +96,7 @@ function BankManager() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deleteBank(id)
+    return deleteBank(id)
       .then(() => {
         setBanks((prev) => prev.filter((bank) => bank.id !== id))
       })
@@ -119,7 +120,7 @@ function BankManager() {
             onChange={(e) => setNewName(e.target.value)}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim()}>
-            Adicionar
+            {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
@@ -286,9 +287,13 @@ function BankManager() {
         title="Salvar alterações"
         message="Confirma as alterações neste banco?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -299,9 +304,13 @@ function BankManager() {
         message="Tem certeza que deseja excluir este banco? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -312,10 +321,14 @@ function BankManager() {
         message={`Tem certeza que deseja excluir os ${selectedIds.size} bancos selecionados? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

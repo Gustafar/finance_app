@@ -27,6 +27,7 @@ function BucketManager() {
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [defaultError, setDefaultError] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -68,7 +69,7 @@ function BucketManager() {
 
     setRowError(null)
 
-    updateBucket(id, { name, color: editingColor })
+    return updateBucket(id, { name, color: editingColor })
       .then((updated) => {
         setBuckets((prev) => sortByName(prev.map((bucket) => (bucket.id === id ? updated : bucket))))
         cancelEditing()
@@ -95,7 +96,7 @@ function BucketManager() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deleteBucket(id)
+    return deleteBucket(id)
       .then(() => {
         setBuckets((prev) => prev.filter((bucket) => bucket.id !== id))
       })
@@ -119,7 +120,7 @@ function BucketManager() {
             onChange={(e) => setNewName(e.target.value)}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim()}>
-            Adicionar
+            {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
@@ -286,9 +287,13 @@ function BucketManager() {
         title="Salvar alterações"
         message="Confirma as alterações neste Envelope?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -299,9 +304,13 @@ function BucketManager() {
         message="Tem certeza que deseja excluir este Envelope? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -312,10 +321,14 @@ function BucketManager() {
         message={`Tem certeza que deseja excluir os ${selectedIds.size} Envelopes selecionados? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

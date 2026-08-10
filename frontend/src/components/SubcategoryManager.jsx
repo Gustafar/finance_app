@@ -29,6 +29,7 @@ function SubcategoryManager() {
   const [deleteError, setDeleteError] = useState(null)
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const effectiveNewCategoryId = newCategoryId || (categories[0] ? String(categories[0].id) : '')
 
@@ -72,7 +73,7 @@ function SubcategoryManager() {
 
     setRowError(null)
 
-    updateSubcategory(id, { name, category_id: Number(editingCategoryId) })
+    return updateSubcategory(id, { name, category_id: Number(editingCategoryId) })
       .then((updated) => {
         setSubcategories((prev) => sortByName(prev.map((subcategory) => (subcategory.id === id ? updated : subcategory))))
         cancelEditing()
@@ -86,7 +87,7 @@ function SubcategoryManager() {
   const handleDelete = (id) => {
     setDeleteError(null)
 
-    deleteSubcategory(id)
+    return deleteSubcategory(id)
       .then(() => {
         setSubcategories((prev) => prev.filter((subcategory) => subcategory.id !== id))
       })
@@ -112,7 +113,7 @@ function SubcategoryManager() {
             onChange={(e) => setNewName(e.target.value)}
           />
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim() || noCategories}>
-            Adicionar
+            {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
         </div>
         <div className="field">
@@ -274,9 +275,13 @@ function SubcategoryManager() {
         title="Salvar alterações"
         message="Confirma as alterações nesta subcategoria?"
         confirmLabel="Salvar"
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleUpdate(pendingUpdateId)
-          setPendingUpdateId(null)
+          setIsProcessing(true)
+          handleUpdate(pendingUpdateId).finally(() => {
+            setIsProcessing(false)
+            setPendingUpdateId(null)
+          })
         }}
         onCancel={() => setPendingUpdateId(null)}
       />
@@ -287,9 +292,13 @@ function SubcategoryManager() {
         message="Tem certeza que deseja excluir esta subcategoria? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          handleDelete(pendingDeleteId)
-          setPendingDeleteId(null)
+          setIsProcessing(true)
+          handleDelete(pendingDeleteId).finally(() => {
+            setIsProcessing(false)
+            setPendingDeleteId(null)
+          })
         }}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -300,10 +309,14 @@ function SubcategoryManager() {
         message={`Tem certeza que deseja excluir as ${selectedIds.size} subcategorias selecionadas? Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         danger
+        isConfirming={isProcessing}
         onConfirm={() => {
-          selectedIds.forEach((id) => handleDelete(id))
-          setIsBulkDeleteOpen(false)
-          toggleSelecting()
+          setIsProcessing(true)
+          Promise.all([...selectedIds].map((id) => handleDelete(id))).finally(() => {
+            setIsProcessing(false)
+            setIsBulkDeleteOpen(false)
+            toggleSelecting()
+          })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />
