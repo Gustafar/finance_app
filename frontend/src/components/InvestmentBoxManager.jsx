@@ -2,10 +2,15 @@ import { useState } from 'react'
 import { createInvestmentBox, updateInvestmentBox, deleteInvestmentBox, setDefaultInvestmentBox } from '../api/investmentBoxes'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { sortByName } from '../hooks/useInvestmentBoxes'
+import { useBulkSelection } from '../hooks/useBulkSelection'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
+import SelectionToolbar from './SelectionToolbar'
 
 function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, loadError, onBoxDeleted }) {
+  const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
+
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(COLOR_KEYS[0])
   const [isCreating, setIsCreating] = useState(false)
@@ -129,13 +134,27 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
       )}
 
       {!isLoading && !loadError && investmentBoxes.length > 0 && (
+        <SelectionToolbar
+          isSelecting={isSelecting}
+          count={selectedIds.size}
+          onToggle={toggleSelecting}
+          onDeleteClick={() => setIsBulkDeleteOpen(true)}
+        />
+      )}
+
+      {!isLoading && !loadError && investmentBoxes.length > 0 && (
         <ul className="entity-list">
           {investmentBoxes.map((box) => {
             const color = paletteColor(box.color)
             const isEditing = editingId === box.id
+            const isSelected = selectedIds.has(box.id)
 
             return (
-              <li className="entity-row" key={box.id}>
+              <li
+                className={`entity-row${isSelected ? ' entity-row--selected' : ''}`}
+                key={box.id}
+                onClick={() => isSelecting && !box.is_default && toggleId(box.id)}
+              >
                 <div className="entity-row-main">
                   {isEditing ? (
                     <>
@@ -180,59 +199,74 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
                         {box.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
-                        {!box.is_default && (
-                          <button
-                            type="button"
-                            className="icon-btn"
-                            onClick={() => handleSetDefault(box.id)}
-                            aria-label="Definir como padrão"
-                            title="Definir como padrão"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
-                                stroke="currentColor"
-                                strokeWidth="1.2"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          onClick={() => startEditing(box)}
-                          aria-label="Editar caixinha"
-                          title="Editar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
-                              stroke="currentColor"
-                              strokeWidth="1.3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                        {isSelecting ? (
+                          !box.is_default && (
+                            <input
+                              type="checkbox"
+                              className="select-checkbox"
+                              checked={isSelected}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={() => toggleId(box.id)}
+                              aria-label="Selecionar caixinha"
                             />
-                          </svg>
-                        </button>
-                        {!box.is_default && (
-                          <button
-                            type="button"
-                            className="icon-btn icon-btn--danger"
-                            onClick={() => setPendingDeleteId(box.id)}
-                            aria-label="Excluir caixinha"
-                            title="Excluir"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                                stroke="currentColor"
-                                strokeWidth="1.3"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
+                          )
+                        ) : (
+                          <>
+                            {!box.is_default && (
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                onClick={() => handleSetDefault(box.id)}
+                                aria-label="Definir como padrão"
+                                title="Definir como padrão"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.2"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="icon-btn"
+                              onClick={() => startEditing(box)}
+                              aria-label="Editar caixinha"
+                              title="Editar"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                            {!box.is_default && (
+                              <button
+                                type="button"
+                                className="icon-btn icon-btn--danger"
+                                onClick={() => setPendingDeleteId(box.id)}
+                                aria-label="Excluir caixinha"
+                                title="Excluir"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                                    stroke="currentColor"
+                                    strokeWidth="1.3"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </>
@@ -269,6 +303,20 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
           setPendingDeleteId(null)
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Excluir caixinhas"
+        message={`Tem certeza que deseja excluir as ${selectedIds.size} caixinhas selecionadas? Essa ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          selectedIds.forEach((id) => handleDelete(id))
+          setIsBulkDeleteOpen(false)
+          toggleSelecting()
+        }}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </div>
   )

@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { createBank, updateBank, deleteBank, setDefaultBank } from '../api/banks'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useBanks, sortByName } from '../hooks/useBanks'
+import { useBulkSelection } from '../hooks/useBulkSelection'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
+import SelectionToolbar from './SelectionToolbar'
 
 function BankManager() {
   const { banks, setBanks, isLoading, error: loadError } = useBanks()
+  const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(COLOR_KEYS[0])
@@ -131,13 +135,27 @@ function BankManager() {
       )}
 
       {!isLoading && !loadError && banks.length > 0 && (
+        <SelectionToolbar
+          isSelecting={isSelecting}
+          count={selectedIds.size}
+          onToggle={toggleSelecting}
+          onDeleteClick={() => setIsBulkDeleteOpen(true)}
+        />
+      )}
+
+      {!isLoading && !loadError && banks.length > 0 && (
         <ul className="entity-list">
           {banks.map((bank) => {
             const color = paletteColor(bank.color)
             const isEditing = editingId === bank.id
+            const isSelected = selectedIds.has(bank.id)
 
             return (
-              <li className="entity-row" key={bank.id}>
+              <li
+                className={`entity-row${isSelected ? ' entity-row--selected' : ''}`}
+                key={bank.id}
+                onClick={() => isSelecting && !bank.is_default && toggleId(bank.id)}
+              >
                 <div className="entity-row-main">
                   {isEditing ? (
                     <>
@@ -182,59 +200,74 @@ function BankManager() {
                         {bank.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
-                        {!bank.is_default && (
-                          <button
-                            type="button"
-                            className="icon-btn"
-                            onClick={() => handleSetDefault(bank.id)}
-                            aria-label="Definir como padrão"
-                            title="Definir como padrão"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
-                                stroke="currentColor"
-                                strokeWidth="1.2"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          onClick={() => startEditing(bank)}
-                          aria-label="Editar banco"
-                          title="Editar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
-                              stroke="currentColor"
-                              strokeWidth="1.3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                        {isSelecting ? (
+                          !bank.is_default && (
+                            <input
+                              type="checkbox"
+                              className="select-checkbox"
+                              checked={isSelected}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={() => toggleId(bank.id)}
+                              aria-label="Selecionar banco"
                             />
-                          </svg>
-                        </button>
-                        {!bank.is_default && (
-                          <button
-                            type="button"
-                            className="icon-btn icon-btn--danger"
-                            onClick={() => setPendingDeleteId(bank.id)}
-                            aria-label="Excluir banco"
-                            title="Excluir"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                                stroke="currentColor"
-                                strokeWidth="1.3"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
+                          )
+                        ) : (
+                          <>
+                            {!bank.is_default && (
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                onClick={() => handleSetDefault(bank.id)}
+                                aria-label="Definir como padrão"
+                                title="Definir como padrão"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.2"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="icon-btn"
+                              onClick={() => startEditing(bank)}
+                              aria-label="Editar banco"
+                              title="Editar"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                            {!bank.is_default && (
+                              <button
+                                type="button"
+                                className="icon-btn icon-btn--danger"
+                                onClick={() => setPendingDeleteId(bank.id)}
+                                aria-label="Excluir banco"
+                                title="Excluir"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                                    stroke="currentColor"
+                                    strokeWidth="1.3"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </>
@@ -271,6 +304,20 @@ function BankManager() {
           setPendingDeleteId(null)
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Excluir bancos"
+        message={`Tem certeza que deseja excluir os ${selectedIds.size} bancos selecionados? Essa ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          selectedIds.forEach((id) => handleDelete(id))
+          setIsBulkDeleteOpen(false)
+          toggleSelecting()
+        }}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </div>
   )

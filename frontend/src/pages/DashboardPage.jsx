@@ -4,6 +4,7 @@ import FilterButton from '../components/FilterButton'
 import MonthPicker from '../components/MonthPicker'
 import RefreshButton from '../components/RefreshButton'
 import { formatCurrency } from '../utils/format'
+import { useBulkSelection } from '../hooks/useBulkSelection'
 
 function DashboardPage({
   selectedMonth,
@@ -23,6 +24,8 @@ function DashboardPage({
   onRefresh,
   isRefreshing,
 }) {
+  const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+
   return (
     <main className="container">
       <div className="dashboard-toolbar">
@@ -76,8 +79,13 @@ function DashboardPage({
       </section>
 
       <section className="panel">
-        <div className="panel-header">
+        <div className="panel-header panel-header--actions">
           <h2>Despesas</h2>
+          {!isLoading && !loadError && filteredExpenses.length > 0 && (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
+              {isSelecting ? 'Cancelar' : 'Selecionar'}
+            </button>
+          )}
         </div>
 
         {isLoading && <p className="state-message">Carregando despesas…</p>}
@@ -98,7 +106,15 @@ function DashboardPage({
         )}
 
         {!isLoading && !loadError && filteredExpenses.length > 0 && (
-          <ExpenseList expenses={filteredExpenses} onDelete={onDeleteExpense} onEdit={onEditExpense} />
+          <ExpenseList
+            expenses={filteredExpenses}
+            onDelete={onDeleteExpense}
+            onEdit={onEditExpense}
+            isSelecting={isSelecting}
+            selectedIds={selectedIds}
+            toggleId={toggleId}
+            toggleSelecting={toggleSelecting}
+          />
         )}
       </section>
     </main>

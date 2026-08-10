@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { createBucket, updateBucket, deleteBucket, setDefaultBucket } from '../api/buckets'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useBuckets, sortByName } from '../hooks/useBuckets'
+import { useBulkSelection } from '../hooks/useBulkSelection'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
+import SelectionToolbar from './SelectionToolbar'
 
 function BucketManager() {
   const { buckets, setBuckets, isLoading, error: loadError } = useBuckets()
+  const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(COLOR_KEYS[0])
@@ -131,13 +135,27 @@ function BucketManager() {
       )}
 
       {!isLoading && !loadError && buckets.length > 0 && (
+        <SelectionToolbar
+          isSelecting={isSelecting}
+          count={selectedIds.size}
+          onToggle={toggleSelecting}
+          onDeleteClick={() => setIsBulkDeleteOpen(true)}
+        />
+      )}
+
+      {!isLoading && !loadError && buckets.length > 0 && (
         <ul className="entity-list">
           {buckets.map((bucket) => {
             const color = paletteColor(bucket.color)
             const isEditing = editingId === bucket.id
+            const isSelected = selectedIds.has(bucket.id)
 
             return (
-              <li className="entity-row" key={bucket.id}>
+              <li
+                className={`entity-row${isSelected ? ' entity-row--selected' : ''}`}
+                key={bucket.id}
+                onClick={() => isSelecting && !bucket.is_default && toggleId(bucket.id)}
+              >
                 <div className="entity-row-main">
                   {isEditing ? (
                     <>
@@ -182,59 +200,74 @@ function BucketManager() {
                         {bucket.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
-                        {!bucket.is_default && (
-                          <button
-                            type="button"
-                            className="icon-btn"
-                            onClick={() => handleSetDefault(bucket.id)}
-                            aria-label="Definir como padrão"
-                            title="Definir como padrão"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
-                                stroke="currentColor"
-                                strokeWidth="1.2"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          onClick={() => startEditing(bucket)}
-                          aria-label="Editar Envelope"
-                          title="Editar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
-                              stroke="currentColor"
-                              strokeWidth="1.3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                        {isSelecting ? (
+                          !bucket.is_default && (
+                            <input
+                              type="checkbox"
+                              className="select-checkbox"
+                              checked={isSelected}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={() => toggleId(bucket.id)}
+                              aria-label="Selecionar Envelope"
                             />
-                          </svg>
-                        </button>
-                        {!bucket.is_default && (
-                          <button
-                            type="button"
-                            className="icon-btn icon-btn--danger"
-                            onClick={() => setPendingDeleteId(bucket.id)}
-                            aria-label="Excluir Envelope"
-                            title="Excluir"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                                stroke="currentColor"
-                                strokeWidth="1.3"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
+                          )
+                        ) : (
+                          <>
+                            {!bucket.is_default && (
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                onClick={() => handleSetDefault(bucket.id)}
+                                aria-label="Definir como padrão"
+                                title="Definir como padrão"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M8 1.6l1.85 3.75 4.14.6-3 2.92.71 4.13L8 11.06l-3.7 1.94.71-4.13-3-2.92 4.14-.6L8 1.6Z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.2"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="icon-btn"
+                              onClick={() => startEditing(bucket)}
+                              aria-label="Editar Envelope"
+                              title="Editar"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                            {!bucket.is_default && (
+                              <button
+                                type="button"
+                                className="icon-btn icon-btn--danger"
+                                onClick={() => setPendingDeleteId(bucket.id)}
+                                aria-label="Excluir Envelope"
+                                title="Excluir"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                                    stroke="currentColor"
+                                    strokeWidth="1.3"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </>
@@ -271,6 +304,20 @@ function BucketManager() {
           setPendingDeleteId(null)
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Excluir Envelopes"
+        message={`Tem certeza que deseja excluir os ${selectedIds.size} Envelopes selecionados? Essa ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          selectedIds.forEach((id) => handleDelete(id))
+          setIsBulkDeleteOpen(false)
+          toggleSelecting()
+        }}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </div>
   )

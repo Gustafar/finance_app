@@ -553,6 +553,12 @@
   gap: 12px;
 }
 
+.panel-header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .panel-header--toggle:hover {
   background: var(--bg);
 }
@@ -636,6 +642,11 @@
   filter: brightness(0.92);
 }
 
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
 /* Confirm dialog */
 
 .confirm-dialog {
@@ -656,6 +667,52 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* Bulk selection */
+
+.selection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.selection-toolbar--active {
+  justify-content: space-between;
+}
+
+.selection-toolbar--panel {
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.selection-toolbar--panel.selection-toolbar--active {
+  background: var(--primary-bg);
+}
+
+.selection-toolbar-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.selection-toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.select-checkbox {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.expense-row--selected,
+.entity-row--selected {
+  background: color-mix(in srgb, var(--primary-bg) 70%, transparent);
 }
 
 /* Expense list */

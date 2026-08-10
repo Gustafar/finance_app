@@ -3,12 +3,16 @@ import { createSubcategory, updateSubcategory, deleteSubcategory } from '../api/
 import { paletteColor } from '../utils/categoryColor'
 import { useSubcategories, sortByName } from '../hooks/useSubcategories'
 import { useCategories } from '../hooks/useCategories'
+import { useBulkSelection } from '../hooks/useBulkSelection'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
+import SelectionToolbar from './SelectionToolbar'
 
 function SubcategoryManager() {
   const { subcategories, setSubcategories, isLoading: isLoadingSubcategories, error: loadError } = useSubcategories()
   const { categories, isLoading: isLoadingCategories } = useCategories()
+  const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
   const isLoading = isLoadingSubcategories || isLoadingCategories
 
@@ -135,14 +139,28 @@ function SubcategoryManager() {
       )}
 
       {!isLoading && !loadError && subcategories.length > 0 && (
+        <SelectionToolbar
+          isSelecting={isSelecting}
+          count={selectedIds.size}
+          onToggle={toggleSelecting}
+          onDeleteClick={() => setIsBulkDeleteOpen(true)}
+        />
+      )}
+
+      {!isLoading && !loadError && subcategories.length > 0 && (
         <ul className="entity-list">
           {subcategories.map((subcategory) => {
             const category = categories.find((c) => c.id === subcategory.category_id)
             const color = paletteColor(category?.color)
             const isEditing = editingId === subcategory.id
+            const isSelected = selectedIds.has(subcategory.id)
 
             return (
-              <li className="entity-row" key={subcategory.id}>
+              <li
+                className={`entity-row${isSelected ? ' entity-row--selected' : ''}`}
+                key={subcategory.id}
+                onClick={() => isSelecting && toggleId(subcategory.id)}
+              >
                 <div className="entity-row-main">
                   {isEditing ? (
                     <>
@@ -193,40 +211,53 @@ function SubcategoryManager() {
                         {subcategory.name}
                       </span>
                       <div className="entity-actions">
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          onClick={() => startEditing(subcategory)}
-                          aria-label="Editar subcategoria"
-                          title="Editar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
-                              stroke="currentColor"
-                              strokeWidth="1.3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          className="icon-btn icon-btn--danger"
-                          onClick={() => setPendingDeleteId(subcategory.id)}
-                          aria-label="Excluir subcategoria"
-                          title="Excluir"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                              stroke="currentColor"
-                              strokeWidth="1.3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
+                        {isSelecting ? (
+                          <input
+                            type="checkbox"
+                            className="select-checkbox"
+                            checked={isSelected}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={() => toggleId(subcategory.id)}
+                            aria-label="Selecionar subcategoria"
+                          />
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="icon-btn"
+                              onClick={() => startEditing(subcategory)}
+                              aria-label="Editar subcategoria"
+                              title="Editar"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className="icon-btn icon-btn--danger"
+                              onClick={() => setPendingDeleteId(subcategory.id)}
+                              aria-label="Excluir subcategoria"
+                              title="Excluir"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                                  stroke="currentColor"
+                                  strokeWidth="1.3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </>
                   )}
@@ -261,6 +292,20 @@ function SubcategoryManager() {
           setPendingDeleteId(null)
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Excluir subcategorias"
+        message={`Tem certeza que deseja excluir as ${selectedIds.size} subcategorias selecionadas? Essa ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          selectedIds.forEach((id) => handleDelete(id))
+          setIsBulkDeleteOpen(false)
+          toggleSelecting()
+        }}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </div>
   )

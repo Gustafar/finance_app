@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { createCategory, updateCategory, deleteCategory, setDefaultCategory } from '../api/categories'
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { useCategories, sortByName } from '../hooks/useCategories'
+import { useBulkSelection } from '../hooks/useBulkSelection'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
+import SelectionToolbar from './SelectionToolbar'
 
 function CategoryManager() {
   const { categories, setCategories, isLoading, error: loadError } = useCategories()
+  const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(COLOR_KEYS[0])
@@ -131,13 +135,27 @@ function CategoryManager() {
       )}
 
       {!isLoading && !loadError && categories.length > 0 && (
+        <SelectionToolbar
+          isSelecting={isSelecting}
+          count={selectedIds.size}
+          onToggle={toggleSelecting}
+          onDeleteClick={() => setIsBulkDeleteOpen(true)}
+        />
+      )}
+
+      {!isLoading && !loadError && categories.length > 0 && (
         <ul className="entity-list">
           {categories.map((category) => {
             const color = paletteColor(category.color)
             const isEditing = editingId === category.id
+            const isSelected = selectedIds.has(category.id)
 
             return (
-              <li className="entity-row" key={category.id}>
+              <li
+                className={`entity-row${isSelected ? ' entity-row--selected' : ''}`}
+                key={category.id}
+                onClick={() => isSelecting && !category.is_default && toggleId(category.id)}
+              >
                 <div className="entity-row-main">
                   {isEditing ? (
                     <>
@@ -182,6 +200,19 @@ function CategoryManager() {
                         {category.is_default && ' (padrão)'}
                       </span>
                       <div className="entity-actions">
+                        {isSelecting ? (
+                          !category.is_default && (
+                            <input
+                              type="checkbox"
+                              className="select-checkbox"
+                              checked={isSelected}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={() => toggleId(category.id)}
+                              aria-label="Selecionar categoria"
+                            />
+                          )
+                        ) : (
+                          <>
                         {!category.is_default && (
                           <button
                             type="button"
@@ -236,6 +267,8 @@ function CategoryManager() {
                             </svg>
                           </button>
                         )}
+                          </>
+                        )}
                       </div>
                     </>
                   )}
@@ -271,6 +304,20 @@ function CategoryManager() {
           setPendingDeleteId(null)
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Excluir categorias"
+        message={`Tem certeza que deseja excluir ${selectedIds.size} categoria${selectedIds.size === 1 ? '' : 's'}? Essa ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          selectedIds.forEach((id) => handleDelete(id))
+          setIsBulkDeleteOpen(false)
+          toggleSelecting()
+        }}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </div>
   )

@@ -12,11 +12,13 @@ import { TRANSACTION_TYPES, TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/trans
 import { formatCurrency } from '../utils/format'
 import { clampDayOfMonth } from '../utils/date'
 import { paletteColor } from '../utils/categoryColor'
+import { useBulkSelection } from '../hooks/useBulkSelection'
 import ConfirmDialog from '../components/ConfirmDialog'
 import LoadingBar from '../components/LoadingBar'
 import Modal from '../components/Modal'
 import FilterButton from '../components/FilterButton'
 import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
+import SelectionToolbar from '../components/SelectionToolbar'
 
 const emptyForm = {
   description: '',
@@ -274,6 +276,8 @@ function RecurringExpensesPage() {
   const [deleteError, setDeleteError] = useState(null)
   const [pendingUpdateId, setPendingUpdateId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -474,10 +478,29 @@ function RecurringExpensesPage() {
       <section className="panel">
         <div className="panel-header panel-header--actions">
           <h2>Gastos fixos cadastrados</h2>
-          <FilterButton onClick={() => setIsFiltersOpen(true)} active={hasActiveFilters} />
+          <div className="panel-header-actions-group">
+            {!isLoading && !loadError && recurrences.length > 0 && (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
+                {isSelecting ? 'Cancelar' : 'Selecionar'}
+              </button>
+            )}
+            <FilterButton onClick={() => setIsFiltersOpen(true)} active={hasActiveFilters} />
+          </div>
         </div>
 
         {deleteError && <p className="form-error" style={{ padding: '0 24px' }}>{deleteError}</p>}
+
+        {!isLoading && !loadError && recurrences.length > 0 && (
+          <SelectionToolbar
+            isSelecting={isSelecting}
+            count={selectedIds.size}
+            onToggle={toggleSelecting}
+            onDeleteClick={() => setIsBulkDeleteOpen(true)}
+            panel
+            hideIdle
+            hideCancel
+          />
+        )}
 
         {isLoading && <p className="state-message">Carregando gastos fixos…</p>}
         {!isLoading && loadError && <p className="state-message state-message--error">{loadError}</p>}
@@ -554,9 +577,14 @@ function RecurringExpensesPage() {
               const paymentMethodColor = paletteColor(paymentMethod?.color)
               const bucketColor = paletteColor(bucket?.color)
               const bankColor = paletteColor(bank?.color)
+              const isSelected = selectedIds.has(recurring.id)
 
               return (
-                <li className="expense-row" key={recurring.id}>
+                <li
+                  className={`expense-row${isSelected ? ' expense-row--selected' : ''}`}
+                  key={recurring.id}
+                  onClick={() => isSelecting && toggleId(recurring.id)}
+                >
                   <div className="expense-badges">
                     <span className="badge" style={{ background: categoryColor.bg, color: categoryColor.text }}>
                       {subcategory?.name ?? category?.name ?? '—'}
@@ -586,40 +614,53 @@ function RecurringExpensesPage() {
                   </span>
 
                   <div className="expense-actions">
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      onClick={() => startEditing(recurring)}
-                      aria-label="Editar gasto fixo"
-                      title="Editar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path
-                          d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
-                          stroke="currentColor"
-                          strokeWidth="1.3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-btn icon-btn--danger"
-                      onClick={() => setPendingDeleteId(recurring.id)}
-                      aria-label="Excluir gasto fixo"
-                      title="Excluir"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path
-                          d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                          stroke="currentColor"
-                          strokeWidth="1.3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
+                    {isSelecting ? (
+                      <input
+                        type="checkbox"
+                        className="select-checkbox"
+                        checked={isSelected}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={() => toggleId(recurring.id)}
+                        aria-label="Selecionar gasto fixo"
+                      />
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={() => startEditing(recurring)}
+                          aria-label="Editar gasto fixo"
+                          title="Editar"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                              stroke="currentColor"
+                              strokeWidth="1.3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn icon-btn--danger"
+                          onClick={() => setPendingDeleteId(recurring.id)}
+                          aria-label="Excluir gasto fixo"
+                          title="Excluir"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                              stroke="currentColor"
+                              strokeWidth="1.3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </li>
               )
@@ -694,6 +735,20 @@ function RecurringExpensesPage() {
           setPendingDeleteId(null)
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Excluir gastos fixos"
+        message={`Tem certeza que deseja excluir ${selectedIds.size} gasto${selectedIds.size === 1 ? '' : 's'} fixo${selectedIds.size === 1 ? '' : 's'}? Essa ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          selectedIds.forEach((id) => handleDelete(id))
+          setIsBulkDeleteOpen(false)
+          toggleSelecting()
+        }}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </main>
   )

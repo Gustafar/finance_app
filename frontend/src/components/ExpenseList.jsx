@@ -3,11 +3,13 @@ import { formatCurrency, formatDate } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
 import { TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import ConfirmDialog from './ConfirmDialog'
+import SelectionToolbar from './SelectionToolbar'
 
-function ExpenseList({ expenses, onDelete, onEdit }) {
+function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, toggleId, toggleSelecting }) {
   const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
   const toggleExpanded = (id) => {
     setExpandedIds((current) => {
@@ -20,6 +22,16 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
 
   return (
     <>
+      <SelectionToolbar
+        isSelecting={isSelecting}
+        count={selectedIds.size}
+        onToggle={toggleSelecting}
+        onDeleteClick={() => setIsBulkDeleteOpen(true)}
+        panel
+        hideIdle
+        hideCancel
+      />
+
       <ul className="expense-list">
         {sorted.map((expense) => {
           const categoryColor = paletteColor(expense.category_color)
@@ -29,11 +41,12 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
           const bankColor = paletteColor(expense.bank_color)
           const amountConfig = TRANSACTION_TYPE_AMOUNT_STYLE[expense.type] ?? TRANSACTION_TYPE_AMOUNT_STYLE.expense
           const isExpanded = expandedIds.has(expense.id)
+          const isSelected = selectedIds.has(expense.id)
           return (
             <li
-              className={`expense-row${isExpanded ? ' expense-row--expanded' : ''}`}
+              className={`expense-row${isExpanded ? ' expense-row--expanded' : ''}${isSelected ? ' expense-row--selected' : ''}`}
               key={expense.id}
-              onClick={() => toggleExpanded(expense.id)}
+              onClick={() => (isSelecting ? toggleId(expense.id) : toggleExpanded(expense.id))}
             >
               <div className="expense-badges">
                 <span
@@ -101,46 +114,59 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
               </div>
 
               <div className="expense-actions">
-                <button
-                  type="button"
-                  className="icon-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onEdit(expense)
-                  }}
-                  aria-label="Editar despesa"
-                  title="Editar"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
-                      stroke="currentColor"
-                      strokeWidth="1.3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn icon-btn--danger"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setPendingDeleteId(expense.id)
-                  }}
-                  aria-label="Excluir despesa"
-                  title="Excluir"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                      stroke="currentColor"
-                      strokeWidth="1.3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                {isSelecting ? (
+                  <input
+                    type="checkbox"
+                    className="select-checkbox"
+                    checked={isSelected}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => toggleId(expense.id)}
+                    aria-label="Selecionar transação"
+                  />
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEdit(expense)
+                      }}
+                      aria-label="Editar despesa"
+                      title="Editar"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn--danger"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPendingDeleteId(expense.id)
+                      }}
+                      aria-label="Excluir despesa"
+                      title="Excluir"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5m-6.5 0 .6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </>
+                )}
               </div>
             </li>
           )
@@ -158,6 +184,20 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
           setPendingDeleteId(null)
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Excluir transações"
+        message={`Tem certeza que deseja excluir ${selectedIds.size} transaç${selectedIds.size === 1 ? 'ão' : 'ões'}? Essa ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={() => {
+          selectedIds.forEach((id) => onDelete(id))
+          setIsBulkDeleteOpen(false)
+          toggleSelecting()
+        }}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </>
   )
