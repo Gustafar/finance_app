@@ -46,6 +46,35 @@ func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, criada)
 }
 
+func (h *CategoryHandler) CreateMany(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Names []string `json:"names"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	created, err := h.Service.CreateMany(body.Names)
+	if err != nil {
+		if errors.Is(err, services.ErrEmptyCategoryName) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrCategoryAlreadyExists) {
+			respondError(w, http.StatusConflict, err.Error())
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, created)
+}
+
 func (h *CategoryHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.Service.GetAll()
 	if err != nil {

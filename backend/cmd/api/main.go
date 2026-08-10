@@ -37,6 +37,10 @@ func main() {
 	categoryService := services.NewCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
+	subcategoryRepo := repositories.NewSubcategoryRepository(db)
+	subcategoryService := services.NewSubcategoryService(subcategoryRepo)
+	subcategoryHandler := handlers.NewSubcategoryHandler(subcategoryService)
+
 	personRepo := repositories.NewPersonRepository(db)
 	personService := services.NewPersonService(personRepo)
 	personHandler := handlers.NewPersonHandler(personService)
@@ -80,9 +84,16 @@ func main() {
 	mux.HandleFunc("GET /categories", categoryHandler.GetAll)
 	mux.HandleFunc("GET /categories/{id}", categoryHandler.GetByID)
 	mux.HandleFunc("POST /categories", categoryHandler.Create)
+	mux.HandleFunc("POST /categories/bulk", categoryHandler.CreateMany)
 	mux.HandleFunc("PUT /categories/{id}", categoryHandler.Update)
 	mux.HandleFunc("PUT /categories/{id}/default", categoryHandler.SetDefault)
 	mux.HandleFunc("DELETE /categories/{id}", categoryHandler.Delete)
+
+	mux.HandleFunc("GET /subcategories", subcategoryHandler.GetAll)
+	mux.HandleFunc("GET /subcategories/{id}", subcategoryHandler.GetByID)
+	mux.HandleFunc("POST /subcategories", subcategoryHandler.Create)
+	mux.HandleFunc("PUT /subcategories/{id}", subcategoryHandler.Update)
+	mux.HandleFunc("DELETE /subcategories/{id}", subcategoryHandler.Delete)
 
 	mux.HandleFunc("GET /people", personHandler.GetAll)
 	mux.HandleFunc("GET /people/{id}", personHandler.GetByID)

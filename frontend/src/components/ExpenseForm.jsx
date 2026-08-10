@@ -3,6 +3,7 @@ import { createExpense, createInstallmentPurchase } from '../api/expenses'
 import DatePicker from './DatePicker'
 import LoadingBar from './LoadingBar'
 import { useCategories } from '../hooks/useCategories'
+import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useBuckets } from '../hooks/useBuckets'
@@ -13,6 +14,7 @@ import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
 
 function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
+  const { subcategories, isLoading: isLoadingSubcategories } = useSubcategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { buckets, isLoading: isLoadingBuckets } = useBuckets()
@@ -27,6 +29,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const [installmentCount, setInstallmentCount] = useState('2')
   const [date, setDate] = useState(todayDateInputValue)
   const [categoryId, setCategoryId] = useState('')
+  const [subcategoryId, setSubcategoryId] = useState('')
   const [personId, setPersonId] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState('')
   const [bucketId, setBucketId] = useState('')
@@ -44,7 +47,8 @@ function ExpenseForm({ onExpenseCreated }) {
     isLoadingPaymentMethods ||
     isLoadingBuckets ||
     isLoadingBanks ||
-    isLoadingInvestmentBoxes
+    isLoadingInvestmentBoxes ||
+    isLoadingSubcategories
 
   const defaultCategoryId = useMemo(() => {
     const defaultCategory = categories.find((c) => c.is_default)
@@ -52,6 +56,11 @@ function ExpenseForm({ onExpenseCreated }) {
   }, [categories])
 
   const effectiveCategoryId = categoryId || defaultCategoryId
+
+  const filteredSubcategories = useMemo(
+    () => subcategories.filter((s) => s.category_id === Number(effectiveCategoryId)),
+    [subcategories, effectiveCategoryId]
+  )
 
   const defaultPaymentMethodId = useMemo(() => {
     const defaultMethod = paymentMethods.find((m) => m.is_default)
@@ -124,6 +133,7 @@ function ExpenseForm({ onExpenseCreated }) {
       payment_method_id: Number(effectivePaymentMethodId),
       bucket_id: Number(effectiveBucketId),
       bank_id: Number(effectiveBankId),
+      ...(subcategoryId ? { subcategory_id: Number(subcategoryId) } : {}),
     }
 
     const request = isInstallment
@@ -150,6 +160,7 @@ function ExpenseForm({ onExpenseCreated }) {
         setInstallmentCount('2')
         setDate(todayDateInputValue())
         setCategoryId('')
+        setSubcategoryId('')
         setInvestmentBoxId('')
         setIsInstallment(false)
         setAttemptedSubmit(false)
@@ -247,13 +258,31 @@ function ExpenseForm({ onExpenseCreated }) {
               <select
                 id="category"
                 value={effectiveCategoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onChange={(e) => {
+                  setCategoryId(e.target.value)
+                  setSubcategoryId('')
+                }}
                 required
                 disabled={noCategories}
               >
                 <option value="" disabled>Selecione…</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="subcategory">Subcategoria</label>
+              <select
+                id="subcategory"
+                value={subcategoryId}
+                onChange={(e) => setSubcategoryId(e.target.value)}
+                disabled={isLoadingSubcategories}
+              >
+                <option value="">Nenhuma</option>
+                {filteredSubcategories.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
             </div>
@@ -285,13 +314,31 @@ function ExpenseForm({ onExpenseCreated }) {
             <select
               id="category"
               value={effectiveCategoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              onChange={(e) => {
+                setCategoryId(e.target.value)
+                setSubcategoryId('')
+              }}
               required
               disabled={noCategories}
             >
               <option value="" disabled>Selecione…</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
+            <label htmlFor="subcategory">Subcategoria</label>
+            <select
+              id="subcategory"
+              value={subcategoryId}
+              onChange={(e) => setSubcategoryId(e.target.value)}
+              disabled={isLoadingSubcategories}
+            >
+              <option value="">Nenhuma</option>
+              {filteredSubcategories.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>

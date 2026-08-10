@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { createExpensesBulk } from '../api/expenses'
 import { useCategories } from '../hooks/useCategories'
+import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useBuckets } from '../hooks/useBuckets'
@@ -38,6 +39,7 @@ function makeEmptyRow() {
     amount: '',
     type: 'expense',
     categoryId: '',
+    subcategoryId: '',
     personId: '',
     paymentMethodId: '',
     bucketId: '',
@@ -116,6 +118,7 @@ function buildRowPayload(row, defaults) {
     payment_method_id: Number(row.paymentMethodId || defaults.paymentMethodId),
     bucket_id: Number(row.bucketId || defaults.bucketId),
     bank_id: Number(row.bankId || defaults.bankId),
+    ...(row.subcategoryId ? { subcategory_id: Number(row.subcategoryId) } : {}),
   }
 
   if (row.isInstallment) {
@@ -140,6 +143,7 @@ function buildRowPayload(row, defaults) {
 
 function ExpenseBulkForm({ onExpensesCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
+  const { subcategories, isLoading: isLoadingSubcategories } = useSubcategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { buckets, isLoading: isLoadingBuckets } = useBuckets()
@@ -159,7 +163,8 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     isLoadingPaymentMethods ||
     isLoadingBuckets ||
     isLoadingBanks ||
-    isLoadingInvestmentBoxes
+    isLoadingInvestmentBoxes ||
+    isLoadingSubcategories
 
   const defaults = useMemo(() => {
     const defaultCategory = categories.find((c) => c.is_default)
@@ -313,6 +318,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                 <th>Valor</th>
                 <th>Tipo</th>
                 <th>Categoria</th>
+                <th>Subcategoria</th>
                 <th>Responsável</th>
                 <th>Método de pagamento</th>
                 <th>Envelope</th>
@@ -377,7 +383,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   <td>
                     <select
                       value={row.categoryId || defaults.categoryId}
-                      onChange={(e) => updateRow(index, { categoryId: e.target.value })}
+                      onChange={(e) => updateRow(index, { categoryId: e.target.value, subcategoryId: '' })}
                       onPaste={pasteHandler(index, 'categoryId')}
                       disabled={noCategories}
                     >
@@ -385,6 +391,20 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={row.subcategoryId}
+                      onChange={(e) => updateRow(index, { subcategoryId: e.target.value })}
+                      disabled={isLoadingSubcategories}
+                    >
+                      <option value="">Nenhuma</option>
+                      {subcategories
+                        .filter((s) => s.category_id === Number(row.categoryId || defaults.categoryId))
+                        .map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
                     </select>
                   </td>
                   <td>

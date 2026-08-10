@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { updateExpense } from '../api/expenses'
 import { useCategories } from '../hooks/useCategories'
+import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useBuckets } from '../hooks/useBuckets'
@@ -12,6 +13,7 @@ import LoadingBar from './LoadingBar'
 
 function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
+  const { subcategories, isLoading: isLoadingSubcategories } = useSubcategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { buckets, isLoading: isLoadingBuckets } = useBuckets()
@@ -22,6 +24,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [description, setDescription] = useState(expense.description)
   const [amount, setAmount] = useState(expense.amount)
   const [categoryId, setCategoryId] = useState(String(expense.category_id))
+  const [subcategoryId, setSubcategoryId] = useState(expense.subcategory_id ? String(expense.subcategory_id) : '')
   const [personId, setPersonId] = useState(String(expense.person_id))
   const [paymentMethodId, setPaymentMethodId] = useState(String(expense.payment_method_id))
   const [bucketId, setBucketId] = useState(String(expense.bucket_id))
@@ -42,7 +45,8 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
     isLoadingPaymentMethods ||
     isLoadingBuckets ||
     isLoadingBanks ||
-    isLoadingInvestmentBoxes
+    isLoadingInvestmentBoxes ||
+    isLoadingSubcategories
 
   const defaultInvestmentBoxId = useMemo(() => {
     const defaultBox = investmentBoxes.find((b) => b.is_default)
@@ -50,6 +54,11 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   }, [investmentBoxes])
 
   const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
+
+  const filteredSubcategories = useMemo(
+    () => subcategories.filter((s) => s.category_id === Number(categoryId)),
+    [subcategories, categoryId]
+  )
 
   const isFormInvalid =
     !description.trim() ||
@@ -85,6 +94,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       bucket_id: Number(bucketId),
       bank_id: Number(bankId),
       date: expense.date,
+      ...(subcategoryId ? { subcategory_id: Number(subcategoryId) } : {}),
       ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
     }
 
@@ -152,7 +162,10 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
             <select
               id="edit-category"
               value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              onChange={(e) => {
+                setCategoryId(e.target.value)
+                setSubcategoryId('')
+              }}
               required
               disabled={noCategories}
             >
@@ -162,6 +175,21 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="edit-subcategory">Subcategoria</label>
+          <select
+            id="edit-subcategory"
+            value={subcategoryId}
+            onChange={(e) => setSubcategoryId(e.target.value)}
+            disabled={isLoadingSubcategories}
+          >
+            <option value="">Nenhuma</option>
+            {filteredSubcategories.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className={`field${attemptedSubmit && !personId ? ' field--error' : ''}`}>

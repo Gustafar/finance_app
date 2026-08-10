@@ -9,6 +9,8 @@ type Expense struct {
 	CategoryID         int       `json:"category_id"`
 	CategoryName       string    `json:"category_name"`
 	CategoryColor      string    `json:"category_color"`
+	SubcategoryID      *int      `json:"subcategory_id,omitempty"`
+	SubcategoryName    *string   `json:"subcategory_name,omitempty"`
 	PersonID           int       `json:"person_id"`
 	PersonName         string    `json:"person_name"`
 	PersonColor        string    `json:"person_color"`

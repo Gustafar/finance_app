@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { createRecurringExpense, updateRecurringExpense, deleteRecurringExpense } from '../api/recurringExpenses'
 import { useRecurringExpenses, sortByDay } from '../hooks/useRecurringExpenses'
 import { useCategories } from '../hooks/useCategories'
+import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useBuckets } from '../hooks/useBuckets'
@@ -23,6 +24,7 @@ const emptyForm = {
   type: 'expense',
   day_of_month: '1',
   category_id: '',
+  subcategory_id: '',
   person_id: '',
   payment_method_id: '',
   bucket_id: '',
@@ -40,6 +42,7 @@ function toPayload(form) {
     payment_method_id: Number(form.payment_method_id),
     bucket_id: Number(form.bucket_id),
     bank_id: Number(form.bank_id),
+    ...(form.subcategory_id ? { subcategory_id: Number(form.subcategory_id) } : {}),
   }
 }
 
@@ -60,7 +63,9 @@ function byId(list, id) {
   return list.find((item) => item.id === id)
 }
 
-function RecurringFields({ idPrefix, form, onChange, categories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
+function RecurringFields({ idPrefix, form, onChange, categories, subcategories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
+  const filteredSubcategories = subcategories.filter((s) => s.category_id === Number(form.category_id))
+
   const errCls = (invalid) => `field${attemptedSubmit && invalid ? ' field--error' : ''}`
 
   return (
@@ -126,11 +131,24 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
           <select
             id={`${idPrefix}-category`}
             value={form.category_id}
-            onChange={(e) => onChange({ ...form, category_id: e.target.value })}
+            onChange={(e) => onChange({ ...form, category_id: e.target.value, subcategory_id: '' })}
           >
             <option value="" disabled>Selecione…</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor={`${idPrefix}-subcategory`}>Subcategoria</label>
+          <select
+            id={`${idPrefix}-subcategory`}
+            value={form.subcategory_id}
+            onChange={(e) => onChange({ ...form, subcategory_id: e.target.value })}
+          >
+            <option value="">Nenhuma</option>
+            {filteredSubcategories.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </div>
@@ -198,6 +216,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, people, payment
 function RecurringExpensesPage() {
   const { recurrences, setRecurrences, isLoading: isLoadingRecurrences, error: loadError } = useRecurringExpenses()
   const { categories, isLoading: isLoadingCategories } = useCategories()
+  const { subcategories, isLoading: isLoadingSubcategories } = useSubcategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
   const { buckets, isLoading: isLoadingBuckets } = useBuckets()
@@ -209,7 +228,8 @@ function RecurringExpensesPage() {
     isLoadingPeople ||
     isLoadingPaymentMethods ||
     isLoadingBuckets ||
-    isLoadingBanks
+    isLoadingBanks ||
+    isLoadingSubcategories
 
   const [form, setForm] = useState(emptyForm)
   const [isCreating, setIsCreating] = useState(false)
@@ -307,6 +327,7 @@ function RecurringExpensesPage() {
       type: recurring.type,
       day_of_month: String(recurring.day_of_month),
       category_id: String(recurring.category_id),
+      subcategory_id: recurring.subcategory_id ? String(recurring.subcategory_id) : '',
       person_id: String(recurring.person_id),
       payment_method_id: String(recurring.payment_method_id),
       bucket_id: String(recurring.bucket_id),
@@ -419,6 +440,7 @@ function RecurringExpensesPage() {
                     form={effectiveCreateForm}
                     onChange={setForm}
                     categories={categories}
+                    subcategories={subcategories}
                     people={people}
                     paymentMethods={paymentMethods}
                     buckets={buckets}
@@ -436,6 +458,7 @@ function RecurringExpensesPage() {
               ) : (
                 <RecurringExpenseBulkForm
                   categories={categories}
+                  subcategories={subcategories}
                   people={people}
                   paymentMethods={paymentMethods}
                   buckets={buckets}
@@ -480,6 +503,7 @@ function RecurringExpensesPage() {
                         form={editForm}
                         onChange={setEditForm}
                         categories={categories}
+                        subcategories={subcategories}
                         people={people}
                         paymentMethods={paymentMethods}
                         buckets={buckets}
@@ -520,6 +544,7 @@ function RecurringExpensesPage() {
               }
 
               const category = byId(categories, recurring.category_id)
+              const subcategory = byId(subcategories, recurring.subcategory_id)
               const person = byId(people, recurring.person_id)
               const paymentMethod = byId(paymentMethods, recurring.payment_method_id)
               const bucket = byId(buckets, recurring.bucket_id)
@@ -534,7 +559,7 @@ function RecurringExpensesPage() {
                 <li className="expense-row" key={recurring.id}>
                   <div className="expense-badges">
                     <span className="badge" style={{ background: categoryColor.bg, color: categoryColor.text }}>
-                      {category?.name ?? '—'}
+                      {subcategory?.name ?? category?.name ?? '—'}
                     </span>
                     <span className="badge" style={{ background: personColor.bg, color: personColor.text }}>
                       {person?.name ?? '—'}

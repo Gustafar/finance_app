@@ -75,6 +75,7 @@ type InstallmentPurchaseInput struct {
 	InstallmentCount int
 	PurchaseDate     time.Time
 	CategoryID       int
+	SubcategoryID    *int
 	PersonID         int
 	PaymentMethodID  int
 	BucketID         int
@@ -113,6 +114,7 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 		PurchaseDate:     input.PurchaseDate,
 		InstallmentCount: input.InstallmentCount,
 		CategoryID:       input.CategoryID,
+		SubcategoryID:    input.SubcategoryID,
 		PersonID:         input.PersonID,
 		PaymentMethodID:  input.PaymentMethodID,
 		BucketID:         input.BucketID,
@@ -192,6 +194,7 @@ func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
 				Amount:             recurring.Amount,
 				Type:               recurring.Type,
 				CategoryID:         recurring.CategoryID,
+				SubcategoryID:      recurring.SubcategoryID,
 				PersonID:           recurring.PersonID,
 				PaymentMethodID:    recurring.PaymentMethodID,
 				BucketID:           recurring.BucketID,
@@ -247,6 +250,9 @@ func referencedEntityError(err error) error {
 	}
 	if violatesConstraint(err, "fk_expenses_investment_box") {
 		return ErrInvestmentBoxNotFound
+	}
+	if violatesConstraint(err, "fk_expenses_subcategory") || violatesConstraint(err, "fk_installment_purchases_subcategory") {
+		return ErrSubcategoryNotFound
 	}
 	return nil
 }

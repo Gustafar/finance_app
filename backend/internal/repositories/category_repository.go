@@ -25,6 +25,31 @@ func (r *CategoryRepository) Create(category models.Category) (models.Category, 
 	return category, nil
 }
 
+// CreateMany inserts all categories in a single transaction, rolling back entirely if any insert fails.
+func (r *CategoryRepository) CreateMany(categories []models.Category) ([]models.Category, error) {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	query := "INSERT INTO categories (name, color) VALUES ($1, $2) RETURNING id"
+
+	created := make([]models.Category, len(categories))
+	for i, category := range categories {
+		if err := tx.QueryRow(query, category.Name, category.Color).Scan(&category.ID); err != nil {
+			return nil, err
+		}
+		created[i] = category
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return created, nil
+}
+
 func (r *CategoryRepository) GetByID(id int) (models.Category, error) {
 	query := "SELECT id, name, color, is_default FROM categories WHERE id = $1"
 

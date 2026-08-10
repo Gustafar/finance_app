@@ -30,6 +30,7 @@ function makeEmptyRow() {
     amount: '',
     dayOfMonth: '1',
     categoryId: '',
+    subcategoryId: '',
     personId: '',
     paymentMethodId: '',
     bucketId: '',
@@ -108,10 +109,11 @@ function buildRowPayload(row, defaults) {
     payment_method_id: Number(row.paymentMethodId || defaults.paymentMethodId),
     bucket_id: Number(row.bucketId || defaults.bucketId),
     bank_id: Number(row.bankId || defaults.bankId),
+    ...(row.subcategoryId ? { subcategory_id: Number(row.subcategoryId) } : {}),
   }
 }
 
-function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets, banks, onRecurrencesCreated }) {
+function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMethods, buckets, banks, onRecurrencesCreated }) {
   const [rows, setRows] = useState(() => Array.from({ length: INITIAL_ROW_COUNT }, makeEmptyRow))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -265,6 +267,7 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                 <th>Valor</th>
                 <th>Dia do mês</th>
                 <th>Categoria</th>
+                <th>Subcategoria</th>
                 <th>Responsável</th>
                 <th>Método de pagamento</th>
                 <th>Envelope</th>
@@ -326,13 +329,26 @@ function RecurringExpenseBulkForm({ categories, people, paymentMethods, buckets,
                   <td>
                     <select
                       value={row.categoryId || defaults.categoryId}
-                      onChange={(e) => updateRow(index, { categoryId: e.target.value })}
+                      onChange={(e) => updateRow(index, { categoryId: e.target.value, subcategoryId: '' })}
                       onPaste={pasteHandler(index, 'categoryId')}
                     >
                       <option value="">Selecione…</option>
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={row.subcategoryId}
+                      onChange={(e) => updateRow(index, { subcategoryId: e.target.value })}
+                    >
+                      <option value="">Nenhuma</option>
+                      {subcategories
+                        .filter((s) => s.category_id === Number(row.categoryId || defaults.categoryId))
+                        .map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
                     </select>
                   </td>
                   <td>

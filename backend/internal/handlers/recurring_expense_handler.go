@@ -32,7 +32,8 @@ func badRequestOnValidationError(w http.ResponseWriter, err error) bool {
 		errors.Is(err, services.ErrPersonNotFound) ||
 		errors.Is(err, services.ErrPaymentMethodNotFound) ||
 		errors.Is(err, services.ErrBucketNotFound) ||
-		errors.Is(err, services.ErrBankNotFound) {
+		errors.Is(err, services.ErrBankNotFound) ||
+		errors.Is(err, services.ErrSubcategoryNotFound) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return true
 	}

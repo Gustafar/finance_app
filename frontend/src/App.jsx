@@ -8,6 +8,7 @@ import Modal from './components/Modal'
 import Drawer from './components/Drawer'
 import LoadingBar from './components/LoadingBar'
 import CategoryManager from './components/CategoryManager'
+import SubcategoryManager from './components/SubcategoryManager'
 import PersonManager from './components/PersonManager'
 import PaymentMethodManager from './components/PaymentMethodManager'
 import BucketManager from './components/BucketManager'
@@ -38,6 +39,7 @@ function App() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
+  const [isSubcategoriesOpen, setIsSubcategoriesOpen] = useState(false)
   const [isPeopleOpen, setIsPeopleOpen] = useState(false)
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false)
   const [isBucketsOpen, setIsBucketsOpen] = useState(false)
@@ -211,6 +213,29 @@ function App() {
             <button
               type="button"
               className="icon-btn icon-btn--header"
+              onClick={() => setIsSubcategoriesOpen(true)}
+              aria-label="Subcategorias"
+              title="Subcategorias"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M6 2h3.2A1.2 1.2 0 0 1 10.4 3.2v3.2a1.2 1.2 0 0 1-.35.85l-4.4 4.4a1.2 1.2 0 0 1-1.7 0l-2.8-2.8a1.2 1.2 0 0 1 0-1.7l4.4-4.4A1.2 1.2 0 0 1 6 2Z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <circle cx="7.7" cy="4.5" r="0.7" fill="currentColor" />
+                <path
+                  d="M9.5 7.5 12 10"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="icon-btn icon-btn--header"
               onClick={() => setIsPeopleOpen(true)}
               aria-label="Responsáveis"
               title="Responsáveis"
@@ -360,6 +385,27 @@ function App() {
             <circle cx="10.5" cy="5.5" r="0.9" fill="currentColor" />
           </svg>
           Categorias
+        </button>
+
+        <button
+          type="button"
+          className="drawer-item"
+          onClick={() => {
+            setIsMenuOpen(false)
+            setIsSubcategoriesOpen(true)
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M6 2h3.2A1.2 1.2 0 0 1 10.4 3.2v3.2a1.2 1.2 0 0 1-.35.85l-4.4 4.4a1.2 1.2 0 0 1-1.7 0l-2.8-2.8a1.2 1.2 0 0 1 0-1.7l4.4-4.4A1.2 1.2 0 0 1 6 2Z"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
+            <circle cx="7.7" cy="4.5" r="0.7" fill="currentColor" />
+            <path d="M9.5 7.5 12 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+          Subcategorias
         </button>
 
         <button
@@ -554,6 +600,10 @@ function App() {
 
       <Modal isOpen={isCategoriesOpen} onClose={() => setIsCategoriesOpen(false)}>
         <CategoryManager />
+      </Modal>
+
+      <Modal isOpen={isSubcategoriesOpen} onClose={() => setIsSubcategoriesOpen(false)}>
+        <SubcategoryManager />
       </Modal>
 
       <Modal isOpen={isPeopleOpen} onClose={() => setIsPeopleOpen(false)}>

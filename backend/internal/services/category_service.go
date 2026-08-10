@@ -42,6 +42,34 @@ func (s *CategoryService) Create(category models.Category) (models.Category, err
 	return created, nil
 }
 
+// CreateMany creates one category per name, assigning colors by rotating through the palette.
+func (s *CategoryService) CreateMany(names []string) ([]models.Category, error) {
+	if len(names) == 0 {
+		return nil, ErrEmptyCategoryName
+	}
+
+	categories := make([]models.Category, len(names))
+	for i, name := range names {
+		if name == "" {
+			return nil, ErrEmptyCategoryName
+		}
+		categories[i] = models.Category{
+			Name:  name,
+			Color: colorPalette[i%len(colorPalette)],
+		}
+	}
+
+	created, err := s.Repo.CreateMany(categories)
+	if err != nil {
+		if isDuplicateEntry(err) {
+			return nil, ErrCategoryAlreadyExists
+		}
+		return nil, err
+	}
+
+	return created, nil
+}
+
 func (s *CategoryService) GetAll() ([]models.Category, error) {
 	return s.Repo.GetAll()
 }

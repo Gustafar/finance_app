@@ -40,7 +40,7 @@ function ExpenseList({ expenses, onDelete, onEdit }) {
                   className="badge badge--category"
                   style={{ background: categoryColor.bg, color: categoryColor.text }}
                 >
-                  {expense.category_name}
+                  {expense.subcategory_name || expense.category_name}
                 </span>
 
                 <span

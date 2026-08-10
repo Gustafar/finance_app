@@ -37,7 +37,8 @@ func isClientValidationError(err error) bool {
 		errors.Is(err, services.ErrPaymentMethodNotFound) ||
 		errors.Is(err, services.ErrBucketNotFound) ||
 		errors.Is(err, services.ErrBankNotFound) ||
-		errors.Is(err, services.ErrInvestmentBoxNotFound)
+		errors.Is(err, services.ErrInvestmentBoxNotFound) ||
+		errors.Is(err, services.ErrSubcategoryNotFound)
 }
 
 func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +69,7 @@ type createInstallmentsRequest struct {
 	TotalAmount      float64   `json:"total_amount"`
 	InstallmentCount int       `json:"installment_count"`
 	CategoryID       int       `json:"category_id"`
+	SubcategoryID    *int      `json:"subcategory_id,omitempty"`
 	PersonID         int       `json:"person_id"`
 	PaymentMethodID  int       `json:"payment_method_id"`
 	BucketID         int       `json:"bucket_id"`
@@ -89,6 +91,7 @@ func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Reque
 		InstallmentCount: req.InstallmentCount,
 		PurchaseDate:     req.PurchaseDate,
 		CategoryID:       req.CategoryID,
+		SubcategoryID:    req.SubcategoryID,
 		PersonID:         req.PersonID,
 		PaymentMethodID:  req.PaymentMethodID,
 		BucketID:         req.BucketID,
@@ -122,11 +125,12 @@ type bulkExpenseRow struct {
 	InstallmentCount int       `json:"installment_count"`
 	PurchaseDate     time.Time `json:"purchase_date"`
 
-	CategoryID      int `json:"category_id"`
-	PersonID        int `json:"person_id"`
-	PaymentMethodID int `json:"payment_method_id"`
-	BucketID        int `json:"bucket_id"`
-	BankID          int `json:"bank_id"`
+	CategoryID      int  `json:"category_id"`
+	SubcategoryID   *int `json:"subcategory_id,omitempty"`
+	PersonID        int  `json:"person_id"`
+	PaymentMethodID int  `json:"payment_method_id"`
+	BucketID        int  `json:"bucket_id"`
+	BankID          int  `json:"bank_id"`
 }
 
 type bulkCreateRequest struct {
@@ -162,6 +166,7 @@ func (h *ExpenseHandler) CreateBulk(w http.ResponseWriter, r *http.Request) {
 					InstallmentCount: row.InstallmentCount,
 					PurchaseDate:     row.PurchaseDate,
 					CategoryID:       row.CategoryID,
+					SubcategoryID:    row.SubcategoryID,
 					PersonID:         row.PersonID,
 					PaymentMethodID:  row.PaymentMethodID,
 					BucketID:         row.BucketID,
@@ -178,6 +183,7 @@ func (h *ExpenseHandler) CreateBulk(w http.ResponseWriter, r *http.Request) {
 				Type:            row.Type,
 				Date:            row.Date,
 				CategoryID:      row.CategoryID,
+				SubcategoryID:   row.SubcategoryID,
 				PersonID:        row.PersonID,
 				PaymentMethodID: row.PaymentMethodID,
 				BucketID:        row.BucketID,

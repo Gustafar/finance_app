@@ -63,6 +63,9 @@ func recurringReferencedEntityError(err error) error {
 	if violatesConstraint(err, "fk_recurring_expenses_bank") {
 		return ErrBankNotFound
 	}
+	if violatesConstraint(err, "fk_recurring_expenses_subcategory") {
+		return ErrSubcategoryNotFound
+	}
 	return nil
 }
 

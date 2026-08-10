@@ -22,6 +22,11 @@ var (
 	ErrCategoryAlreadyExists       = errors.New("category already exists")
 	ErrCannotDeleteDefaultCategory = errors.New("the default category cannot be deleted")
 
+	ErrEmptySubcategoryName     = errors.New("subcategory name cannot be empty")
+	ErrEmptySubcategoryCategory = errors.New("subcategory must belong to a category")
+	ErrSubcategoryNotFound      = errors.New("subcategory not found")
+	ErrSubcategoryAlreadyExists = errors.New("subcategory already exists for this category")
+
 	ErrEmptyPersonName           = errors.New("person name cannot be empty")
 	ErrInvalidPersonColor        = errors.New("invalid person color")
 	ErrPersonNotFound            = errors.New("person not found")
