@@ -18,7 +18,7 @@ import RecurringExpensesPage from './pages/RecurringExpensesPage'
 import InvestmentsPage from './pages/InvestmentsPage'
 import { fetchExpenses, deleteExpense } from './api/expenses'
 import { generateDueRecurringExpenses } from './api/recurringExpenses'
-import { fetchCategories } from './api/categories'
+import { fetchSubcategories } from './api/subcategories'
 import { fetchPeople } from './api/people'
 import { fetchPaymentMethods } from './api/paymentMethods'
 import { fetchBuckets } from './api/buckets'
@@ -47,7 +47,7 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
-  const [categories, setCategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
   const [people, setPeople] = useState([])
   const [paymentMethods, setPaymentMethods] = useState([])
   const [buckets, setBuckets] = useState([])
@@ -85,7 +85,7 @@ function App() {
       })
 
     Promise.all([
-      fetchCategories().then(setCategories).catch((error) => console.error('Erro ao buscar categorias:', error)),
+      fetchSubcategories().then(setSubcategories).catch((error) => console.error('Erro ao buscar subcategorias:', error)),
       fetchPeople().then(setPeople).catch((error) => console.error('Erro ao buscar responsáveis:', error)),
       fetchPaymentMethods()
         .then(setPaymentMethods)
@@ -584,7 +584,7 @@ function App() {
         onClose={() => setIsFiltersOpen(false)}
         filters={filters}
         onChange={setFilters}
-        categories={categories}
+        subcategories={subcategories}
         people={people}
         paymentMethods={paymentMethods}
         buckets={buckets}

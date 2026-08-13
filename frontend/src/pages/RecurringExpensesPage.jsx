@@ -19,6 +19,7 @@ import Modal from '../components/Modal'
 import FilterButton from '../components/FilterButton'
 import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
 import SelectionToolbar from '../components/SelectionToolbar'
+import SubcategorySelect from '../components/SubcategorySelect'
 
 const emptyForm = {
   description: '',
@@ -40,11 +41,11 @@ function toPayload(form) {
     type: form.type,
     day_of_month: Number(form.day_of_month),
     category_id: Number(form.category_id),
+    subcategory_id: Number(form.subcategory_id),
     person_id: Number(form.person_id),
     payment_method_id: Number(form.payment_method_id),
     bucket_id: Number(form.bucket_id),
     bank_id: Number(form.bank_id),
-    ...(form.subcategory_id ? { subcategory_id: Number(form.subcategory_id) } : {}),
   }
 }
 
@@ -54,6 +55,7 @@ function isFormComplete(form) {
     form.amount &&
     form.day_of_month &&
     form.category_id &&
+    form.subcategory_id &&
     form.person_id &&
     form.payment_method_id &&
     form.bucket_id &&
@@ -66,8 +68,6 @@ function byId(list, id) {
 }
 
 function RecurringFields({ idPrefix, form, onChange, categories, subcategories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
-  const filteredSubcategories = subcategories.filter((s) => s.category_id === Number(form.category_id))
-
   const errCls = (invalid) => `field${attemptedSubmit && invalid ? ' field--error' : ''}`
 
   return (
@@ -128,31 +128,15 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
       </div>
 
       <div className="field-row">
-        <div className={errCls(!form.category_id)}>
-          <label htmlFor={`${idPrefix}-category`}>Categoria</label>
-          <select
-            id={`${idPrefix}-category`}
-            value={form.category_id}
-            onChange={(e) => onChange({ ...form, category_id: e.target.value, subcategory_id: '' })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
+        <div className={errCls(!form.subcategory_id)}>
           <label htmlFor={`${idPrefix}-subcategory`}>Subcategoria</label>
-          <select
+          <SubcategorySelect
             id={`${idPrefix}-subcategory`}
+            categories={categories}
+            subcategories={subcategories}
             value={form.subcategory_id}
-            onChange={(e) => onChange({ ...form, subcategory_id: e.target.value })}
-          >
-            <option value="">Nenhuma</option>
-            {filteredSubcategories.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+            onChange={(subcategoryId, categoryId) => onChange({ ...form, subcategory_id: subcategoryId, category_id: categoryId })}
+          />
         </div>
         <div className={errCls(!form.person_id)}>
           <label htmlFor={`${idPrefix}-person`}>Responsável</label>
@@ -282,26 +266,26 @@ function RecurringExpensesPage() {
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [subcategoryFilter, setSubcategoryFilter] = useState('all')
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
-  const hasActiveFilters = search.trim() !== '' || typeFilter !== 'all' || categoryFilter !== 'all'
+  const hasActiveFilters = search.trim() !== '' || typeFilter !== 'all' || subcategoryFilter !== 'all'
 
   const handleClearFilters = () => {
     setSearch('')
     setTypeFilter('all')
-    setCategoryFilter('all')
+    setSubcategoryFilter('all')
   }
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     return recurrences.filter((r) => {
       if (typeFilter !== 'all' && r.type !== typeFilter) return false
-      if (categoryFilter !== 'all' && String(r.category_id) !== categoryFilter) return false
+      if (subcategoryFilter !== 'all' && String(r.subcategory_id) !== subcategoryFilter) return false
       if (term && !r.description.toLowerCase().includes(term)) return false
       return true
     })
-  }, [recurrences, search, typeFilter, categoryFilter])
+  }, [recurrences, search, typeFilter, subcategoryFilter])
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -694,12 +678,20 @@ function RecurringExpensesPage() {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="filter-category">Categoria</label>
-            <select id="filter-category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+            <label htmlFor="filter-subcategory">Subcategoria</label>
+            <select id="filter-subcategory" value={subcategoryFilter} onChange={(e) => setSubcategoryFilter(e.target.value)}>
               <option value="all">Todas</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {categories.map((category) => {
+                const options = subcategories.filter((s) => s.category_id === category.id)
+                if (options.length === 0) return null
+                return (
+                  <optgroup key={category.id} label={category.name}>
+                    {options.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </optgroup>
+                )
+              })}
             </select>
           </div>
         </div>

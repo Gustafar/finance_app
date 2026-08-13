@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { createExpense, createInstallmentPurchase } from '../api/expenses'
 import DatePicker from './DatePicker'
 import LoadingBar from './LoadingBar'
+import SubcategorySelect from './SubcategorySelect'
 import { useCategories } from '../hooks/useCategories'
 import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
@@ -39,7 +40,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const [error, setError] = useState(null)
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
-  const noCategories = !isLoadingCategories && categories.length === 0
+  const noSubcategories = !isLoadingSubcategories && subcategories.length === 0
 
   const isLoadingOptions =
     isLoadingCategories ||
@@ -49,18 +50,6 @@ function ExpenseForm({ onExpenseCreated }) {
     isLoadingBanks ||
     isLoadingInvestmentBoxes ||
     isLoadingSubcategories
-
-  const defaultCategoryId = useMemo(() => {
-    const defaultCategory = categories.find((c) => c.is_default)
-    return defaultCategory ? String(defaultCategory.id) : categories[0] ? String(categories[0].id) : ''
-  }, [categories])
-
-  const effectiveCategoryId = categoryId || defaultCategoryId
-
-  const filteredSubcategories = useMemo(
-    () => subcategories.filter((s) => s.category_id === Number(effectiveCategoryId)),
-    [subcategories, effectiveCategoryId]
-  )
 
   const defaultPaymentMethodId = useMemo(() => {
     const defaultMethod = paymentMethods.find((m) => m.is_default)
@@ -109,7 +98,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const isFormInvalid =
     !description.trim() ||
     !date ||
-    !effectiveCategoryId ||
+    !subcategoryId ||
     !effectivePersonId ||
     !effectivePaymentMethodId ||
     !effectiveBucketId ||
@@ -121,19 +110,19 @@ function ExpenseForm({ onExpenseCreated }) {
     e.preventDefault()
     setAttemptedSubmit(true)
 
-    if (noCategories || isFormInvalid) return
+    if (noSubcategories || isFormInvalid) return
 
     setError(null)
     setIsSubmitting(true)
 
     const shared = {
       description,
-      category_id: Number(effectiveCategoryId),
+      category_id: Number(categoryId),
+      subcategory_id: Number(subcategoryId),
       person_id: Number(effectivePersonId),
       payment_method_id: Number(effectivePaymentMethodId),
       bucket_id: Number(effectiveBucketId),
       bank_id: Number(effectiveBankId),
-      ...(subcategoryId ? { subcategory_id: Number(subcategoryId) } : {}),
     }
 
     const request = isInstallment
@@ -253,38 +242,19 @@ function ExpenseForm({ onExpenseCreated }) {
               <DatePicker id="purchase-date" value={date} onChange={(e) => setDate(e.target.value)} required />
             </div>
 
-            <div className={`field${attemptedSubmit && !effectiveCategoryId ? ' field--error' : ''}`}>
-              <label htmlFor="category">Categoria</label>
-              <select
-                id="category"
-                value={effectiveCategoryId}
-                onChange={(e) => {
-                  setCategoryId(e.target.value)
-                  setSubcategoryId('')
-                }}
-                required
-                disabled={noCategories}
-              >
-                <option value="" disabled>Selecione…</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="field">
+            <div className={`field${attemptedSubmit && !subcategoryId ? ' field--error' : ''}`}>
               <label htmlFor="subcategory">Subcategoria</label>
-              <select
+              <SubcategorySelect
                 id="subcategory"
+                categories={categories}
+                subcategories={subcategories}
                 value={subcategoryId}
-                onChange={(e) => setSubcategoryId(e.target.value)}
-                disabled={isLoadingSubcategories}
-              >
-                <option value="">Nenhuma</option>
-                {filteredSubcategories.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
+                onChange={(nextSubcategoryId, nextCategoryId) => {
+                  setSubcategoryId(nextSubcategoryId)
+                  setCategoryId(nextCategoryId)
+                }}
+                disabled={noSubcategories}
+              />
             </div>
           </div>
         </>
@@ -309,38 +279,19 @@ function ExpenseForm({ onExpenseCreated }) {
             <DatePicker id="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
 
-          <div className={`field${attemptedSubmit && !effectiveCategoryId ? ' field--error' : ''}`}>
-            <label htmlFor="category">Categoria</label>
-            <select
-              id="category"
-              value={effectiveCategoryId}
-              onChange={(e) => {
-                setCategoryId(e.target.value)
-                setSubcategoryId('')
-              }}
-              required
-              disabled={noCategories}
-            >
-              <option value="" disabled>Selecione…</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="field">
+          <div className={`field${attemptedSubmit && !subcategoryId ? ' field--error' : ''}`}>
             <label htmlFor="subcategory">Subcategoria</label>
-            <select
+            <SubcategorySelect
               id="subcategory"
+              categories={categories}
+              subcategories={subcategories}
               value={subcategoryId}
-              onChange={(e) => setSubcategoryId(e.target.value)}
-              disabled={isLoadingSubcategories}
-            >
-              <option value="">Nenhuma</option>
-              {filteredSubcategories.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+              onChange={(nextSubcategoryId, nextCategoryId) => {
+                setSubcategoryId(nextSubcategoryId)
+                setCategoryId(nextCategoryId)
+              }}
+              disabled={noSubcategories}
+            />
           </div>
         </div>
       )}
@@ -431,8 +382,8 @@ function ExpenseForm({ onExpenseCreated }) {
         </div>
       )}
 
-      {noCategories && (
-        <p className="form-error">Cadastre uma categoria em "Categorias" antes de adicionar despesas.</p>
+      {noSubcategories && (
+        <p className="form-error">Cadastre uma categoria e uma subcategoria antes de adicionar despesas.</p>
       )}
 
       {attemptedSubmit && isFormInvalid && (
@@ -441,7 +392,7 @@ function ExpenseForm({ onExpenseCreated }) {
 
       {error && <p className="form-error">{error}</p>}
 
-      <button type="submit" className="btn btn-primary" disabled={isSubmitting || noCategories}>
+      <button type="submit" className="btn btn-primary" disabled={isSubmitting || noSubcategories}>
         {isSubmitting ? 'Salvando…' : 'Adicionar transação'}
       </button>
     </form>

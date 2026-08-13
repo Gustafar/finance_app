@@ -12,6 +12,7 @@ import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date
 import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
 import DatePicker from './DatePicker'
 import LoadingBar from './LoadingBar'
+import SubcategorySelect from './SubcategorySelect'
 
 // Fixed left-to-right order pasted spreadsheet columns are mapped to, starting from whichever
 // cell was focused when the paste happened.
@@ -20,7 +21,7 @@ const PASTE_COLUMNS = [
   'description',
   'amount',
   'type',
-  'categoryId',
+  'subcategoryId',
   'personId',
   'paymentMethodId',
   'bucketId',
@@ -38,7 +39,6 @@ function makeEmptyRow() {
     description: '',
     amount: '',
     type: 'expense',
-    categoryId: '',
     subcategoryId: '',
     personId: '',
     paymentMethodId: '',
@@ -63,8 +63,8 @@ function parseCellForColumn(columnKey, text, lookups) {
       return { amount: parsePastedAmount(text) }
     case 'type':
       return { type: resolveType(text) || 'expense' }
-    case 'categoryId':
-      return { categoryId: resolveIdByName(lookups.categories, text) }
+    case 'subcategoryId':
+      return { subcategoryId: resolveIdByName(lookups.subcategories, text) }
     case 'personId':
       return { personId: resolveIdByName(lookups.people, text) }
     case 'paymentMethodId':
@@ -83,7 +83,6 @@ function isRowBlank(row) {
 }
 
 function isRowComplete(row, defaults) {
-  const effectiveCategoryId = row.categoryId || defaults.categoryId
   const effectivePersonId = row.personId || defaults.personId
   const effectivePaymentMethodId = row.paymentMethodId || defaults.paymentMethodId
   const effectiveBucketId = row.bucketId || defaults.bucketId
@@ -92,7 +91,7 @@ function isRowComplete(row, defaults) {
 
   const sharedOk =
     row.description.trim() &&
-    effectiveCategoryId &&
+    row.subcategoryId &&
     effectivePersonId &&
     effectivePaymentMethodId &&
     effectiveBucketId &&
@@ -110,15 +109,16 @@ function isRowComplete(row, defaults) {
   return Boolean(row.amount) && Number(row.amount) > 0 && Boolean(row.date) && Boolean(row.type)
 }
 
-function buildRowPayload(row, defaults) {
+function buildRowPayload(row, defaults, subcategories) {
+  const subcategory = subcategories.find((s) => String(s.id) === String(row.subcategoryId))
   const shared = {
     description: row.description.trim(),
-    category_id: Number(row.categoryId || defaults.categoryId),
+    category_id: Number(subcategory?.category_id),
+    subcategory_id: Number(row.subcategoryId),
     person_id: Number(row.personId || defaults.personId),
     payment_method_id: Number(row.paymentMethodId || defaults.paymentMethodId),
     bucket_id: Number(row.bucketId || defaults.bucketId),
     bank_id: Number(row.bankId || defaults.bankId),
-    ...(row.subcategoryId ? { subcategory_id: Number(row.subcategoryId) } : {}),
   }
 
   if (row.isInstallment) {
@@ -155,7 +155,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
   const [error, setError] = useState(null)
   const [summary, setSummary] = useState(null)
 
-  const noCategories = !isLoadingCategories && categories.length === 0
+  const noSubcategories = !isLoadingSubcategories && subcategories.length === 0
 
   const isLoadingOptions =
     isLoadingCategories ||
@@ -167,14 +167,12 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     isLoadingSubcategories
 
   const defaults = useMemo(() => {
-    const defaultCategory = categories.find((c) => c.is_default)
     const defaultPerson = people.find((p) => p.is_default)
     const defaultPaymentMethod = paymentMethods.find((m) => m.is_default)
     const defaultBucket = buckets.find((b) => b.is_default)
     const defaultBank = banks.find((b) => b.is_default)
     const defaultBox = investmentBoxes.find((b) => b.is_default)
     return {
-      categoryId: defaultCategory ? String(defaultCategory.id) : categories[0] ? String(categories[0].id) : '',
       personId: defaultPerson ? String(defaultPerson.id) : people[0] ? String(people[0].id) : '',
       paymentMethodId: defaultPaymentMethod
         ? String(defaultPaymentMethod.id)
@@ -185,9 +183,9 @@ function ExpenseBulkForm({ onExpensesCreated }) {
       bankId: defaultBank ? String(defaultBank.id) : banks[0] ? String(banks[0].id) : '',
       investmentBoxId: defaultBox ? String(defaultBox.id) : investmentBoxes[0] ? String(investmentBoxes[0].id) : '',
     }
-  }, [categories, people, paymentMethods, buckets, banks, investmentBoxes])
+  }, [people, paymentMethods, buckets, banks, investmentBoxes])
 
-  const lookups = { categories, people, paymentMethods, buckets, banks }
+  const lookups = { subcategories, people, paymentMethods, buckets, banks }
 
   const updateRow = (index, patch) => {
     setRows((current) => current.map((row, i) => (i === index ? { ...row, ...patch, status: 'idle', error: null } : row)))
@@ -256,7 +254,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
       }
       candidateIndices.push(index)
-      payloadRows.push(buildRowPayload(row, defaults))
+      payloadRows.push(buildRowPayload(row, defaults, subcategories))
       return { ...row, status: 'idle', error: null }
     })
 
@@ -303,7 +301,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
       {isLoadingOptions && <LoadingBar variant="dialog" />}
 
       <p className="bulk-grid-hint">
-        Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Descrição, Valor, Tipo, Categoria,
+        Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Descrição, Valor, Tipo, Subcategoria,
         Responsável, Método de pagamento, Envelope, Banco.
       </p>
 
@@ -317,7 +315,6 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                 <th>Descrição</th>
                 <th>Valor</th>
                 <th>Tipo</th>
-                <th>Categoria</th>
                 <th>Subcategoria</th>
                 <th>Responsável</th>
                 <th>Método de pagamento</th>
@@ -380,32 +377,14 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                       ))}
                     </select>
                   </td>
-                  <td>
-                    <select
-                      value={row.categoryId || defaults.categoryId}
-                      onChange={(e) => updateRow(index, { categoryId: e.target.value, subcategoryId: '' })}
-                      onPaste={pasteHandler(index, 'categoryId')}
-                      disabled={noCategories}
-                    >
-                      <option value="">Selecione…</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <select
+                  <td onPaste={pasteHandler(index, 'subcategoryId')}>
+                    <SubcategorySelect
+                      categories={categories}
+                      subcategories={subcategories}
                       value={row.subcategoryId}
-                      onChange={(e) => updateRow(index, { subcategoryId: e.target.value })}
-                      disabled={isLoadingSubcategories}
-                    >
-                      <option value="">Nenhuma</option>
-                      {subcategories
-                        .filter((s) => s.category_id === Number(row.categoryId || defaults.categoryId))
-                        .map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                    </select>
+                      onChange={(nextSubcategoryId) => updateRow(index, { subcategoryId: nextSubcategoryId })}
+                      disabled={noSubcategories}
+                    />
                   </td>
                   <td>
                     <select
@@ -501,8 +480,8 @@ function ExpenseBulkForm({ onExpensesCreated }) {
         <p className="form-error">Algumas linhas têm campos pendentes ou não puderam ser salvas — corrija as linhas destacadas.</p>
       )}
 
-      {noCategories && (
-        <p className="form-error">Cadastre uma categoria em "Categorias" antes de adicionar despesas.</p>
+      {noSubcategories && (
+        <p className="form-error">Cadastre uma categoria e uma subcategoria antes de adicionar despesas.</p>
       )}
 
       {error && <p className="form-error">{error}</p>}
@@ -515,7 +494,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
         <button type="button" className="btn btn-secondary" onClick={removeSelected} disabled={isSubmitting || !hasSelected}>
           Remover selecionadas
         </button>
-        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={isSubmitting || noCategories}>
+        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={isSubmitting || noSubcategories}>
           {isSubmitting ? 'Salvando…' : 'Salvar transações'}
         </button>
       </div>

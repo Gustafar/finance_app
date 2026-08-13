@@ -1,7 +1,7 @@
 import DatePicker from './DatePicker'
 import MultiSelectField from './MultiSelectField'
 
-function FilterBar({ filters, onChange, categories, people, paymentMethods, buckets, banks }) {
+function FilterBar({ filters, onChange, subcategories, people, paymentMethods, buckets, banks }) {
   const handleField = (field) => (event) => {
     onChange({ ...filters, [field]: event.target.value })
   }
@@ -13,13 +13,13 @@ function FilterBar({ filters, onChange, categories, people, paymentMethods, buck
   return (
     <div className="filter-bar">
       <div className="filter-field">
-        <label htmlFor="filter-category">Categoria</label>
+        <label htmlFor="filter-subcategory">Subcategoria</label>
         <MultiSelectField
-          id="filter-category"
+          id="filter-subcategory"
           allLabel="Todas"
-          options={categories}
-          selected={filters.categoryId}
-          onChange={handleMultiField('categoryId')}
+          options={subcategories}
+          selected={filters.subcategoryId}
+          onChange={handleMultiField('subcategoryId')}
         />
       </div>
 

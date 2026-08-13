@@ -1,8 +1,21 @@
 import { Link } from 'react-router-dom'
 import MonthlyTrendChart from '../components/charts/MonthlyTrendChart'
-import BreakdownBarChart from '../components/charts/BreakdownBarChart'
+import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
 import FilterButton from '../components/FilterButton'
 import { formatMonthLabel } from '../utils/date'
+
+const NO_SUBCATEGORY_ID = 'none'
+const NO_SUBCATEGORY_NAME = 'Sem subcategoria'
+
+const subcategoryDimension = {
+  idKey: 'subcategory_id',
+  nameKey: 'subcategory_name',
+  colorKey: 'category_color',
+  tableLabel: 'Subcategoria',
+  emptyMessage: 'Nenhuma despesa nesta categoria.',
+  noneId: NO_SUBCATEGORY_ID,
+  noneLabel: NO_SUBCATEGORY_NAME,
+}
 
 function ChartsPage({
   trendExpenses,
@@ -15,6 +28,7 @@ function ChartsPage({
   hasActiveFilters,
 }) {
   const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
+  const caption = `Filtros ativos · ${scopeLabel}`
 
   return (
     <main className="container">
@@ -47,16 +61,23 @@ function ChartsPage({
             <section className="panel chart-panel">
               <div className="panel-header">
                 <h2>Gastos por categoria</h2>
-                <p className="chart-caption">Filtros ativos · {scopeLabel}</p>
               </div>
               <div className="chart-body">
-                <BreakdownBarChart
+                <DrillDownBreakdownChart
                   expenses={filteredExpenses}
-                  idKey="category_id"
-                  nameKey="category_name"
-                  colorKey="category_color"
-                  tableLabel="Categoria"
-                  emptyMessage="Nenhuma despesa no período para exibir por categoria."
+                  rootLabel="Categorias"
+                  caption={caption}
+                  detailEmptyMessage="Nenhuma despesa para exibir."
+                  dimensions={[
+                    {
+                      idKey: 'category_id',
+                      nameKey: 'category_name',
+                      colorKey: 'category_color',
+                      tableLabel: 'Categoria',
+                      emptyMessage: 'Nenhuma despesa no período para exibir por categoria.',
+                    },
+                    subcategoryDimension,
+                  ]}
                 />
               </div>
             </section>
@@ -64,16 +85,30 @@ function ChartsPage({
             <section className="panel chart-panel">
               <div className="panel-header">
                 <h2>Gastos por responsável</h2>
-                <p className="chart-caption">Filtros ativos · {scopeLabel}</p>
               </div>
               <div className="chart-body">
-                <BreakdownBarChart
+                <DrillDownBreakdownChart
                   expenses={filteredExpenses}
-                  idKey="person_id"
-                  nameKey="person_name"
-                  colorKey="person_color"
-                  tableLabel="Responsável"
-                  emptyMessage="Nenhuma despesa no período para exibir por responsável."
+                  rootLabel="Responsáveis"
+                  caption={caption}
+                  detailEmptyMessage="Nenhuma despesa para exibir."
+                  dimensions={[
+                    {
+                      idKey: 'person_id',
+                      nameKey: 'person_name',
+                      colorKey: 'person_color',
+                      tableLabel: 'Responsável',
+                      emptyMessage: 'Nenhuma despesa no período para exibir por responsável.',
+                    },
+                    {
+                      idKey: 'category_id',
+                      nameKey: 'category_name',
+                      colorKey: 'category_color',
+                      tableLabel: 'Categoria',
+                      emptyMessage: 'Nenhuma despesa deste responsável.',
+                    },
+                    subcategoryDimension,
+                  ]}
                 />
               </div>
             </section>

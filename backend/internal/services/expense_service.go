@@ -40,6 +40,9 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.CategoryID <= 0 {
 		return ErrEmptyCategory
 	}
+	if expense.SubcategoryID == nil || *expense.SubcategoryID <= 0 {
+		return ErrEmptySubcategory
+	}
 	if expense.PersonID <= 0 {
 		return ErrEmptyPerson
 	}
@@ -91,6 +94,9 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 	}
 	if input.CategoryID <= 0 {
 		return nil, ErrEmptyCategory
+	}
+	if input.SubcategoryID == nil || *input.SubcategoryID <= 0 {
+		return nil, ErrEmptySubcategory
 	}
 	if input.PersonID <= 0 {
 		return nil, ErrEmptyPerson

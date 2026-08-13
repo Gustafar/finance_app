@@ -32,6 +32,9 @@ func (s *RecurringExpenseService) validate(recurring models.RecurringExpense) er
 	if recurring.CategoryID <= 0 {
 		return ErrEmptyCategory
 	}
+	if recurring.SubcategoryID == nil || *recurring.SubcategoryID <= 0 {
+		return ErrEmptySubcategory
+	}
 	if recurring.PersonID <= 0 {
 		return ErrEmptyPerson
 	}

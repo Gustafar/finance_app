@@ -26,6 +26,7 @@ var (
 	ErrEmptySubcategoryCategory = errors.New("subcategory must belong to a category")
 	ErrSubcategoryNotFound      = errors.New("subcategory not found")
 	ErrSubcategoryAlreadyExists = errors.New("subcategory already exists for this category")
+	ErrEmptySubcategory         = errors.New("subcategory cannot be empty")
 
 	ErrEmptyPersonName           = errors.New("person name cannot be empty")
 	ErrInvalidPersonColor        = errors.New("invalid person color")

@@ -28,6 +28,7 @@ func badRequestOnValidationError(w http.ResponseWriter, err error) bool {
 		errors.Is(err, services.ErrEmptyPaymentMethod) ||
 		errors.Is(err, services.ErrEmptyBucket) ||
 		errors.Is(err, services.ErrEmptyBank) ||
+		errors.Is(err, services.ErrEmptySubcategory) ||
 		errors.Is(err, services.ErrCategoryNotFound) ||
 		errors.Is(err, services.ErrPersonNotFound) ||
 		errors.Is(err, services.ErrPaymentMethodNotFound) ||

@@ -17,7 +17,7 @@ function BarTooltip({ active, payload }) {
   )
 }
 
-function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, tableLabel }) {
+function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, tableLabel, onBarClick }) {
   const data = expenses
     .filter((expense) => expense.type === 'expense')
     .reduce((acc, expense) => {
@@ -66,7 +66,12 @@ function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
           <Tooltip content={<BarTooltip />} cursor={{ fill: 'var(--primary-bg)' }} />
           <Bar dataKey="amount" maxBarSize={22} radius={[0, 4, 4, 0]}>
             {data.map((entry) => (
-              <Cell key={entry.id} fill={entry.color} />
+              <Cell
+                key={entry.id}
+                fill={entry.color}
+                cursor={onBarClick ? 'pointer' : undefined}
+                onClick={onBarClick ? () => onBarClick(entry) : undefined}
+              />
             ))}
           </Bar>
         </BarChart>
@@ -83,7 +88,11 @@ function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
           </thead>
           <tbody>
             {data.map((item) => (
-              <tr key={item.id}>
+              <tr
+                key={item.id}
+                onClick={onBarClick ? () => onBarClick(item) : undefined}
+                className={onBarClick ? 'chart-table-row--clickable' : undefined}
+              >
                 <td>{item.name}</td>
                 <td>{formatCurrency(item.amount)}</td>
               </tr>

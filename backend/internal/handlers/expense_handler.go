@@ -32,6 +32,7 @@ func isClientValidationError(err error) bool {
 		errors.Is(err, services.ErrEmptyBank) ||
 		errors.Is(err, services.ErrEmptyInvestmentBox) ||
 		errors.Is(err, services.ErrEmptyDescription) ||
+		errors.Is(err, services.ErrEmptySubcategory) ||
 		errors.Is(err, services.ErrCategoryNotFound) ||
 		errors.Is(err, services.ErrPersonNotFound) ||
 		errors.Is(err, services.ErrPaymentMethodNotFound) ||

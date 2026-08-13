@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { updateExpense } from '../api/expenses'
+import SubcategorySelect from './SubcategorySelect'
 import { useCategories } from '../hooks/useCategories'
 import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
@@ -37,7 +38,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
-  const noCategories = !isLoadingCategories && categories.length === 0
+  const noSubcategories = !isLoadingSubcategories && subcategories.length === 0
 
   const isLoadingOptions =
     isLoadingCategories ||
@@ -55,15 +56,10 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
   const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
 
-  const filteredSubcategories = useMemo(
-    () => subcategories.filter((s) => s.category_id === Number(categoryId)),
-    [subcategories, categoryId]
-  )
-
   const isFormInvalid =
     !description.trim() ||
     !amount ||
-    !categoryId ||
+    !subcategoryId ||
     !personId ||
     !paymentMethodId ||
     !bucketId ||
@@ -74,7 +70,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
     e.preventDefault()
     setAttemptedSubmit(true)
 
-    if (noCategories || isFormInvalid) return
+    if (noSubcategories || isFormInvalid) return
 
     setShowConfirm(true)
   }
@@ -89,12 +85,12 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       amount: parseFloat(amount),
       type,
       category_id: Number(categoryId),
+      subcategory_id: Number(subcategoryId),
       person_id: Number(personId),
       payment_method_id: Number(paymentMethodId),
       bucket_id: Number(bucketId),
       bank_id: Number(bankId),
       date: expense.date,
-      ...(subcategoryId ? { subcategory_id: Number(subcategoryId) } : {}),
       ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
     }
 
@@ -157,39 +153,20 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
             />
           </div>
 
-          <div className={`field${attemptedSubmit && !categoryId ? ' field--error' : ''}`}>
-            <label htmlFor="edit-category">Categoria</label>
-            <select
-              id="edit-category"
-              value={categoryId}
-              onChange={(e) => {
-                setCategoryId(e.target.value)
-                setSubcategoryId('')
+          <div className={`field${attemptedSubmit && !subcategoryId ? ' field--error' : ''}`}>
+            <label htmlFor="edit-subcategory">Subcategoria</label>
+            <SubcategorySelect
+              id="edit-subcategory"
+              categories={categories}
+              subcategories={subcategories}
+              value={subcategoryId}
+              onChange={(nextSubcategoryId, nextCategoryId) => {
+                setSubcategoryId(nextSubcategoryId)
+                setCategoryId(nextCategoryId)
               }}
-              required
-              disabled={noCategories}
-            >
-              <option value="" disabled>Selecione…</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              disabled={noSubcategories}
+            />
           </div>
-        </div>
-
-        <div className="field">
-          <label htmlFor="edit-subcategory">Subcategoria</label>
-          <select
-            id="edit-subcategory"
-            value={subcategoryId}
-            onChange={(e) => setSubcategoryId(e.target.value)}
-            disabled={isLoadingSubcategories}
-          >
-            <option value="">Nenhuma</option>
-            {filteredSubcategories.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
         </div>
 
         <div className={`field${attemptedSubmit && !personId ? ' field--error' : ''}`}>
@@ -280,7 +257,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         {error && <p className="form-error">{error}</p>}
 
-        <button type="submit" className="btn btn-primary" disabled={isSubmitting || noCategories}>
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting || noSubcategories}>
           {isSubmitting ? 'Salvando…' : 'Salvar alterações'}
         </button>
       </form>

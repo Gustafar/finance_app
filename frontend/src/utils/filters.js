@@ -1,5 +1,5 @@
 export const EMPTY_FILTERS = {
-  categoryId: [],
+  subcategoryId: [],
   personId: [],
   paymentMethodId: [],
   bucketId: [],
@@ -10,7 +10,7 @@ export const EMPTY_FILTERS = {
 
 export function hasActiveFilters(filters) {
   return Boolean(
-    filters.categoryId.length ||
+    filters.subcategoryId.length ||
       filters.personId.length ||
       filters.paymentMethodId.length ||
       filters.bucketId.length ||
@@ -22,7 +22,7 @@ export function hasActiveFilters(filters) {
 
 export function matchesFilters(expense, filters) {
   return (
-    (filters.categoryId.length === 0 || filters.categoryId.includes(String(expense.category_id))) &&
+    (filters.subcategoryId.length === 0 || filters.subcategoryId.includes(String(expense.subcategory_id))) &&
     (filters.personId.length === 0 || filters.personId.includes(String(expense.person_id))) &&
     (filters.paymentMethodId.length === 0 || filters.paymentMethodId.includes(String(expense.payment_method_id))) &&
     (filters.bucketId.length === 0 || filters.bucketId.includes(String(expense.bucket_id))) &&

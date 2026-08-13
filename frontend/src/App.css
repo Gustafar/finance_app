@@ -1796,6 +1796,97 @@
   font-variant-numeric: tabular-nums;
 }
 
+.chart-table-row--clickable {
+  cursor: pointer;
+}
+
+.chart-table-row--clickable:hover td {
+  background: var(--primary-bg);
+}
+
+.chart-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.chart-breadcrumb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chart-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.chart-breadcrumb-sep {
+  color: var(--text-muted);
+}
+
+.chart-breadcrumb-current {
+  color: var(--text-muted);
+}
+
+.chart-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.chart-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-detail-row:last-child {
+  border-bottom: none;
+}
+
+.chart-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chart-detail-description {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-detail-date {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.chart-detail-amount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 /* Investments */
 
 .investment-box-grid {
