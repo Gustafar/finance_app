@@ -198,17 +198,6 @@ function ExpenseForm({ onExpenseCreated }) {
         />
       </div>
 
-      <div className="field">
-        <label htmlFor="comment">Comentário (opcional)</label>
-        <input
-          id="comment"
-          type="text"
-          placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-        />
-      </div>
-
       {type === 'expense' && (
         <label className="checkbox-field">
           <input
@@ -309,6 +298,17 @@ function ExpenseForm({ onExpenseCreated }) {
           </div>
         </div>
       )}
+
+      <div className="field">
+        <label htmlFor="comment">Comentário (opcional)</label>
+        <input
+          id="comment"
+          type="text"
+          placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </div>
 
       <div className="field-row">
         <div className={`field${attemptedSubmit && !effectivePersonId ? ' field--error' : ''}`}>

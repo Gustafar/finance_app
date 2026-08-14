@@ -31,6 +31,7 @@ function ChartsPage({
   hasActiveFilters,
   searchValue,
   onSearchChange,
+  onEditExpense,
 }) {
   const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
   const caption = `Filtros ativos · ${scopeLabel}`
@@ -79,6 +80,7 @@ function ChartsPage({
                   rootLabel="Categorias"
                   caption={caption}
                   detailEmptyMessage="Nenhuma despesa para exibir."
+                  onEditExpense={onEditExpense}
                   dimensions={[
                     {
                       idKey: 'category_id',
@@ -103,6 +105,7 @@ function ChartsPage({
                   rootLabel="Responsáveis"
                   caption={caption}
                   detailEmptyMessage="Nenhuma despesa para exibir."
+                  onEditExpense={onEditExpense}
                   dimensions={[
                     {
                       idKey: 'person_id',

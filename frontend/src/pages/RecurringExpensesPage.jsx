@@ -33,6 +33,7 @@ const emptyForm = {
   payment_method_id: '',
   bucket_id: '',
   bank_id: '',
+  include_in_expenses: true,
 }
 
 function toPayload(form) {
@@ -47,6 +48,7 @@ function toPayload(form) {
     payment_method_id: Number(form.payment_method_id),
     bucket_id: Number(form.bucket_id),
     bank_id: Number(form.bank_id),
+    include_in_expenses: Boolean(form.include_in_expenses),
   }
 }
 
@@ -183,18 +185,30 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
         </div>
       </div>
 
-      <div className={errCls(!form.bank_id)}>
-        <label htmlFor={`${idPrefix}-bank`}>Banco</label>
-        <select
-          id={`${idPrefix}-bank`}
-          value={form.bank_id}
-          onChange={(e) => onChange({ ...form, bank_id: e.target.value })}
-        >
-          <option value="" disabled>Selecione…</option>
-          {banks.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
+      <div className="field-row field-row--end">
+        <div className={errCls(!form.bank_id)}>
+          <label htmlFor={`${idPrefix}-bank`}>Banco</label>
+          <select
+            id={`${idPrefix}-bank`}
+            value={form.bank_id}
+            onChange={(e) => onChange({ ...form, bank_id: e.target.value })}
+          >
+            <option value="" disabled>Selecione…</option>
+            {banks.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <label className="checkbox-field checkbox-field--compact" htmlFor={`${idPrefix}-include-in-expenses`}>
+          <input
+            id={`${idPrefix}-include-in-expenses`}
+            type="checkbox"
+            checked={form.include_in_expenses}
+            onChange={(e) => onChange({ ...form, include_in_expenses: e.target.checked })}
+          />
+          Lançar automaticamente
+        </label>
       </div>
     </>
   )
@@ -322,6 +336,7 @@ function RecurringExpensesPage() {
       payment_method_id: String(recurring.payment_method_id),
       bucket_id: String(recurring.bucket_id),
       bank_id: String(recurring.bank_id),
+      include_in_expenses: recurring.include_in_expenses,
     })
     setRowError(null)
     setEditAttemptedSubmit(false)
@@ -372,7 +387,12 @@ function RecurringExpensesPage() {
             <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
-        <h1>Gastos fixos</h1>
+        <h1>Planejador Mensal</h1>
+        <div className="page-header-actions">
+          <Link to="/estimativa-mensal" className="btn btn-secondary btn-sm">
+            Ver estimativa mensal
+          </Link>
+        </div>
       </div>
 
       <section className="panel">
@@ -385,7 +405,8 @@ function RecurringExpensesPage() {
           <span>
             <h2>Novo gasto fixo</h2>
             <p className="state-message" style={{ padding: 0, textAlign: 'left' }}>
-              Repetem todo mês no dia configurado — aparecem automaticamente na próxima vez que você abrir o app.
+              Repetem todo mês no dia configurado. Marque "Lançar automaticamente" para que também virem despesas
+              reais — caso contrário ficam só no planejamento.
             </p>
           </span>
           <svg
@@ -588,6 +609,11 @@ function RecurringExpensesPage() {
                     <span className="badge" style={{ background: bankColor.bg, color: bankColor.text }}>
                       {bank?.name ?? '—'}
                     </span>
+                    {!recurring.include_in_expenses && (
+                      <span className="badge" style={{ background: 'var(--border)', color: 'var(--text-muted)' }}>
+                        Somente planejamento
+                      </span>
+                    )}
                   </div>
 
                   <div className="expense-main">

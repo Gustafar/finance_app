@@ -15,6 +15,7 @@ import BucketManager from './components/BucketManager'
 import BankManager from './components/BankManager'
 import DashboardPage from './pages/DashboardPage'
 import RecurringExpensesPage from './pages/RecurringExpensesPage'
+import MonthlyEstimatePage from './pages/MonthlyEstimatePage'
 import InvestmentsPage from './pages/InvestmentsPage'
 import { fetchExpenses, deleteExpense } from './api/expenses'
 import { generateDueRecurringExpenses } from './api/recurringExpenses'
@@ -324,8 +325,8 @@ function App() {
             <Link
               to="/gastos-fixos"
               className={`icon-btn icon-btn--header${location.pathname === '/gastos-fixos' ? ' icon-btn--active' : ''}`}
-              aria-label="Gastos fixos"
-              title="Gastos fixos"
+              aria-label="Planejador Mensal"
+              title="Planejador Mensal"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
@@ -506,7 +507,20 @@ function App() {
             />
             <circle cx="8" cy="8" r="2.3" stroke="currentColor" strokeWidth="1.3" />
           </svg>
-          Gastos fixos
+          Planejador Mensal
+        </Link>
+
+        <Link to="/estimativa-mensal" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M2.5 13.5h11M4 13.5V9M7.5 13.5V6M11 13.5V3"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Estimativa mensal
         </Link>
 
         <Link to="/graficos" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
@@ -560,6 +574,7 @@ function App() {
           }
         />
         <Route path="/gastos-fixos" element={<RecurringExpensesPage />} />
+        <Route path="/estimativa-mensal" element={<MonthlyEstimatePage />} />
         <Route
           path="/graficos"
           element={
@@ -577,6 +592,7 @@ function App() {
                 hasActiveFilters={filtersAreActive}
                 searchValue={filters.description}
                 onSearchChange={(value) => setFilters((prev) => ({ ...prev, description: value }))}
+                onEditExpense={setEditingExpense}
               />
             </Suspense>
           }

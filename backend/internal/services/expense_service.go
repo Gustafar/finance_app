@@ -193,30 +193,33 @@ func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
 		}
 
 		for !cursor.After(currentMonth) {
-			recurringID := recurring.ID
+			if recurring.IncludeInExpenses {
+				recurringID := recurring.ID
 
-			expense, err := s.Repo.Create(models.Expense{
-				Description:        recurring.Description,
-				Amount:             recurring.Amount,
-				Type:               recurring.Type,
-				CategoryID:         recurring.CategoryID,
-				SubcategoryID:      recurring.SubcategoryID,
-				PersonID:           recurring.PersonID,
-				PaymentMethodID:    recurring.PaymentMethodID,
-				BucketID:           recurring.BucketID,
-				BankID:             recurring.BankID,
-				Date:               dateForDay(cursor.Year(), cursor.Month(), recurring.DayOfMonth),
-				RecurringExpenseID: &recurringID,
-			})
-			if err != nil {
-				return created, err
+				expense, err := s.Repo.Create(models.Expense{
+					Description:        recurring.Description,
+					Amount:             recurring.Amount,
+					Type:               recurring.Type,
+					CategoryID:         recurring.CategoryID,
+					SubcategoryID:      recurring.SubcategoryID,
+					PersonID:           recurring.PersonID,
+					PaymentMethodID:    recurring.PaymentMethodID,
+					BucketID:           recurring.BucketID,
+					BankID:             recurring.BankID,
+					Date:               dateForDay(cursor.Year(), cursor.Month(), recurring.DayOfMonth),
+					RecurringExpenseID: &recurringID,
+				})
+				if err != nil {
+					return created, err
+				}
+
+				created = append(created, expense)
 			}
 
 			if err := s.RecurringRepo.MarkGenerated(recurring.ID, cursor.Year(), int(cursor.Month())); err != nil {
 				return created, err
 			}
 
-			created = append(created, expense)
 			cursor = cursor.AddDate(0, 1, 0)
 		}
 	}

@@ -35,6 +35,7 @@ function makeEmptyRow() {
     paymentMethodId: '',
     bucketId: '',
     bankId: '',
+    includeInExpenses: true,
     selected: false,
     status: 'idle',
     error: null,
@@ -110,6 +111,7 @@ function buildRowPayload(row, defaults, subcategories) {
     payment_method_id: Number(row.paymentMethodId || defaults.paymentMethodId),
     bucket_id: Number(row.bucketId || defaults.bucketId),
     bank_id: Number(row.bankId || defaults.bankId),
+    include_in_expenses: Boolean(row.includeInExpenses),
   }
 }
 
@@ -269,6 +271,7 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                 <th>Método de pagamento</th>
                 <th>Envelope</th>
                 <th>Banco</th>
+                <th>Lança</th>
               </tr>
             </thead>
             <tbody>
@@ -378,6 +381,14 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={row.includeInExpenses}
+                      onChange={(e) => updateRow(index, { includeInExpenses: e.target.checked })}
+                      aria-label="Lançar automaticamente nas despesas"
+                    />
                   </td>
                 </tr>
               ))}

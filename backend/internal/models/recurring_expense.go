@@ -14,6 +14,7 @@ type RecurringExpense struct {
 	PaymentMethodID    int       `json:"payment_method_id"`
 	BucketID           int       `json:"bucket_id"`
 	BankID             int       `json:"bank_id"`
+	IncludeInExpenses  bool      `json:"include_in_expenses"`
 	LastGeneratedYear  *int      `json:"last_generated_year,omitempty"`
 	LastGeneratedMonth *int      `json:"last_generated_month,omitempty"`
 	CreatedAt          time.Time `json:"created_at"`

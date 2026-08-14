@@ -145,17 +145,6 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           />
         </div>
 
-        <div className="field">
-          <label htmlFor="edit-comment">Comentário (opcional)</label>
-          <input
-            id="edit-comment"
-            type="text"
-            placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
-        </div>
-
         <div className="field-row">
           <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
             <label htmlFor="edit-amount">Valor</label>
@@ -184,6 +173,17 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
               disabled={noSubcategories}
             />
           </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="edit-comment">Comentário (opcional)</label>
+          <input
+            id="edit-comment"
+            type="text"
+            placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
         </div>
 
         <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>

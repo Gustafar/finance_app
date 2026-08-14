@@ -16,7 +16,7 @@ func NewRecurringExpenseRepository(db *sql.DB) *RecurringExpenseRepository {
 
 const selectRecurringExpenseQuery = `
 	SELECT id, description, amount, type, day_of_month, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id,
-	       last_generated_year, last_generated_month, created_at
+	       include_in_expenses, last_generated_year, last_generated_month, created_at
 	FROM recurring_expenses
 `
 
@@ -25,19 +25,20 @@ func scanRecurringExpense(row interface{ Scan(...any) error }) (models.Recurring
 	err := row.Scan(
 		&recurring.ID, &recurring.Description, &recurring.Amount, &recurring.Type, &recurring.DayOfMonth,
 		&recurring.CategoryID, &recurring.SubcategoryID, &recurring.PersonID, &recurring.PaymentMethodID, &recurring.BucketID, &recurring.BankID,
-		&recurring.LastGeneratedYear, &recurring.LastGeneratedMonth, &recurring.CreatedAt,
+		&recurring.IncludeInExpenses, &recurring.LastGeneratedYear, &recurring.LastGeneratedMonth, &recurring.CreatedAt,
 	)
 	return recurring, err
 }
 
 func (r *RecurringExpenseRepository) Create(recurring models.RecurringExpense) (models.RecurringExpense, error) {
-	query := `INSERT INTO recurring_expenses (description, amount, type, day_of_month, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
+	query := `INSERT INTO recurring_expenses (description, amount, type, day_of_month, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id, include_in_expenses)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
 
 	var id int
 	err := r.DB.QueryRow(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
 		recurring.CategoryID, recurring.SubcategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.BucketID, recurring.BankID,
+		recurring.IncludeInExpenses,
 	).Scan(&id)
 	if err != nil {
 		return models.RecurringExpense{}, err
@@ -86,12 +87,13 @@ func (r *RecurringExpenseRepository) GetAll() ([]models.RecurringExpense, error)
 
 func (r *RecurringExpenseRepository) Update(id int, recurring models.RecurringExpense) (models.RecurringExpense, error) {
 	query := `UPDATE recurring_expenses
-		SET description = $1, amount = $2, type = $3, day_of_month = $4, category_id = $5, subcategory_id = $6, person_id = $7, payment_method_id = $8, bucket_id = $9, bank_id = $10
-		WHERE id = $11`
+		SET description = $1, amount = $2, type = $3, day_of_month = $4, category_id = $5, subcategory_id = $6, person_id = $7, payment_method_id = $8, bucket_id = $9, bank_id = $10, include_in_expenses = $11
+		WHERE id = $12`
 
 	_, err := r.DB.Exec(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
-		recurring.CategoryID, recurring.SubcategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.BucketID, recurring.BankID, id,
+		recurring.CategoryID, recurring.SubcategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.BucketID, recurring.BankID,
+		recurring.IncludeInExpenses, id,
 	)
 	if err != nil {
 		return models.RecurringExpense{}, err

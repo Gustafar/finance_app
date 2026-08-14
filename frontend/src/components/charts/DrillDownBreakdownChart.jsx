@@ -2,7 +2,7 @@ import { useState } from 'react'
 import BreakdownBarChart from './BreakdownBarChart'
 import { formatCurrency, formatDate } from '../../utils/format'
 
-function ExpenseDetailList({ expenses, emptyMessage }) {
+function ExpenseDetailList({ expenses, emptyMessage, onEditExpense }) {
   const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
 
   if (sorted.length === 0) {
@@ -18,6 +18,25 @@ function ExpenseDetailList({ expenses, emptyMessage }) {
             <span className="chart-detail-date">{formatDate(expense.date)} · {expense.person_name}</span>
           </div>
           <span className="chart-detail-amount">{formatCurrency(expense.amount)}</span>
+          {onEditExpense && (
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => onEditExpense(expense)}
+              aria-label="Editar despesa"
+              title="Editar"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M11.333 2a1.2 1.2 0 0 1 1.697 1.697l-7.03 7.03-2.333.637.636-2.334z"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
         </li>
       ))}
     </ul>
@@ -29,7 +48,7 @@ function ExpenseDetailList({ expenses, emptyMessage }) {
 // — noneId/noneLabel group expenses missing that field (e.g. legacy expenses without a
 // subcategory) under a synthetic bucket instead of dropping them. Clicking a bar drills one
 // level deeper; the last level's clicks reveal the individual expenses behind it.
-function DrillDownBreakdownChart({ expenses, dimensions, rootLabel, caption, detailEmptyMessage }) {
+function DrillDownBreakdownChart({ expenses, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense }) {
   const [drillPath, setDrillPath] = useState([])
 
   // Reset the drill whenever the underlying scope changes (month, filters, period). Adjusting
@@ -98,7 +117,7 @@ function DrillDownBreakdownChart({ expenses, dimensions, rootLabel, caption, det
           onBarClick={(item) => setDrillPath([...drillPath, { id: item.id, name: item.name }])}
         />
       ) : (
-        <ExpenseDetailList expenses={scopedExpenses} emptyMessage={detailEmptyMessage} />
+        <ExpenseDetailList expenses={scopedExpenses} emptyMessage={detailEmptyMessage} onEditExpense={onEditExpense} />
       )}
     </>
   )
