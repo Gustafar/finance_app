@@ -65,6 +65,12 @@
   z-index: 10;
 }
 
+.topbar-start {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -72,6 +78,7 @@
   font-size: 17px;
   font-weight: 600;
   color: var(--text-h);
+  text-decoration: none;
 }
 
 .topbar-actions {
@@ -187,6 +194,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  position: sticky;
+  top: var(--topbar-height, 64px);
+  z-index: 5;
+  background: var(--bg);
+  padding-block: 16px;
+  margin-block: -16px;
+  border-bottom: 1px solid var(--border);
 }
 
 .dashboard-toolbar .month-nav {
@@ -311,7 +325,10 @@
   border: 1.5px solid var(--surface);
 }
 
-.page-header-filter-btn {
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
 }
 
@@ -376,6 +393,43 @@
 .filter-field select:focus,
 .filter-field input:focus {
   border-color: var(--primary);
+}
+
+.search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.search-input svg {
+  position: absolute;
+  left: 8px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input input {
+  width: 150px;
+  height: 30px;
+  font-family: inherit;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 8px 0 26px;
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.search-input input:focus {
+  border-color: var(--primary);
+}
+
+@media (max-width: 480px) {
+  .search-input input {
+    width: 110px;
+  }
 }
 
 .multi-select {
@@ -1611,7 +1665,7 @@
 .drawer-panel {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
   bottom: 0;
   width: 260px;
   max-width: 80vw;
@@ -1621,7 +1675,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 16px;
-  transform: translateX(100%);
+  transform: translateX(-100%);
   transition: transform 0.2s ease;
 }
 
@@ -1752,7 +1806,18 @@
   padding: 16px 20px 20px;
 }
 
+.chart-scroll-row {
+  display: flex;
+  align-items: stretch;
+}
+
+.chart-axis-fixed {
+  flex-shrink: 0;
+}
+
 .chart-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow-x: auto;
 }
 

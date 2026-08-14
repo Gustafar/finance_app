@@ -59,38 +59,60 @@ function MonthlyTrendChart({ expenses, dateFrom, dateTo }) {
         ))}
       </div>
 
-      <div className="chart-scroll">
-        <ResponsiveContainer width="100%" minWidth={months.length * 56} height={260}>
-          <LineChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
-            <CartesianGrid vertical={false} stroke="var(--border)" />
-            <XAxis
-              dataKey="label"
-              tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-              axisLine={{ stroke: 'var(--border)' }}
-              tickLine={false}
-            />
-            <YAxis
-              tickFormatter={formatCompactCurrency}
-              tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-              axisLine={false}
-              tickLine={false}
-              width={56}
-            />
-            <Tooltip content={<LineTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
-            {SERIES.map((series) => (
-              <Line
-                key={series.key}
-                type="monotone"
-                dataKey={series.key}
-                name={series.label}
-                stroke={series.color}
-                strokeWidth={2}
-                dot={{ r: 4, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
-                activeDot={{ r: 5, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
+      <div className="chart-scroll-row">
+        <div className="chart-axis-fixed">
+          <ResponsiveContainer width={56} height={260}>
+            <LineChart data={data} margin={{ top: 8, right: 0, bottom: 4, left: 4 }}>
+              <YAxis
+                tickFormatter={formatCompactCurrency}
+                tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                axisLine={false}
+                tickLine={false}
+                width={56}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+              {SERIES.map((series) => (
+                <Line
+                  key={series.key}
+                  type="monotone"
+                  dataKey={series.key}
+                  stroke="transparent"
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  legendType="none"
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="chart-scroll">
+          <ResponsiveContainer width="100%" minWidth={months.length * 56} height={260}>
+            <LineChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
+              <CartesianGrid vertical={false} stroke="var(--border)" />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                axisLine={{ stroke: 'var(--border)' }}
+                tickLine={false}
+              />
+              <YAxis hide width={0} />
+              <Tooltip content={<LineTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
+              {SERIES.map((series) => (
+                <Line
+                  key={series.key}
+                  type="monotone"
+                  dataKey={series.key}
+                  name={series.label}
+                  stroke={series.color}
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <details className="chart-table-toggle">

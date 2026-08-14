@@ -3,6 +3,7 @@ import SummaryCard from '../components/SummaryCard'
 import FilterButton from '../components/FilterButton'
 import MonthPicker from '../components/MonthPicker'
 import RefreshButton from '../components/RefreshButton'
+import SearchInput from '../components/SearchInput'
 import { formatCurrency } from '../utils/format'
 import { useBulkSelection } from '../hooks/useBulkSelection'
 
@@ -23,6 +24,8 @@ function DashboardPage({
   onDeleteExpense,
   onRefresh,
   isRefreshing,
+  searchValue,
+  onSearchChange,
 }) {
   const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
 
@@ -81,11 +84,14 @@ function DashboardPage({
       <section className="panel">
         <div className="panel-header panel-header--actions">
           <h2>Despesas</h2>
-          {!isLoading && !loadError && filteredExpenses.length > 0 && (
-            <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
-              {isSelecting ? 'Cancelar' : 'Selecionar'}
-            </button>
-          )}
+          <div className="panel-header-actions-group">
+            <SearchInput value={searchValue} onChange={onSearchChange} />
+            {!isLoading && !loadError && filteredExpenses.length > 0 && (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
+                {isSelecting ? 'Cancelar' : 'Selecionar'}
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading && <p className="state-message">Carregando despesas…</p>}

@@ -17,6 +17,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import LoadingBar from '../components/LoadingBar'
 import Modal from '../components/Modal'
 import FilterButton from '../components/FilterButton'
+import SearchInput from '../components/SearchInput'
 import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
 import SelectionToolbar from '../components/SelectionToolbar'
 import SubcategorySelect from '../components/SubcategorySelect'
@@ -464,6 +465,7 @@ function RecurringExpensesPage() {
         <div className="panel-header panel-header--actions">
           <h2>Gastos fixos cadastrados</h2>
           <div className="panel-header-actions-group">
+            <SearchInput value={search} onChange={setSearch} />
             {!isLoading && !loadError && recurrences.length > 0 && (
               <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
                 {isSelecting ? 'Cancelar' : 'Selecionar'}
@@ -658,16 +660,6 @@ function RecurringExpensesPage() {
         <h2 className="modal-title">Filtros</h2>
 
         <div className="field-row">
-          <div className="field">
-            <label htmlFor="filter-search">Buscar</label>
-            <input
-              id="filter-search"
-              type="text"
-              placeholder="Descrição…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
           <div className="field">
             <label htmlFor="filter-type">Tipo</label>
             <select id="filter-type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>

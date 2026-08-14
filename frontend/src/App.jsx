@@ -31,6 +31,7 @@ import './App.css'
 const ChartsPage = lazy(() => import('./pages/ChartsPage'))
 
 function App() {
+  const topbarRef = useRef(null)
   const [expenses, setExpenses] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -106,6 +107,20 @@ function App() {
     }
     loadExpenses()
   }, [location.pathname])
+
+  useEffect(() => {
+    const el = topbarRef.current
+    if (!el) return
+
+    const setTopbarHeight = () => {
+      document.documentElement.style.setProperty('--topbar-height', `${el.offsetHeight}px`)
+    }
+
+    setTopbarHeight()
+    const observer = new ResizeObserver(setTopbarHeight)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const handleExpenseCreated = (created) => {
     const newExpenses = Array.isArray(created) ? created : [created]
@@ -186,10 +201,23 @@ function App() {
     <div className="page">
       {isLoading && <LoadingBar />}
 
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">R$</span>
-          <span>Minhas Finanças</span>
+      <header className="topbar" ref={topbarRef}>
+        <div className="topbar-start">
+          <button
+            type="button"
+            className="icon-btn icon-btn--header topbar-menu-btn"
+            onClick={() => setIsMenuOpen(true)}
+            aria-label="Abrir menu"
+            title="Menu"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 4.5h12M2 8h12M2 11.5h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </button>
+          <Link to="/" className="brand">
+            <span className="brand-mark">R$</span>
+            <span>Minhas Finanças</span>
+          </Link>
         </div>
         <div className="topbar-actions">
           <div className="topbar-actions-full">
@@ -338,18 +366,6 @@ function App() {
             </Link>
             <ThemeToggle theme={theme} onToggle={cycleTheme} />
           </div>
-
-          <button
-            type="button"
-            className="icon-btn icon-btn--header topbar-menu-btn"
-            onClick={() => setIsMenuOpen(true)}
-            aria-label="Abrir menu"
-            title="Menu"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 4.5h12M2 8h12M2 11.5h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-          </button>
 
           <button
             type="button"
@@ -538,6 +554,8 @@ function App() {
               onDeleteExpense={handleDelete}
               onRefresh={handleRefresh}
               isRefreshing={isRefreshing}
+              searchValue={filters.description}
+              onSearchChange={(value) => setFilters((prev) => ({ ...prev, description: value }))}
             />
           }
         />
@@ -557,6 +575,8 @@ function App() {
                 trendDateTo={filters.dateTo}
                 onOpenFilters={() => setIsFiltersOpen(true)}
                 hasActiveFilters={filtersAreActive}
+                searchValue={filters.description}
+                onSearchChange={(value) => setFilters((prev) => ({ ...prev, description: value }))}
               />
             </Suspense>
           }

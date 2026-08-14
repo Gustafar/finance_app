@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import MonthlyTrendChart from '../components/charts/MonthlyTrendChart'
 import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
 import FilterButton from '../components/FilterButton'
+import SearchInput from '../components/SearchInput'
 import { formatMonthLabel } from '../utils/date'
 
 const NO_SUBCATEGORY_ID = 'none'
@@ -28,6 +29,8 @@ function ChartsPage({
   trendDateTo,
   onOpenFilters,
   hasActiveFilters,
+  searchValue,
+  onSearchChange,
 }) {
   const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
   const caption = `Filtros ativos · ${scopeLabel}`
@@ -44,7 +47,10 @@ function ChartsPage({
           </svg>
         </Link>
         <h1>Gráficos</h1>
-        <FilterButton onClick={onOpenFilters} active={hasActiveFilters} className="page-header-filter-btn" />
+        <div className="page-header-actions">
+          <SearchInput value={searchValue} onChange={onSearchChange} />
+          <FilterButton onClick={onOpenFilters} active={hasActiveFilters} />
+        </div>
       </div>
 
       {isLoading && <p className="state-message">Carregando dados…</p>}
