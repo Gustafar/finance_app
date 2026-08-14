@@ -1752,6 +1752,10 @@
   padding: 16px 20px 20px;
 }
 
+.chart-scroll {
+  overflow-x: auto;
+}
+
 .chart-legend {
   display: flex;
   flex-wrap: wrap;

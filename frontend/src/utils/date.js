@@ -47,8 +47,28 @@ export function isoStringToDateInputValue(isoString) {
   return `${year}-${month}-${day}`
 }
 
-export function formatShortMonthLabel({ year, month }) {
-  return shortMonthLabelFormatter.format(new Date(year, month, 1)).replace('.', '')
+export function formatShortMonthLabel({ year, month }, includeYear = false) {
+  const label = shortMonthLabelFormatter.format(new Date(year, month, 1)).replace('.', '')
+  if (!includeYear) return label
+  return `${label}/${String(year).slice(2)}`
+}
+
+export function dateStringToYearMonth(dateString) {
+  const [year, month] = dateString.split('-').map(Number)
+  return { year, month: month - 1 }
+}
+
+export function monthsInRange(fromDateString, toDateString) {
+  const end = toDateString ? dateStringToYearMonth(toDateString) : currentYearMonth()
+  const start = fromDateString ? dateStringToYearMonth(fromDateString) : shiftMonth(end, -5)
+
+  const months = []
+  let cursor = start
+  while (cursor.year < end.year || (cursor.year === end.year && cursor.month <= end.month)) {
+    months.push(cursor)
+    cursor = shiftMonth(cursor, 1)
+  }
+  return months.length ? months : [end]
 }
 
 export function parseFlexibleDateInput(text) {

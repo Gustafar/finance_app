@@ -24,11 +24,16 @@ function ChartsPage({
   loadError,
   periodFilterActive,
   selectedMonth,
+  trendDateFrom,
+  trendDateTo,
   onOpenFilters,
   hasActiveFilters,
 }) {
   const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
   const caption = `Filtros ativos · ${scopeLabel}`
+  const trendCaption = periodFilterActive
+    ? 'Despesas, receitas e investimentos no período selecionado.'
+    : 'Despesas, receitas e investimentos nos últimos 6 meses.'
 
   return (
     <main className="container">
@@ -50,10 +55,10 @@ function ChartsPage({
           <section className="panel chart-panel">
             <div className="panel-header">
               <h2>Evolução mensal</h2>
-              <p className="chart-caption">Despesas, receitas e investimentos nos últimos 6 meses.</p>
+              <p className="chart-caption">{trendCaption}</p>
             </div>
             <div className="chart-body">
-              <MonthlyTrendChart expenses={trendExpenses} />
+              <MonthlyTrendChart expenses={trendExpenses} dateFrom={trendDateFrom} dateTo={trendDateTo} />
             </div>
           </section>
 

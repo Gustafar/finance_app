@@ -1,6 +1,6 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatCompactCurrency, formatCurrency } from '../../utils/format'
-import { formatShortMonthLabel, lastMonths, sameYearMonth } from '../../utils/date'
+import { formatShortMonthLabel, lastMonths, monthsInRange, sameYearMonth } from '../../utils/date'
 
 const SERIES = [
   { key: 'expense', label: 'Despesas', color: 'var(--danger)' },
@@ -29,8 +29,9 @@ function LineTooltip({ active, payload, label }) {
   )
 }
 
-function MonthlyTrendChart({ expenses, monthsCount = 6 }) {
-  const months = lastMonths(monthsCount)
+function MonthlyTrendChart({ expenses, dateFrom, dateTo }) {
+  const months = dateFrom || dateTo ? monthsInRange(dateFrom, dateTo) : lastMonths(6)
+  const showYear = months.length > 12
 
   const data = months.map((month) => {
     const monthExpenses = expenses.filter((expense) => sameYearMonth(expense.date, month))
@@ -38,7 +39,7 @@ function MonthlyTrendChart({ expenses, monthsCount = 6 }) {
     monthExpenses.forEach((expense) => {
       totals[expense.type] = (totals[expense.type] ?? 0) + expense.amount
     })
-    return { label: formatShortMonthLabel(month), ...totals }
+    return { label: formatShortMonthLabel(month, showYear), ...totals }
   })
 
   const hasData = data.some((month) => month.expense || month.income || month.investment)
@@ -58,37 +59,39 @@ function MonthlyTrendChart({ expenses, monthsCount = 6 }) {
         ))}
       </div>
 
-      <ResponsiveContainer width="100%" height={260}>
-        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
-          <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis
-            dataKey="label"
-            tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-            axisLine={{ stroke: 'var(--border)' }}
-            tickLine={false}
-          />
-          <YAxis
-            tickFormatter={formatCompactCurrency}
-            tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-            axisLine={false}
-            tickLine={false}
-            width={56}
-          />
-          <Tooltip content={<LineTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
-          {SERIES.map((series) => (
-            <Line
-              key={series.key}
-              type="monotone"
-              dataKey={series.key}
-              name={series.label}
-              stroke={series.color}
-              strokeWidth={2}
-              dot={{ r: 4, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
-              activeDot={{ r: 5, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
+      <div className="chart-scroll">
+        <ResponsiveContainer width="100%" minWidth={months.length * 56} height={260}>
+          <LineChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
+            <CartesianGrid vertical={false} stroke="var(--border)" />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+              axisLine={{ stroke: 'var(--border)' }}
+              tickLine={false}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+            <YAxis
+              tickFormatter={formatCompactCurrency}
+              tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+              axisLine={false}
+              tickLine={false}
+              width={56}
+            />
+            <Tooltip content={<LineTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
+            {SERIES.map((series) => (
+              <Line
+                key={series.key}
+                type="monotone"
+                dataKey={series.key}
+                name={series.label}
+                stroke={series.color}
+                strokeWidth={2}
+                dot={{ r: 4, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       <details className="chart-table-toggle">
         <summary>Ver como tabela</summary>
