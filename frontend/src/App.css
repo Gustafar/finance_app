@@ -427,6 +427,24 @@
   padding: 8px;
 }
 
+.multi-select-search {
+  width: 100%;
+  height: 28px;
+  font-family: inherit;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 8px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 6px;
+}
+
+.multi-select-search:focus {
+  border-color: var(--primary);
+}
+
 .multi-select-list {
   display: flex;
   flex-direction: column;

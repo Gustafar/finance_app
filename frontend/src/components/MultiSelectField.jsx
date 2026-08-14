@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 function MultiSelectField({ id, allLabel, options, selected, onChange }) {
   const [isOpen, setIsOpen] = useState(false)
   const [popoverStyle, setPopoverStyle] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const wrapperRef = useRef(null)
   const popoverRef = useRef(null)
@@ -57,8 +58,13 @@ function MultiSelectField({ id, allLabel, options, selected, onChange }) {
       return
     }
     setPopoverStyle(null)
+    setSearchTerm('')
     setIsOpen(true)
   }
+
+  const filteredOptions = searchTerm.trim()
+    ? options.filter((option) => option.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))
+    : options
 
   const toggleValue = (value) => {
     if (selected.includes(value)) {
@@ -94,8 +100,18 @@ function MultiSelectField({ id, allLabel, options, selected, onChange }) {
       {isOpen &&
         createPortal(
           <div className="date-picker-popover multi-select-popover" style={popoverStyle} ref={popoverRef}>
+            {options.length > 0 && (
+              <input
+                type="text"
+                className="multi-select-search"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+              />
+            )}
             <div className="multi-select-list">
-              {options.map((option) => {
+              {filteredOptions.map((option) => {
                 const value = String(option.id)
                 return (
                   <label className="multi-select-option" key={option.id}>
@@ -109,6 +125,9 @@ function MultiSelectField({ id, allLabel, options, selected, onChange }) {
                 )
               })}
               {options.length === 0 && <p className="multi-select-empty">Nada cadastrado ainda.</p>}
+              {options.length > 0 && filteredOptions.length === 0 && (
+                <p className="multi-select-empty">Nenhum resultado.</p>
+              )}
             </div>
 
             {selected.length > 0 && (

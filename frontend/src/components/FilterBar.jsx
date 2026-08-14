@@ -13,6 +13,17 @@ function FilterBar({ filters, onChange, subcategories, people, paymentMethods, b
   return (
     <div className="filter-bar">
       <div className="filter-field">
+        <label htmlFor="filter-description">Nome</label>
+        <input
+          id="filter-description"
+          type="text"
+          placeholder="Buscar por nome..."
+          value={filters.description}
+          onChange={handleField('description')}
+        />
+      </div>
+
+      <div className="filter-field">
         <label htmlFor="filter-subcategory">Subcategoria</label>
         <MultiSelectField
           id="filter-subcategory"
