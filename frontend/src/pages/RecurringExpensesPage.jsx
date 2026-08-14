@@ -530,7 +530,7 @@ function RecurringExpensesPage() {
         )}
 
         {!isLoading && !loadError && filtered.length > 0 && (
-          <ul className="expense-list">
+          <ul className="expense-list recurring-list">
             {filtered.map((recurring) => {
               const isEditing = editingId === recurring.id
               const amountConfig = TRANSACTION_TYPE_AMOUNT_STYLE[recurring.type] ?? TRANSACTION_TYPE_AMOUNT_STYLE.expense

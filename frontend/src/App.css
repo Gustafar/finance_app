@@ -923,6 +923,63 @@
   gap: 6px;
 }
 
+@media (min-width: 1025px) {
+  .recurring-list .expense-row {
+    grid-template-columns: auto auto auto auto auto auto minmax(130px, 1fr) auto auto;
+  }
+
+  .recurring-list .expense-main {
+    grid-column: 7;
+  }
+
+  .recurring-list .expense-amount {
+    grid-column: 8;
+  }
+
+  .recurring-list .expense-actions {
+    grid-column: 9;
+  }
+}
+
+@media (max-width: 1024px) {
+  .recurring-list .expense-row {
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas:
+      'main amount actions'
+      'tags tags tags';
+    row-gap: 4px;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .recurring-list .expense-badges {
+    grid-area: tags;
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .recurring-list .expense-row--expanded .expense-badges {
+    display: flex;
+  }
+
+  .recurring-list .expense-actions {
+    grid-area: actions;
+    justify-self: end;
+  }
+
+  .recurring-list .expense-main {
+    grid-area: main;
+    min-width: 0;
+  }
+
+  .recurring-list .expense-amount {
+    grid-area: amount;
+    justify-self: end;
+  }
+}
+
 .badge--planning-only {
   width: max-content;
   flex: 0 0 auto;
