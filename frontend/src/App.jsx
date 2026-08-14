@@ -325,8 +325,8 @@ function App() {
             <Link
               to="/gastos-fixos"
               className={`icon-btn icon-btn--header${location.pathname === '/gastos-fixos' ? ' icon-btn--active' : ''}`}
-              aria-label="Planejador Mensal"
-              title="Planejador Mensal"
+              aria-label="Planejamento Mensal"
+              title="Planejamento Mensal"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12M8.8,14L10,12.8V4H14V12.8L15.2,14H8.8Z" />
@@ -495,7 +495,7 @@ function App() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12M8.8,14L10,12.8V4H14V12.8L15.2,14H8.8Z" />
           </svg>
-          Planejador Mensal
+          Planejamento Mensal
         </Link>
 
         <Link to="/estimativa-mensal" className="drawer-item" onClick={() => setIsMenuOpen(false)}>

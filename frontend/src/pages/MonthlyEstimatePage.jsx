@@ -110,15 +110,15 @@ function MonthlyEstimatePage() {
               <DrillDownBreakdownChart
                 expenses={plannedAsExpenses}
                 rootLabel="Categorias"
-                caption="Todo o Planejador Mensal, marcado ou não para lançamento automático."
-                detailEmptyMessage="Nenhum item do planejador para exibir."
+                caption="Todo o Planejamento Mensal, marcado ou não para lançamento automático."
+                detailEmptyMessage="Nenhum item do planejamento para exibir."
                 dimensions={[
                   {
                     idKey: 'category_id',
                     nameKey: 'category_name',
                     colorKey: 'category_color',
                     tableLabel: 'Categoria',
-                    emptyMessage: 'Nenhum item do planejador para exibir por categoria.',
+                    emptyMessage: 'Nenhum item do planejamento para exibir por categoria.',
                   },
                   {
                     idKey: 'subcategory_id',
@@ -136,7 +136,7 @@ function MonthlyEstimatePage() {
 
           <section className="panel">
             <div className="panel-header">
-              <h2>Itens do planejador</h2>
+              <h2>Itens do planejamento</h2>
             </div>
             {recurrences.length === 0 ? (
               <p className="state-message">Nenhum gasto fixo cadastrado ainda.</p>

@@ -387,7 +387,7 @@ function RecurringExpensesPage() {
             <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
-        <h1>Planejador Mensal</h1>
+        <h1>Planejamento Mensal</h1>
         <div className="page-header-actions">
           <Link to="/estimativa-mensal" className="btn btn-secondary btn-sm">
             Ver estimativa mensal
