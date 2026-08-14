@@ -621,7 +621,7 @@ function RecurringExpensesPage() {
                       {bank?.name ?? '—'}
                     </span>
                     {!recurring.include_in_expenses && (
-                      <span className="badge" style={{ background: 'var(--border)', color: 'var(--text-muted)' }}>
+                      <span className="badge badge--planning-only" style={{ background: 'var(--border)', color: 'var(--text-muted)' }}>
                         Somente planejamento
                       </span>
                     )}
