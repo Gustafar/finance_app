@@ -328,14 +328,8 @@ function App() {
               aria-label="Planejador Mensal"
               title="Planejador Mensal"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M8 1.5v2M8 12.5v2M2.5 8h2M11.5 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4"
-                  stroke="currentColor"
-                  strokeWidth="1.3"
-                  strokeLinecap="round"
-                />
-                <circle cx="8" cy="8" r="2.3" stroke="currentColor" strokeWidth="1.3" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12M8.8,14L10,12.8V4H14V12.8L15.2,14H8.8Z" />
               </svg>
             </Link>
             <Link
@@ -345,7 +339,14 @@ function App() {
               title="Gráficos"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M2.5 13.5v-6M7 13.5V2.5M11.5 13.5V7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <path d="M2 13.5h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <path
+                  d="M2.5 10.5 6 7l2.5 2.5L14 4"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </Link>
             <Link
@@ -354,15 +355,8 @@ function App() {
               aria-label="Investimentos"
               title="Investimentos"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M2 12.5 6 8l3 3 5-6.5"
-                  stroke="currentColor"
-                  strokeWidth="1.3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path d="M10.5 4.5H14V8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15 10C15 9.45 15.45 9 16 9C16.55 9 17 9.45 17 10S16.55 11 16 11 15 10.55 15 10M22 7.5V14.47L19.18 15.41L17.5 21H12V19H10V21H4.5C4.5 21 2 12.54 2 9.5S4.46 4 7.5 4H12.5C13.41 2.79 14.86 2 16.5 2C17.33 2 18 2.67 18 3.5C18 3.71 17.96 3.9 17.88 4.08C17.74 4.42 17.62 4.81 17.56 5.23L19.83 7.5H22M20 9.5H19L15.5 6C15.5 5.35 15.59 4.71 15.76 4.09C14.79 4.34 14 5.06 13.67 6H7.5C5.57 6 4 7.57 4 9.5C4 11.38 5.22 16.15 6 19H8V17H14V19H16L17.56 13.85L20 13.03V9.5Z" />
               </svg>
             </Link>
             <ThemeToggle theme={theme} onToggle={cycleTheme} />
@@ -498,14 +492,8 @@ function App() {
         </button>
 
         <Link to="/gastos-fixos" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M8 1.5v2M8 12.5v2M2.5 8h2M11.5 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            />
-            <circle cx="8" cy="8" r="2.3" stroke="currentColor" strokeWidth="1.3" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12M8.8,14L10,12.8V4H14V12.8L15.2,14H8.8Z" />
           </svg>
           Planejador Mensal
         </Link>
@@ -525,21 +513,21 @@ function App() {
 
         <Link to="/graficos" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M2.5 13.5v-6M7 13.5V2.5M11.5 13.5V7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-          Gráficos
-        </Link>
-
-        <Link to="/investimentos" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 13.5h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             <path
-              d="M2 12.5 6 8l3 3 5-6.5"
+              d="M2.5 10.5 6 7l2.5 2.5L14 4"
               stroke="currentColor"
               strokeWidth="1.3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <path d="M10.5 4.5H14V8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Gráficos
+        </Link>
+
+        <Link to="/investimentos" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15 10C15 9.45 15.45 9 16 9C16.55 9 17 9.45 17 10S16.55 11 16 11 15 10.55 15 10M22 7.5V14.47L19.18 15.41L17.5 21H12V19H10V21H4.5C4.5 21 2 12.54 2 9.5S4.46 4 7.5 4H12.5C13.41 2.79 14.86 2 16.5 2C17.33 2 18 2.67 18 3.5C18 3.71 17.96 3.9 17.88 4.08C17.74 4.42 17.62 4.81 17.56 5.23L19.83 7.5H22M20 9.5H19L15.5 6C15.5 5.35 15.59 4.71 15.76 4.09C14.79 4.34 14 5.06 13.67 6H7.5C5.57 6 4 7.57 4 9.5C4 11.38 5.22 16.15 6 19H8V17H14V19H16L17.56 13.85L20 13.03V9.5Z" />
           </svg>
           Investimentos
         </Link>

@@ -145,18 +145,34 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           />
         </div>
 
+        <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
+          <label htmlFor="edit-amount">Valor</label>
+          <input
+            id="edit-amount"
+            type="number"
+            step="0.01"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="edit-comment">Comentário (opcional)</label>
+          <input
+            id="edit-comment"
+            type="text"
+            placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+        </div>
+
         <div className="field-row">
-          <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
-            <label htmlFor="edit-amount">Valor</label>
-            <input
-              id="edit-amount"
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-            />
+          <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
+            <label htmlFor="edit-date">Data</label>
+            <DatePicker id="edit-date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
 
           <div className={`field${attemptedSubmit && !subcategoryId ? ' field--error' : ''}`}>
@@ -173,22 +189,6 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
               disabled={noSubcategories}
             />
           </div>
-        </div>
-
-        <div className="field">
-          <label htmlFor="edit-comment">Comentário (opcional)</label>
-          <input
-            id="edit-comment"
-            type="text"
-            placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
-        </div>
-
-        <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
-          <label htmlFor="edit-date">Data</label>
-          <DatePicker id="edit-date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </div>
 
         <div className={`field${attemptedSubmit && !personId ? ' field--error' : ''}`}>

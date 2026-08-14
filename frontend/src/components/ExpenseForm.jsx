@@ -239,6 +239,17 @@ function ExpenseForm({ onExpenseCreated }) {
             </div>
           </div>
 
+          <div className="field">
+            <label htmlFor="comment">Comentário (opcional)</label>
+            <input
+              id="comment"
+              type="text"
+              placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+          </div>
+
           <div className="field-row">
             <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
               <label htmlFor="purchase-date">Data da compra</label>
@@ -262,7 +273,7 @@ function ExpenseForm({ onExpenseCreated }) {
           </div>
         </>
       ) : (
-        <div className="field-row">
+        <>
           <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
             <label htmlFor="amount">Valor</label>
             <input
@@ -277,38 +288,40 @@ function ExpenseForm({ onExpenseCreated }) {
             />
           </div>
 
-          <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
-            <label htmlFor="date">Data</label>
-            <DatePicker id="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-          </div>
-
-          <div className={`field${attemptedSubmit && !subcategoryId ? ' field--error' : ''}`}>
-            <label htmlFor="subcategory">Subcategoria</label>
-            <SubcategorySelect
-              id="subcategory"
-              categories={categories}
-              subcategories={subcategories}
-              value={subcategoryId}
-              onChange={(nextSubcategoryId, nextCategoryId) => {
-                setSubcategoryId(nextSubcategoryId)
-                setCategoryId(nextCategoryId)
-              }}
-              disabled={noSubcategories}
+          <div className="field">
+            <label htmlFor="comment">Comentário (opcional)</label>
+            <input
+              id="comment"
+              type="text"
+              placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
             />
           </div>
-        </div>
-      )}
 
-      <div className="field">
-        <label htmlFor="comment">Comentário (opcional)</label>
-        <input
-          id="comment"
-          type="text"
-          placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-        />
-      </div>
+          <div className="field-row">
+            <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
+              <label htmlFor="date">Data</label>
+              <DatePicker id="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+            </div>
+
+            <div className={`field${attemptedSubmit && !subcategoryId ? ' field--error' : ''}`}>
+              <label htmlFor="subcategory">Subcategoria</label>
+              <SubcategorySelect
+                id="subcategory"
+                categories={categories}
+                subcategories={subcategories}
+                value={subcategoryId}
+                onChange={(nextSubcategoryId, nextCategoryId) => {
+                  setSubcategoryId(nextSubcategoryId)
+                  setCategoryId(nextCategoryId)
+                }}
+                disabled={noSubcategories}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="field-row">
         <div className={`field${attemptedSubmit && !effectivePersonId ? ' field--error' : ''}`}>
