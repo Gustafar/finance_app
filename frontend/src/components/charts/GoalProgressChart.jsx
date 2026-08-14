@@ -1,4 +1,4 @@
-import { RadialBar, RadialBarChart } from 'recharts'
+import { PolarAngleAxis, RadialBar, RadialBarChart } from 'recharts'
 
 function GoalProgressChart({ percent, color }) {
   const clamped = Math.min(Math.max(percent, 0), 100)
@@ -18,6 +18,7 @@ function GoalProgressChart({ percent, color }) {
         endAngle={-270}
         data={data}
       >
+        <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
         <RadialBar
           dataKey="value"
           background={{ fill: 'var(--border)' }}
