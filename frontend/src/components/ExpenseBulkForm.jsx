@@ -106,7 +106,7 @@ function isRowComplete(row, defaults) {
 
   if (row.type === 'investment' && !effectiveInvestmentBoxId) return false
 
-  return Boolean(row.amount) && Number(row.amount) > 0 && Boolean(row.date) && Boolean(row.type)
+  return row.amount !== '' && Number(row.amount) >= 0 && Boolean(row.date) && Boolean(row.type)
 }
 
 function buildRowPayload(row, defaults, subcategories) {

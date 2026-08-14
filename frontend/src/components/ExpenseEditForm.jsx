@@ -25,7 +25,8 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
   const [type, setType] = useState(expense.type)
   const [description, setDescription] = useState(expense.description)
-  const [amount, setAmount] = useState(expense.amount)
+  const [comment, setComment] = useState(expense.comment || '')
+  const [amount, setAmount] = useState(String(expense.amount))
   const [date, setDate] = useState(isoStringToDateInputValue(expense.date))
   const [categoryId, setCategoryId] = useState(String(expense.category_id))
   const [subcategoryId, setSubcategoryId] = useState(expense.subcategory_id ? String(expense.subcategory_id) : '')
@@ -96,6 +97,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       bank_id: Number(bankId),
       date: dateInputValueToISOString(date),
       ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
+      ...(comment.trim() ? { comment: comment.trim() } : {}),
     }
 
     updateExpense(expense.id, updatedExpense)
@@ -140,6 +142,17 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="edit-comment">Comentário (opcional)</label>
+          <input
+            id="edit-comment"
+            type="text"
+            placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
           />
         </div>
 

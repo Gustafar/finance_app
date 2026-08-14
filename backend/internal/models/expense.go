@@ -25,6 +25,7 @@ type Expense struct {
 	BankColor          string    `json:"bank_color"`
 	Type               string    `json:"type"`
 	Date               time.Time `json:"date"`
+	Comment            *string   `json:"comment,omitempty"`
 
 	InvestmentBoxID    *int    `json:"investment_box_id,omitempty"`
 	InvestmentBoxName  *string `json:"investment_box_name,omitempty"`

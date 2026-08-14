@@ -88,6 +88,9 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
 
               <div className="expense-main">
                 <span className="expense-description" title={expense.description}>{expense.description}</span>
+                {expense.comment && (
+                  <span className="expense-comment" title={expense.comment}>{expense.comment}</span>
+                )}
                 <span className="expense-date">{formatDate(expense.date)}</span>
                 {expense.installment_count && (
                   <span className="installment-note">

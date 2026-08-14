@@ -25,6 +25,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const [type, setType] = useState('expense')
   const [isInstallment, setIsInstallment] = useState(false)
   const [description, setDescription] = useState('')
+  const [comment, setComment] = useState('')
   const [amount, setAmount] = useState('')
   const [totalAmount, setTotalAmount] = useState('')
   const [installmentCount, setInstallmentCount] = useState('2')
@@ -138,12 +139,14 @@ function ExpenseForm({ onExpenseCreated }) {
           type,
           date: dateInputValueToISOString(date),
           ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
+          ...(comment.trim() ? { comment: comment.trim() } : {}),
         })
 
     request
       .then((created) => {
         onExpenseCreated(created)
         setDescription('')
+        setComment('')
         setAmount('')
         setTotalAmount('')
         setInstallmentCount('2')
@@ -192,6 +195,17 @@ function ExpenseForm({ onExpenseCreated }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
+        />
+      </div>
+
+      <div className="field">
+        <label htmlFor="comment">Comentário (opcional)</label>
+        <input
+          id="comment"
+          type="text"
+          placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
         />
       </div>
 

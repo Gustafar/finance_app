@@ -31,7 +31,7 @@ const (
 )
 
 func (s *ExpenseService) validate(expense models.Expense) error {
-	if expense.Amount <= 0 {
+	if expense.Amount < 0 {
 		return ErrInvalidAmount
 	}
 	if !validTransactionTypes[expense.Type] {

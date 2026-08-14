@@ -3,7 +3,7 @@ package services
 import "errors"
 
 var (
-	ErrInvalidAmount      = errors.New("amount must be greater than zero")
+	ErrInvalidAmount      = errors.New("amount cannot be negative")
 	ErrEmptyCategory      = errors.New("category cannot be empty")
 	ErrEmptyPerson        = errors.New("person cannot be empty")
 	ErrEmptyPaymentMethod = errors.New("payment method cannot be empty")
