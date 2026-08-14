@@ -15,12 +15,14 @@ function BucketManager() {
 
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(COLOR_KEYS[0])
+  const [newIsGoalWithdrawal, setNewIsGoalWithdrawal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
 
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
   const [editingColor, setEditingColor] = useState(COLOR_KEYS[0])
+  const [editingIsGoalWithdrawal, setEditingIsGoalWithdrawal] = useState(false)
   const [rowError, setRowError] = useState(null)
 
   const [deleteError, setDeleteError] = useState(null)
@@ -37,11 +39,12 @@ function BucketManager() {
     setCreateError(null)
     setIsCreating(true)
 
-    createBucket({ name, color: newColor })
+    createBucket({ name, color: newColor, is_goal_withdrawal: newIsGoalWithdrawal })
       .then((created) => {
         setBuckets((prev) => sortByName([...prev, created]))
         setNewName('')
         setNewColor(COLOR_KEYS[0])
+        setNewIsGoalWithdrawal(false)
       })
       .catch((error) => {
         console.error('Erro ao criar bucket:', error)
@@ -54,6 +57,7 @@ function BucketManager() {
     setEditingId(bucket.id)
     setEditingName(bucket.name)
     setEditingColor(bucket.color)
+    setEditingIsGoalWithdrawal(bucket.is_goal_withdrawal)
     setRowError(null)
   }
 
@@ -69,7 +73,7 @@ function BucketManager() {
 
     setRowError(null)
 
-    return updateBucket(id, { name, color: editingColor })
+    return updateBucket(id, { name, color: editingColor, is_goal_withdrawal: editingIsGoalWithdrawal })
       .then((updated) => {
         setBuckets((prev) => sortByName(prev.map((bucket) => (bucket.id === id ? updated : bucket))))
         cancelEditing()
@@ -124,6 +128,14 @@ function BucketManager() {
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
+        <label className="checkbox-field checkbox-field--muted">
+          <input
+            type="checkbox"
+            checked={newIsGoalWithdrawal}
+            onChange={(e) => setNewIsGoalWithdrawal(e.target.checked)}
+          />
+          Retirar de caixinha de investimento ao lançar uma saída neste Envelope
+        </label>
       </form>
       {createError && <p className="form-error">{createError}</p>}
 
@@ -167,6 +179,14 @@ function BucketManager() {
                         onChange={(e) => setEditingName(e.target.value)}
                         autoFocus
                       />
+                      <label className="checkbox-field checkbox-field--muted">
+                        <input
+                          type="checkbox"
+                          checked={editingIsGoalWithdrawal}
+                          onChange={(e) => setEditingIsGoalWithdrawal(e.target.checked)}
+                        />
+                        Retira de investimento
+                      </label>
                       <div className="entity-actions">
                         <button
                           type="button"
@@ -200,6 +220,11 @@ function BucketManager() {
                         {bucket.name}
                         {bucket.is_default && ' (padrão)'}
                       </span>
+                      {bucket.is_goal_withdrawal && (
+                        <span className="badge" style={{ background: 'var(--border)', color: 'var(--text-muted)' }}>
+                          Retira de investimento
+                        </span>
+                      )}
                       <div className="entity-actions">
                         {isSelecting ? (
                           !bucket.is_default && (

@@ -13,10 +13,11 @@ import (
 type ExpenseService struct {
 	Repo          *repositories.ExpenseRepository
 	RecurringRepo *repositories.RecurringExpenseRepository
+	BucketRepo    *repositories.BucketRepository
 }
 
-func NewExpenseService(repo *repositories.ExpenseRepository, recurringRepo *repositories.RecurringExpenseRepository) *ExpenseService {
-	return &ExpenseService{Repo: repo, RecurringRepo: recurringRepo}
+func NewExpenseService(repo *repositories.ExpenseRepository, recurringRepo *repositories.RecurringExpenseRepository, bucketRepo *repositories.BucketRepository) *ExpenseService {
+	return &ExpenseService{Repo: repo, RecurringRepo: recurringRepo, BucketRepo: bucketRepo}
 }
 
 var validTransactionTypes = map[string]bool{
@@ -29,6 +30,26 @@ const (
 	minInstallmentCount = 2
 	maxInstallmentCount = 60
 )
+
+// isGoalWithdrawal reports whether the given bucket is flagged to withdraw from an investment
+// box (envelope "Meta"); an unknown/invalid bucket just means no withdrawal, since bucket
+// existence itself is checked separately via the FK constraint on insert/update.
+func (s *ExpenseService) isGoalWithdrawal(bucketID int) bool {
+	bucket, err := s.BucketRepo.GetByID(bucketID)
+	if err != nil {
+		return false
+	}
+	return bucket.IsGoalWithdrawal
+}
+
+// requiresInvestmentBox reports whether the expense must carry an investment_box_id: either it's
+// a contribution (type=investment) or it's a withdrawal from a "Meta" envelope (type=expense).
+func (s *ExpenseService) requiresInvestmentBox(expense models.Expense) bool {
+	if expense.Type == "investment" {
+		return true
+	}
+	return expense.Type == "expense" && s.isGoalWithdrawal(expense.BucketID)
+}
 
 func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.Amount < 0 {
@@ -58,15 +79,16 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 	if expense.Description == "" {
 		return ErrEmptyDescription
 	}
-	if expense.Type == "investment" && (expense.InvestmentBoxID == nil || *expense.InvestmentBoxID <= 0) {
+	if s.requiresInvestmentBox(expense) && (expense.InvestmentBoxID == nil || *expense.InvestmentBoxID <= 0) {
 		return ErrEmptyInvestmentBox
 	}
 	return nil
 }
 
-// normalize clears the investment box on any non-investment transaction, since it only applies to that type.
-func normalizeExpense(expense models.Expense) models.Expense {
-	if expense.Type != "investment" {
+// normalizeExpense clears the investment box unless the transaction is either an investment
+// contribution or a withdrawal from a "Meta" envelope, since it only applies to those two cases.
+func (s *ExpenseService) normalizeExpense(expense models.Expense) models.Expense {
+	if !s.requiresInvestmentBox(expense) {
 		expense.InvestmentBoxID = nil
 	}
 	return expense
@@ -303,7 +325,7 @@ func (s *ExpenseService) CreateBulk(rows []BulkExpenseRow) []BulkRowResult {
 }
 
 func (s *ExpenseService) Create(expense models.Expense) (models.Expense, error) {
-	expense = normalizeExpense(expense)
+	expense = s.normalizeExpense(expense)
 	if err := s.validate(expense); err != nil {
 		return models.Expense{}, err
 	}
@@ -336,7 +358,7 @@ func (s *ExpenseService) GetByID(id int) (models.Expense, error) {
 }
 
 func (s *ExpenseService) Update(id int, expense models.Expense) (models.Expense, error) {
-	expense = normalizeExpense(expense)
+	expense = s.normalizeExpense(expense)
 	if err := s.validate(expense); err != nil {
 		return models.Expense{}, err
 	}

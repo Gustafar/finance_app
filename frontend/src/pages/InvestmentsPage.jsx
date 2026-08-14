@@ -1,11 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SummaryCard from '../components/SummaryCard'
 import InvestmentBoxManager from '../components/InvestmentBoxManager'
 import GoalProgressChart from '../components/charts/GoalProgressChart'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { paletteColor } from '../utils/categoryColor'
-import { formatCurrency } from '../utils/format'
+import { formatCurrency, formatDate } from '../utils/format'
 import { MONTH_NAMES_PT, monthsUntilGoal } from '../utils/date'
 
 function BoxGoal({ box, saved, color }) {
@@ -35,6 +35,21 @@ function BoxGoal({ box, saved, color }) {
   )
 }
 
+// A box's movements are contributions (type=investment, +amount) and withdrawals from a "Meta"
+// envelope (type=expense with investment_box_id set, -amount) — there's no separate ledger table,
+// this derives the full in/out history straight from the expenses already tied to the box.
+function movementsForBox(expenses, boxId) {
+  return expenses
+    .filter((expense) => expense.investment_box_id === boxId && (expense.type === 'investment' || expense.type === 'expense'))
+    .map((expense) => ({
+      id: expense.id,
+      date: expense.date,
+      description: expense.description,
+      signedAmount: expense.type === 'investment' ? expense.amount : -expense.amount,
+    }))
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+}
+
 function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) {
   const {
     investmentBoxes,
@@ -43,12 +58,24 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
     error: boxesError,
   } = useInvestmentBoxes()
 
+  const [expandedBoxIds, setExpandedBoxIds] = useState(() => new Set())
+
+  const toggleExpanded = (id) => {
+    setExpandedBoxIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const totalsByBoxId = useMemo(() => {
     const totals = {}
     expenses
-      .filter((expense) => expense.type === 'investment' && expense.investment_box_id)
+      .filter((expense) => expense.investment_box_id && (expense.type === 'investment' || expense.type === 'expense'))
       .forEach((expense) => {
-        totals[expense.investment_box_id] = (totals[expense.investment_box_id] ?? 0) + expense.amount
+        const signedAmount = expense.type === 'investment' ? expense.amount : -expense.amount
+        totals[expense.investment_box_id] = (totals[expense.investment_box_id] ?? 0) + signedAmount
       })
     return totals
   }, [expenses])
@@ -92,6 +119,8 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
                 {investmentBoxes.map((box) => {
                   const color = paletteColor(box.color)
                   const total = totalsByBoxId[box.id] ?? 0
+                  const movements = movementsForBox(expenses, box.id)
+                  const isExpanded = expandedBoxIds.has(box.id)
 
                   return (
                     <div className="investment-box-card" key={box.id}>
@@ -100,6 +129,36 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
                       </span>
                       <span className="investment-box-total">{formatCurrency(total)}</span>
                       {box.goal_amount && <BoxGoal box={box} saved={total} color={color} />}
+
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm investment-box-history-toggle"
+                        onClick={() => toggleExpanded(box.id)}
+                        disabled={movements.length === 0}
+                      >
+                        {isExpanded ? 'Ocultar histórico' : `Histórico (${movements.length})`}
+                      </button>
+
+                      {isExpanded && (
+                        <ul className="investment-box-history">
+                          {movements.map((movement) => (
+                            <li className="investment-box-history-row" key={movement.id}>
+                              <div className="investment-box-history-main">
+                                <span className="expense-description" title={movement.description}>
+                                  {movement.description}
+                                </span>
+                                <span className="expense-date">{formatDate(movement.date)}</span>
+                              </div>
+                              <span
+                                className={`expense-amount ${movement.signedAmount >= 0 ? 'expense-amount--income' : 'expense-amount--expense'}`}
+                              >
+                                {movement.signedAmount >= 0 ? '+ ' : '- '}
+                                {formatCurrency(Math.abs(movement.signedAmount))}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   )
                 })}

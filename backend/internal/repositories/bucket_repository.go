@@ -15,9 +15,9 @@ func NewBucketRepository(db *sql.DB) *BucketRepository {
 }
 
 func (r *BucketRepository) Create(bucket models.Bucket) (models.Bucket, error) {
-	query := "INSERT INTO buckets (name, color) VALUES ($1, $2) RETURNING id"
+	query := "INSERT INTO buckets (name, color, is_goal_withdrawal) VALUES ($1, $2, $3) RETURNING id"
 
-	err := r.DB.QueryRow(query, bucket.Name, bucket.Color).Scan(&bucket.ID)
+	err := r.DB.QueryRow(query, bucket.Name, bucket.Color, bucket.IsGoalWithdrawal).Scan(&bucket.ID)
 	if err != nil {
 		return models.Bucket{}, err
 	}
@@ -26,10 +26,10 @@ func (r *BucketRepository) Create(bucket models.Bucket) (models.Bucket, error) {
 }
 
 func (r *BucketRepository) GetByID(id int) (models.Bucket, error) {
-	query := "SELECT id, name, color, is_default FROM buckets WHERE id = $1"
+	query := "SELECT id, name, color, is_default, is_goal_withdrawal FROM buckets WHERE id = $1"
 
 	var bucket models.Bucket
-	err := r.DB.QueryRow(query, id).Scan(&bucket.ID, &bucket.Name, &bucket.Color, &bucket.IsDefault)
+	err := r.DB.QueryRow(query, id).Scan(&bucket.ID, &bucket.Name, &bucket.Color, &bucket.IsDefault, &bucket.IsGoalWithdrawal)
 	if err != nil {
 		return models.Bucket{}, err
 	}
@@ -38,7 +38,7 @@ func (r *BucketRepository) GetByID(id int) (models.Bucket, error) {
 }
 
 func (r *BucketRepository) GetAll() ([]models.Bucket, error) {
-	query := "SELECT id, name, color, is_default FROM buckets ORDER BY name"
+	query := "SELECT id, name, color, is_default, is_goal_withdrawal FROM buckets ORDER BY name"
 
 	rows, err := r.DB.Query(query)
 	if err != nil {
@@ -51,7 +51,7 @@ func (r *BucketRepository) GetAll() ([]models.Bucket, error) {
 	for rows.Next() {
 		var bucket models.Bucket
 
-		err := rows.Scan(&bucket.ID, &bucket.Name, &bucket.Color, &bucket.IsDefault)
+		err := rows.Scan(&bucket.ID, &bucket.Name, &bucket.Color, &bucket.IsDefault, &bucket.IsGoalWithdrawal)
 		if err != nil {
 			return nil, err
 		}
@@ -67,9 +67,9 @@ func (r *BucketRepository) GetAll() ([]models.Bucket, error) {
 }
 
 func (r *BucketRepository) Update(id int, bucket models.Bucket) (models.Bucket, error) {
-	query := "UPDATE buckets SET name = $1, color = $2 WHERE id = $3"
+	query := "UPDATE buckets SET name = $1, color = $2, is_goal_withdrawal = $3 WHERE id = $4"
 
-	result, err := r.DB.Exec(query, bucket.Name, bucket.Color, id)
+	result, err := r.DB.Exec(query, bucket.Name, bucket.Color, bucket.IsGoalWithdrawal, id)
 	if err != nil {
 		return models.Bucket{}, err
 	}

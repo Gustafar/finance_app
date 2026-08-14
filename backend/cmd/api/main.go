@@ -25,9 +25,13 @@ func main() {
 
 	fmt.Println("Tudo certo, aplicação iniciada!")
 
+	bucketRepo := repositories.NewBucketRepository(db)
+	bucketService := services.NewBucketService(bucketRepo)
+	bucketHandler := handlers.NewBucketHandler(bucketService)
+
 	expenseRepo := repositories.NewExpenseRepository(db)
 	recurringExpenseRepo := repositories.NewRecurringExpenseRepository(db)
-	expenseService := services.NewExpenseService(expenseRepo, recurringExpenseRepo)
+	expenseService := services.NewExpenseService(expenseRepo, recurringExpenseRepo, bucketRepo)
 	expenseHandler := handlers.NewExpenseHandler(expenseService)
 
 	recurringExpenseService := services.NewRecurringExpenseService(recurringExpenseRepo)
@@ -48,10 +52,6 @@ func main() {
 	paymentMethodRepo := repositories.NewPaymentMethodRepository(db)
 	paymentMethodService := services.NewPaymentMethodService(paymentMethodRepo)
 	paymentMethodHandler := handlers.NewPaymentMethodHandler(paymentMethodService)
-
-	bucketRepo := repositories.NewBucketRepository(db)
-	bucketService := services.NewBucketService(bucketRepo)
-	bucketHandler := handlers.NewBucketHandler(bucketService)
 
 	bankRepo := repositories.NewBankRepository(db)
 	bankService := services.NewBankService(bankRepo)

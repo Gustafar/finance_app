@@ -60,6 +60,10 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
   const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
 
+  const selectedBucket = buckets.find((b) => String(b.id) === bucketId)
+  const isGoalWithdrawal = type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
+  const needsInvestmentBox = type === 'investment' || isGoalWithdrawal
+
   const isFormInvalid =
     !description.trim() ||
     !amount ||
@@ -69,7 +73,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
     !paymentMethodId ||
     !bucketId ||
     !bankId ||
-    (type === 'investment' && !effectiveInvestmentBoxId)
+    (needsInvestmentBox && !effectiveInvestmentBoxId)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -96,7 +100,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       bucket_id: Number(bucketId),
       bank_id: Number(bankId),
       date: dateInputValueToISOString(date),
-      ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
+      ...(needsInvestmentBox ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
       ...(comment.trim() ? { comment: comment.trim() } : {}),
     }
 
@@ -255,9 +259,11 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           </select>
         </div>
 
-        {type === 'investment' && (
+        {needsInvestmentBox && (
           <div className={`field${attemptedSubmit && !effectiveInvestmentBoxId ? ' field--error' : ''}`}>
-            <label htmlFor="edit-investment-box">Caixinha de investimento</label>
+            <label htmlFor="edit-investment-box">
+              {isGoalWithdrawal ? 'Retirar da caixinha de investimento' : 'Caixinha de investimento'}
+            </label>
             <select
               id="edit-investment-box"
               value={effectiveInvestmentBoxId}
