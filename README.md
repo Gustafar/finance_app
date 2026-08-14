@@ -1,4 +1,4 @@
-# Minhas Finanças
+# My Finance
 
 Personal finance tracker — expenses, income, investments, recurring bills,
 and a small dashboard. Go API + React (Vite) frontend + Postgres.
