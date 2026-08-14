@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { updateExpense } from '../api/expenses'
 import SubcategorySelect from './SubcategorySelect'
+import DatePicker from './DatePicker'
 import { useCategories } from '../hooks/useCategories'
 import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
@@ -9,6 +10,7 @@ import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
+import { dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
 
@@ -24,6 +26,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [type, setType] = useState(expense.type)
   const [description, setDescription] = useState(expense.description)
   const [amount, setAmount] = useState(expense.amount)
+  const [date, setDate] = useState(isoStringToDateInputValue(expense.date))
   const [categoryId, setCategoryId] = useState(String(expense.category_id))
   const [subcategoryId, setSubcategoryId] = useState(expense.subcategory_id ? String(expense.subcategory_id) : '')
   const [personId, setPersonId] = useState(String(expense.person_id))
@@ -59,6 +62,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const isFormInvalid =
     !description.trim() ||
     !amount ||
+    !date ||
     !subcategoryId ||
     !personId ||
     !paymentMethodId ||
@@ -90,7 +94,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       payment_method_id: Number(paymentMethodId),
       bucket_id: Number(bucketId),
       bank_id: Number(bankId),
-      date: expense.date,
+      date: dateInputValueToISOString(date),
       ...(type === 'investment' ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
     }
 
@@ -167,6 +171,11 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
               disabled={noSubcategories}
             />
           </div>
+        </div>
+
+        <div className={`field${attemptedSubmit && !date ? ' field--error' : ''}`}>
+          <label htmlFor="edit-date">Data</label>
+          <DatePicker id="edit-date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </div>
 
         <div className={`field${attemptedSubmit && !personId ? ' field--error' : ''}`}>
