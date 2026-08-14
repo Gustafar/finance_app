@@ -141,7 +141,7 @@ function MonthlyEstimatePage() {
             {recurrences.length === 0 ? (
               <p className="state-message">Nenhum gasto fixo cadastrado ainda.</p>
             ) : (
-              <ul className="expense-list">
+              <ul className="expense-list estimate-list">
                 {recurrences.map((recurring) => {
                   const category = byId(categories, recurring.category_id)
                   const subcategory = byId(subcategories, recurring.subcategory_id)
@@ -163,7 +163,9 @@ function MonthlyEstimatePage() {
                         <span className="expense-description" title={recurring.description}>{recurring.description}</span>
                         <span className="expense-date">Todo dia {recurring.day_of_month}</span>
                       </div>
-                      <span className="expense-amount">{formatCurrency(recurring.amount)}</span>
+                      <div className="expense-amount-group">
+                        <span className="expense-amount">{formatCurrency(recurring.amount)}</span>
+                      </div>
                     </li>
                   )
                 })}

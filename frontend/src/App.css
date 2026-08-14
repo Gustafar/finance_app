@@ -911,6 +911,21 @@
   gap: 4px;
 }
 
+.estimate-list .expense-row {
+  grid-template-columns: auto minmax(130px, 1fr) auto;
+}
+
+.estimate-list .expense-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.estimate-list .badge {
+  width: max-content;
+  flex: 0 0 auto;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;

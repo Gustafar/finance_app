@@ -278,6 +278,16 @@ function RecurringExpensesPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
+  const [expandedIds, setExpandedIds] = useState(() => new Set())
+
+  const toggleExpanded = (id) => {
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -586,12 +596,13 @@ function RecurringExpensesPage() {
               const bucketColor = paletteColor(bucket?.color)
               const bankColor = paletteColor(bank?.color)
               const isSelected = selectedIds.has(recurring.id)
+              const isExpanded = expandedIds.has(recurring.id)
 
               return (
                 <li
-                  className={`expense-row${isSelected ? ' expense-row--selected' : ''}`}
+                  className={`expense-row${isExpanded ? ' expense-row--expanded' : ''}${isSelected ? ' expense-row--selected' : ''}`}
                   key={recurring.id}
-                  onClick={() => isSelecting && toggleId(recurring.id)}
+                  onClick={() => (isSelecting ? toggleId(recurring.id) : toggleExpanded(recurring.id))}
                 >
                   <div className="expense-badges">
                     <span className="badge" style={{ background: categoryColor.bg, color: categoryColor.text }}>
