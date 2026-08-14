@@ -23,6 +23,32 @@ func (s *InvestmentBoxService) validate(box models.InvestmentBox) error {
 	if !validColorKeys[box.Color] {
 		return ErrInvalidInvestmentBoxColor
 	}
+
+	goalFieldsSet := 0
+	if box.GoalAmount != nil {
+		goalFieldsSet++
+	}
+	if box.GoalMonth != nil {
+		goalFieldsSet++
+	}
+	if box.GoalYear != nil {
+		goalFieldsSet++
+	}
+	if goalFieldsSet != 0 && goalFieldsSet != 3 {
+		return ErrInvalidInvestmentBoxGoal
+	}
+	if goalFieldsSet == 3 {
+		if *box.GoalAmount <= 0 {
+			return ErrInvalidInvestmentBoxGoal
+		}
+		if *box.GoalMonth < 1 || *box.GoalMonth > 12 {
+			return ErrInvalidInvestmentBoxGoal
+		}
+		if *box.GoalYear <= 0 {
+			return ErrInvalidInvestmentBoxGoal
+		}
+	}
+
 	return nil
 }
 

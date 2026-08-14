@@ -82,6 +82,26 @@ export function clampDayOfMonth(value) {
   return String(num)
 }
 
+export const MONTH_NAMES_PT = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+]
+
+export function monthsUntilGoal(goalMonth, goalYear) {
+  const { year, month } = currentYearMonth()
+  return (goalYear * 12 + (goalMonth - 1)) - (year * 12 + month)
+}
+
 export function lastMonths(count, endMonth = currentYearMonth()) {
   const months = []
   for (let i = count - 1; i >= 0; i -= 1) {

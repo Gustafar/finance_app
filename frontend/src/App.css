@@ -1386,6 +1386,51 @@
   border-color: var(--primary);
 }
 
+.entity-goal-fields {
+  display: flex;
+  gap: 8px;
+}
+
+.entity-goal-fields input,
+.entity-goal-fields select {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.entity-goal-fields input:focus,
+.entity-goal-fields select:focus {
+  border-color: var(--primary);
+}
+
+.entity-goal-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.link-btn {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--primary);
+}
+
 .color-swatches {
   display: flex;
   flex-wrap: wrap;
@@ -1909,7 +1954,7 @@
 
 .investment-box-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
   padding: 16px 24px 20px;
 }
@@ -1929,6 +1974,46 @@
   font-weight: 700;
   color: var(--text-h);
   font-variant-numeric: tabular-nums;
+}
+
+.investment-box-goal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.goal-progress-chart {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.goal-progress-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+.investment-box-goal-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.investment-box-goal-simulation {
+  color: var(--text-h);
+  font-weight: 600;
 }
 
 .investment-manager-panel {

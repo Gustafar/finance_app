@@ -3,9 +3,44 @@ import { createInvestmentBox, updateInvestmentBox, deleteInvestmentBox, setDefau
 import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { sortByName } from '../hooks/useInvestmentBoxes'
 import { useBulkSelection } from '../hooks/useBulkSelection'
+import { MONTH_NAMES_PT, currentYearMonth } from '../utils/date'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
 import SelectionToolbar from './SelectionToolbar'
+
+function GoalFields({ amount, onAmountChange, month, onMonthChange, year, onYearChange, idPrefix }) {
+  const { year: currentYear } = currentYearMonth()
+
+  return (
+    <div className="entity-goal-fields">
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        placeholder="Meta (R$)"
+        aria-label="Valor da meta"
+        value={amount}
+        onChange={(e) => onAmountChange(e.target.value)}
+      />
+      <select aria-label="Mês da meta" value={month} onChange={(e) => onMonthChange(e.target.value)}>
+        <option value="">Mês</option>
+        {MONTH_NAMES_PT.map((name, idx) => (
+          <option key={idPrefix + idx} value={idx + 1}>
+            {name}
+          </option>
+        ))}
+      </select>
+      <input
+        type="number"
+        min={currentYear}
+        placeholder="Ano"
+        aria-label="Ano da meta"
+        value={year}
+        onChange={(e) => onYearChange(e.target.value)}
+      />
+    </div>
+  )
+}
 
 function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, loadError, onBoxDeleted }) {
   const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
@@ -13,12 +48,18 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
 
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(COLOR_KEYS[0])
+  const [newGoalAmount, setNewGoalAmount] = useState('')
+  const [newGoalMonth, setNewGoalMonth] = useState('')
+  const [newGoalYear, setNewGoalYear] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
 
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
   const [editingColor, setEditingColor] = useState(COLOR_KEYS[0])
+  const [editingGoalAmount, setEditingGoalAmount] = useState('')
+  const [editingGoalMonth, setEditingGoalMonth] = useState('')
+  const [editingGoalYear, setEditingGoalYear] = useState('')
   const [rowError, setRowError] = useState(null)
 
   const [deleteError, setDeleteError] = useState(null)
@@ -26,6 +67,17 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [defaultError, setDefaultError] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
+
+  const buildGoalPayload = (amount, month, year) => {
+    if (!amount && !month && !year) {
+      return { goal_amount: null, goal_month: null, goal_year: null }
+    }
+    return {
+      goal_amount: parseFloat(amount),
+      goal_month: Number(month),
+      goal_year: Number(year),
+    }
+  }
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -35,15 +87,18 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
     setCreateError(null)
     setIsCreating(true)
 
-    createInvestmentBox({ name, color: newColor })
+    createInvestmentBox({ name, color: newColor, ...buildGoalPayload(newGoalAmount, newGoalMonth, newGoalYear) })
       .then((created) => {
         setInvestmentBoxes((prev) => sortByName([...prev, created]))
         setNewName('')
         setNewColor(COLOR_KEYS[0])
+        setNewGoalAmount('')
+        setNewGoalMonth('')
+        setNewGoalYear('')
       })
       .catch((error) => {
         console.error('Erro ao criar caixinha:', error)
-        setCreateError('Não foi possível criar a caixinha. O nome já pode existir.')
+        setCreateError('Não foi possível criar a caixinha. Confira o nome e os campos da meta.')
       })
       .finally(() => setIsCreating(false))
   }
@@ -52,6 +107,9 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
     setEditingId(box.id)
     setEditingName(box.name)
     setEditingColor(box.color)
+    setEditingGoalAmount(box.goal_amount ?? '')
+    setEditingGoalMonth(box.goal_month ?? '')
+    setEditingGoalYear(box.goal_year ?? '')
     setRowError(null)
   }
 
@@ -61,20 +119,30 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
     setRowError(null)
   }
 
+  const clearGoal = () => {
+    setEditingGoalAmount('')
+    setEditingGoalMonth('')
+    setEditingGoalYear('')
+  }
+
   const handleUpdate = (id) => {
     const name = editingName.trim()
     if (!name) return
 
     setRowError(null)
 
-    return updateInvestmentBox(id, { name, color: editingColor })
+    return updateInvestmentBox(id, {
+      name,
+      color: editingColor,
+      ...buildGoalPayload(editingGoalAmount, editingGoalMonth, editingGoalYear),
+    })
       .then((updated) => {
         setInvestmentBoxes((prev) => sortByName(prev.map((box) => (box.id === id ? updated : box))))
         cancelEditing()
       })
       .catch((error) => {
         console.error('Erro ao atualizar caixinha:', error)
-        setRowError('Não foi possível salvar. O nome já pode existir.')
+        setRowError('Não foi possível salvar. Confira o nome e os campos da meta.')
       })
   }
 
@@ -122,6 +190,15 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
           </button>
         </div>
         <ColorSwatchPicker value={newColor} onChange={setNewColor} />
+        <GoalFields
+          idPrefix="new-"
+          amount={newGoalAmount}
+          onAmountChange={setNewGoalAmount}
+          month={newGoalMonth}
+          onMonthChange={setNewGoalMonth}
+          year={newGoalYear}
+          onYearChange={setNewGoalYear}
+        />
       </form>
       {createError && <p className="form-error">{createError}</p>}
 
@@ -274,6 +351,24 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
                   )}
                 </div>
                 {isEditing && <ColorSwatchPicker value={editingColor} onChange={setEditingColor} />}
+                {isEditing && (
+                  <div className="entity-goal-edit">
+                    <GoalFields
+                      idPrefix={`edit-${box.id}-`}
+                      amount={editingGoalAmount}
+                      onAmountChange={setEditingGoalAmount}
+                      month={editingGoalMonth}
+                      onMonthChange={setEditingGoalMonth}
+                      year={editingGoalYear}
+                      onYearChange={setEditingGoalYear}
+                    />
+                    {(editingGoalAmount || editingGoalMonth || editingGoalYear) && (
+                      <button type="button" className="link-btn" onClick={clearGoal}>
+                        Remover meta
+                      </button>
+                    )}
+                  </div>
+                )}
                 {isEditing && rowError && <p className="form-error">{rowError}</p>}
               </li>
             )

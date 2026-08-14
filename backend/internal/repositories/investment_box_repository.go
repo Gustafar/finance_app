@@ -15,9 +15,9 @@ func NewInvestmentBoxRepository(db *sql.DB) *InvestmentBoxRepository {
 }
 
 func (r *InvestmentBoxRepository) Create(box models.InvestmentBox) (models.InvestmentBox, error) {
-	query := "INSERT INTO investment_boxes (name, color) VALUES ($1, $2) RETURNING id"
+	query := "INSERT INTO investment_boxes (name, color, goal_amount, goal_month, goal_year) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 
-	err := r.DB.QueryRow(query, box.Name, box.Color).Scan(&box.ID)
+	err := r.DB.QueryRow(query, box.Name, box.Color, box.GoalAmount, box.GoalMonth, box.GoalYear).Scan(&box.ID)
 	if err != nil {
 		return models.InvestmentBox{}, err
 	}
@@ -26,10 +26,10 @@ func (r *InvestmentBoxRepository) Create(box models.InvestmentBox) (models.Inves
 }
 
 func (r *InvestmentBoxRepository) GetByID(id int) (models.InvestmentBox, error) {
-	query := "SELECT id, name, color, is_default FROM investment_boxes WHERE id = $1"
+	query := "SELECT id, name, color, is_default, goal_amount, goal_month, goal_year FROM investment_boxes WHERE id = $1"
 
 	var box models.InvestmentBox
-	err := r.DB.QueryRow(query, id).Scan(&box.ID, &box.Name, &box.Color, &box.IsDefault)
+	err := r.DB.QueryRow(query, id).Scan(&box.ID, &box.Name, &box.Color, &box.IsDefault, &box.GoalAmount, &box.GoalMonth, &box.GoalYear)
 	if err != nil {
 		return models.InvestmentBox{}, err
 	}
@@ -38,7 +38,7 @@ func (r *InvestmentBoxRepository) GetByID(id int) (models.InvestmentBox, error) 
 }
 
 func (r *InvestmentBoxRepository) GetAll() ([]models.InvestmentBox, error) {
-	query := "SELECT id, name, color, is_default FROM investment_boxes ORDER BY name"
+	query := "SELECT id, name, color, is_default, goal_amount, goal_month, goal_year FROM investment_boxes ORDER BY name"
 
 	rows, err := r.DB.Query(query)
 	if err != nil {
@@ -51,7 +51,7 @@ func (r *InvestmentBoxRepository) GetAll() ([]models.InvestmentBox, error) {
 	for rows.Next() {
 		var box models.InvestmentBox
 
-		err := rows.Scan(&box.ID, &box.Name, &box.Color, &box.IsDefault)
+		err := rows.Scan(&box.ID, &box.Name, &box.Color, &box.IsDefault, &box.GoalAmount, &box.GoalMonth, &box.GoalYear)
 		if err != nil {
 			return nil, err
 		}
@@ -67,9 +67,9 @@ func (r *InvestmentBoxRepository) GetAll() ([]models.InvestmentBox, error) {
 }
 
 func (r *InvestmentBoxRepository) Update(id int, box models.InvestmentBox) (models.InvestmentBox, error) {
-	query := "UPDATE investment_boxes SET name = $1, color = $2 WHERE id = $3"
+	query := "UPDATE investment_boxes SET name = $1, color = $2, goal_amount = $3, goal_month = $4, goal_year = $5 WHERE id = $6"
 
-	result, err := r.DB.Exec(query, box.Name, box.Color, id)
+	result, err := r.DB.Exec(query, box.Name, box.Color, box.GoalAmount, box.GoalMonth, box.GoalYear, id)
 	if err != nil {
 		return models.InvestmentBox{}, err
 	}

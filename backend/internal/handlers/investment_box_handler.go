@@ -30,7 +30,8 @@ func (h *InvestmentBoxHandler) Create(w http.ResponseWriter, r *http.Request) {
 	criado, err := h.Service.Create(box)
 	if err != nil {
 		if errors.Is(err, services.ErrEmptyInvestmentBoxName) ||
-			errors.Is(err, services.ErrInvalidInvestmentBoxColor) {
+			errors.Is(err, services.ErrInvalidInvestmentBoxColor) ||
+			errors.Is(err, services.ErrInvalidInvestmentBoxGoal) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -102,7 +103,8 @@ func (h *InvestmentBoxHandler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, services.ErrEmptyInvestmentBoxName) ||
-			errors.Is(err, services.ErrInvalidInvestmentBoxColor) {
+			errors.Is(err, services.ErrInvalidInvestmentBoxColor) ||
+			errors.Is(err, services.ErrInvalidInvestmentBoxGoal) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}

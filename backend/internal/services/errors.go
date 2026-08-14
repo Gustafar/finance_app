@@ -57,6 +57,7 @@ var (
 	ErrInvestmentBoxNotFound            = errors.New("investment box not found")
 	ErrInvestmentBoxAlreadyExists       = errors.New("investment box already exists")
 	ErrCannotDeleteDefaultInvestmentBox = errors.New("the default investment box cannot be deleted")
+	ErrInvalidInvestmentBoxGoal         = errors.New("meta inválida: informe valor, mês e ano, ou deixe os três em branco")
 
 	ErrEmptyRecurringExpenseName  = errors.New("recurring expense description cannot be empty")
 	ErrInvalidRecurringExpenseDay = errors.New("day of month must be between 1 and 31")

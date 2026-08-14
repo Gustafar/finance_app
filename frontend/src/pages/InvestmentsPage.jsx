@@ -2,9 +2,38 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import SummaryCard from '../components/SummaryCard'
 import InvestmentBoxManager from '../components/InvestmentBoxManager'
+import GoalProgressChart from '../components/charts/GoalProgressChart'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { paletteColor } from '../utils/categoryColor'
 import { formatCurrency } from '../utils/format'
+import { MONTH_NAMES_PT, monthsUntilGoal } from '../utils/date'
+
+function BoxGoal({ box, saved, color }) {
+  const remaining = Math.max(box.goal_amount - saved, 0)
+  const percent = (saved / box.goal_amount) * 100
+  const monthsLeft = monthsUntilGoal(box.goal_month, box.goal_year)
+  const targetLabel = `${MONTH_NAMES_PT[box.goal_month - 1]}/${box.goal_year}`
+
+  let simulationText
+  if (remaining <= 0) {
+    simulationText = 'Meta atingida! 🎉'
+  } else if (monthsLeft < 0) {
+    simulationText = `Meta vencida — faltam ${formatCurrency(remaining)}`
+  } else {
+    const monthly = remaining / (monthsLeft + 1)
+    simulationText = `Guarde ${formatCurrency(monthly)}/mês até ${targetLabel} para atingir a meta`
+  }
+
+  return (
+    <div className="investment-box-goal">
+      <GoalProgressChart percent={percent} color={color.text} />
+      <div className="investment-box-goal-text">
+        <span>Meta: {formatCurrency(box.goal_amount)} até {targetLabel}</span>
+        <span className="investment-box-goal-simulation">{simulationText}</span>
+      </div>
+    </div>
+  )
+}
 
 function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) {
   const {
@@ -70,6 +99,7 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
                         {box.name}
                       </span>
                       <span className="investment-box-total">{formatCurrency(total)}</span>
+                      {box.goal_amount && <BoxGoal box={box} saved={total} color={color} />}
                     </div>
                   )
                 })}
