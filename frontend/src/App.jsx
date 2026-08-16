@@ -369,6 +369,20 @@ function App() {
       </header>
 
       <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)}>
+        <Link to="/" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M2 7.5 8 2l6 5.5M3.5 6.3V14h9V6.3"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path d="M6.3 14v-4h3.4v4" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+          </svg>
+          Início
+        </Link>
+
         <button
           type="button"
           className="drawer-item"
@@ -559,6 +573,7 @@ function App() {
           element={
             <Suspense fallback={<main className="container"><p className="state-message">Carregando gráficos…</p></main>}>
               <ChartsPage
+                expenses={expenses}
                 trendExpenses={trendExpenses}
                 filteredExpenses={filteredExpenses}
                 isLoading={isLoading}

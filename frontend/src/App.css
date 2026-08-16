@@ -1934,6 +1934,114 @@
   padding: 16px 20px 20px;
 }
 
+.chart-panel-header--with-action {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.estimate-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.estimate-compare-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.estimate-compare-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.estimate-compare-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.estimate-compare-diff {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.estimate-compare-diff--good {
+  color: var(--success);
+}
+
+.estimate-compare-diff--bad {
+  color: var(--danger);
+}
+
+.estimate-compare-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.estimate-compare-bar-row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.estimate-compare-bar-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.estimate-compare-bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.estimate-compare-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.estimate-compare-bar-fill--estimated {
+  background: var(--text-muted);
+}
+
+.estimate-compare-bar-fill--actual {
+  background: var(--primary);
+}
+
+.estimate-compare-card--expense .estimate-compare-bar-fill--actual {
+  background: var(--danger);
+}
+
+.estimate-compare-card--income .estimate-compare-bar-fill--actual {
+  background: var(--success);
+}
+
+.estimate-compare-card--investment .estimate-compare-bar-fill--actual {
+  background: var(--info);
+}
+
+.estimate-compare-bar-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
 .chart-scroll-row {
   display: flex;
   align-items: stretch;

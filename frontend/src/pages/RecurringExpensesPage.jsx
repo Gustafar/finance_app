@@ -217,9 +217,6 @@ function RecurringExpensesPage() {
           <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsCopyOpen(true)}>
             Copiar planejamento anterior
           </button>
-          <Link to="/estimativa-mensal" className="btn btn-secondary btn-sm">
-            Ver estimativa mensal
-          </Link>
         </div>
       </div>
 

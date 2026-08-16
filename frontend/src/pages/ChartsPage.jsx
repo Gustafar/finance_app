@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import MonthlyTrendChart from '../components/charts/MonthlyTrendChart'
 import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
+import EstimateComparisonPanel from '../components/charts/EstimateComparisonPanel'
 import FilterButton from '../components/FilterButton'
 import SearchInput from '../components/SearchInput'
 import { formatMonthLabel } from '../utils/date'
@@ -19,6 +20,7 @@ const subcategoryDimension = {
 }
 
 function ChartsPage({
+  expenses,
   trendExpenses,
   filteredExpenses,
   isLoading,
@@ -68,6 +70,8 @@ function ChartsPage({
               <MonthlyTrendChart expenses={trendExpenses} dateFrom={trendDateFrom} dateTo={trendDateTo} />
             </div>
           </section>
+
+          <EstimateComparisonPanel expenses={expenses} selectedMonth={selectedMonth} />
 
           <div className="charts-grid">
             <section className="panel chart-panel">
