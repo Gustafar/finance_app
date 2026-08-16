@@ -34,7 +34,9 @@ func badRequestOnValidationError(w http.ResponseWriter, err error) bool {
 		errors.Is(err, services.ErrPaymentMethodNotFound) ||
 		errors.Is(err, services.ErrBucketNotFound) ||
 		errors.Is(err, services.ErrBankNotFound) ||
-		errors.Is(err, services.ErrSubcategoryNotFound) {
+		errors.Is(err, services.ErrSubcategoryNotFound) ||
+		errors.Is(err, services.ErrInvalidPlanYear) ||
+		errors.Is(err, services.ErrInvalidPlanMonth) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return true
 	}
@@ -101,13 +103,77 @@ func (h *RecurringExpenseHandler) CreateBulk(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *RecurringExpenseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	recurrences, err := h.Service.GetAll()
+	year, err := strconv.Atoi(r.URL.Query().Get("plan_year"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid plan_year")
+		return
+	}
+
+	month, err := strconv.Atoi(r.URL.Query().Get("plan_month"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid plan_month")
+		return
+	}
+
+	recurrences, err := h.Service.GetAllByMonth(year, month)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	respondJSON(w, http.StatusOK, recurrences)
+}
+
+func (h *RecurringExpenseHandler) LatestMonthWithData(w http.ResponseWriter, r *http.Request) {
+	beforeYear, err := strconv.Atoi(r.URL.Query().Get("before_year"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid before_year")
+		return
+	}
+
+	beforeMonth, err := strconv.Atoi(r.URL.Query().Get("before_month"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid before_month")
+		return
+	}
+
+	year, month, found, err := h.Service.LatestMonthWithData(beforeYear, beforeMonth)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+	if !found {
+		respondError(w, http.StatusNotFound, "no earlier month with planning data")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]int{"year": year, "month": month})
+}
+
+type replaceMonthRequest struct {
+	PlanYear  int                       `json:"plan_year"`
+	PlanMonth int                       `json:"plan_month"`
+	Rows      []models.RecurringExpense `json:"rows"`
+}
+
+func (h *RecurringExpenseHandler) ReplaceMonth(w http.ResponseWriter, r *http.Request) {
+	var req replaceMonthRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	created, err := h.Service.ReplaceMonth(req.PlanYear, req.PlanMonth, req.Rows)
+	if err != nil {
+		if badRequestOnValidationError(w, err) {
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, created)
 }
 
 func (h *RecurringExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {

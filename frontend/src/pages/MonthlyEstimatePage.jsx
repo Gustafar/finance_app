@@ -1,13 +1,15 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRecurringExpenses } from '../hooks/useRecurringExpenses'
 import { useCategories } from '../hooks/useCategories'
 import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
 import SummaryCard from '../components/SummaryCard'
+import MonthPicker from '../components/MonthPicker'
 import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
 import { formatCurrency } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
+import { currentYearMonth, shiftMonth } from '../utils/date'
 
 const NO_SUBCATEGORY_ID = 'none'
 const NO_SUBCATEGORY_NAME = 'Sem subcategoria'
@@ -16,12 +18,11 @@ function byId(list, id) {
   return list.find((item) => item.id === id)
 }
 
-// Builds a display-only date for the current month at the rule's day, clamped to the
+// Builds a display-only date for the viewed month at the rule's day, clamped to the
 // month's last day — only used so the chart's leaf-level detail list has something to sort/show.
-function currentMonthDateForDay(day) {
-  const now = new Date()
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-  return new Date(now.getFullYear(), now.getMonth(), Math.min(day, lastDay)).toISOString()
+function monthDateForDay({ year, month }, day) {
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  return new Date(year, month, Math.min(day, lastDay)).toISOString()
 }
 
 function sumAmount(rules) {
@@ -29,7 +30,8 @@ function sumAmount(rules) {
 }
 
 function MonthlyEstimatePage() {
-  const { recurrences, isLoading: isLoadingRecurrences, error: loadError } = useRecurringExpenses()
+  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
+  const { recurrences, isLoading: isLoadingRecurrences, error: loadError } = useRecurringExpenses(selectedMonth.year, selectedMonth.month)
   const { categories, isLoading: isLoadingCategories } = useCategories()
   const { subcategories, isLoading: isLoadingSubcategories } = useSubcategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
@@ -46,7 +48,7 @@ function MonthlyEstimatePage() {
         return {
           id: recurring.id,
           description: recurring.description,
-          date: currentMonthDateForDay(recurring.day_of_month),
+          date: monthDateForDay(selectedMonth, recurring.day_of_month),
           type: recurring.type,
           amount: recurring.amount,
           category_id: recurring.category_id,
@@ -60,7 +62,7 @@ function MonthlyEstimatePage() {
           include_in_expenses: recurring.include_in_expenses,
         }
       }),
-    [recurrences, categories, subcategories, people],
+    [recurrences, categories, subcategories, people, selectedMonth],
   )
 
   const totals = useMemo(() => {
@@ -84,6 +86,34 @@ function MonthlyEstimatePage() {
           </svg>
         </Link>
         <h1>Estimativa mensal</h1>
+      </div>
+
+      <div className="dashboard-toolbar">
+        <div className="month-nav">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
+            aria-label="Mês anterior"
+            title="Mês anterior"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
+            aria-label="Próximo mês"
+            title="Próximo mês"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {isLoading && <p className="state-message">Carregando estimativa…</p>}

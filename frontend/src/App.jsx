@@ -18,7 +18,6 @@ import RecurringExpensesPage from './pages/RecurringExpensesPage'
 import MonthlyEstimatePage from './pages/MonthlyEstimatePage'
 import InvestmentsPage from './pages/InvestmentsPage'
 import { fetchExpenses, deleteExpense } from './api/expenses'
-import { generateDueRecurringExpenses } from './api/recurringExpenses'
 import { fetchSubcategories } from './api/subcategories'
 import { fetchPeople } from './api/people'
 import { fetchPaymentMethods } from './api/paymentMethods'
@@ -72,19 +71,11 @@ function App() {
 
   const handleRefresh = () => {
     setIsRefreshing(true)
-    generateDueRecurringExpenses()
-      .catch((error) => console.error('Erro ao gerar gastos fixos:', error))
-      .finally(() => {
-        loadExpenses().finally(() => setIsRefreshing(false))
-      })
+    loadExpenses().finally(() => setIsRefreshing(false))
   }
 
   useEffect(() => {
-    generateDueRecurringExpenses()
-      .catch((error) => console.error('Erro ao gerar gastos fixos:', error))
-      .finally(() => {
-        loadExpenses().finally(() => setIsLoading(false))
-      })
+    loadExpenses().finally(() => setIsLoading(false))
 
     Promise.all([
       fetchSubcategories().then(setSubcategories).catch((error) => console.error('Erro ao buscar subcategorias:', error)),

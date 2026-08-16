@@ -16,7 +16,7 @@ func NewRecurringExpenseRepository(db *sql.DB) *RecurringExpenseRepository {
 
 const selectRecurringExpenseQuery = `
 	SELECT id, description, amount, type, day_of_month, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id,
-	       include_in_expenses, last_generated_year, last_generated_month, created_at
+	       include_in_expenses, plan_year, plan_month, created_at
 	FROM recurring_expenses
 `
 
@@ -25,32 +25,54 @@ func scanRecurringExpense(row interface{ Scan(...any) error }) (models.Recurring
 	err := row.Scan(
 		&recurring.ID, &recurring.Description, &recurring.Amount, &recurring.Type, &recurring.DayOfMonth,
 		&recurring.CategoryID, &recurring.SubcategoryID, &recurring.PersonID, &recurring.PaymentMethodID, &recurring.BucketID, &recurring.BankID,
-		&recurring.IncludeInExpenses, &recurring.LastGeneratedYear, &recurring.LastGeneratedMonth, &recurring.CreatedAt,
+		&recurring.IncludeInExpenses, &recurring.PlanYear, &recurring.PlanMonth, &recurring.CreatedAt,
 	)
 	return recurring, err
 }
 
+type sqlExecutor interface {
+	Exec(query string, args ...any) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
+	Query(query string, args ...any) (*sql.Rows, error)
+}
+
 func (r *RecurringExpenseRepository) Create(recurring models.RecurringExpense) (models.RecurringExpense, error) {
-	query := `INSERT INTO recurring_expenses (description, amount, type, day_of_month, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id, include_in_expenses)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
+	return r.createWith(r.DB, recurring)
+}
+
+func (r *RecurringExpenseRepository) CreateTx(tx *sql.Tx, recurring models.RecurringExpense) (models.RecurringExpense, error) {
+	return r.createWith(tx, recurring)
+}
+
+func (r *RecurringExpenseRepository) createWith(exec sqlExecutor, recurring models.RecurringExpense) (models.RecurringExpense, error) {
+	query := `INSERT INTO recurring_expenses (description, amount, type, day_of_month, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id, include_in_expenses, plan_year, plan_month)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`
 
 	var id int
-	err := r.DB.QueryRow(
+	err := exec.QueryRow(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
 		recurring.CategoryID, recurring.SubcategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.BucketID, recurring.BankID,
-		recurring.IncludeInExpenses,
+		recurring.IncludeInExpenses, recurring.PlanYear, recurring.PlanMonth,
 	).Scan(&id)
 	if err != nil {
 		return models.RecurringExpense{}, err
 	}
 
-	return r.GetByID(id)
+	return r.getByIDWith(exec, id)
 }
 
 func (r *RecurringExpenseRepository) GetByID(id int) (models.RecurringExpense, error) {
+	return r.getByIDWith(r.DB, id)
+}
+
+func (r *RecurringExpenseRepository) GetByIDTx(tx *sql.Tx, id int) (models.RecurringExpense, error) {
+	return r.getByIDWith(tx, id)
+}
+
+func (r *RecurringExpenseRepository) getByIDWith(exec sqlExecutor, id int) (models.RecurringExpense, error) {
 	query := selectRecurringExpenseQuery + " WHERE id = $1"
 
-	recurring, err := scanRecurringExpense(r.DB.QueryRow(query, id))
+	recurring, err := scanRecurringExpense(exec.QueryRow(query, id))
 	if err != nil {
 		return models.RecurringExpense{}, err
 	}
@@ -58,10 +80,18 @@ func (r *RecurringExpenseRepository) GetByID(id int) (models.RecurringExpense, e
 	return recurring, nil
 }
 
-func (r *RecurringExpenseRepository) GetAll() ([]models.RecurringExpense, error) {
-	query := selectRecurringExpenseQuery + " ORDER BY day_of_month, description"
+func (r *RecurringExpenseRepository) GetAllByMonth(year, month int) ([]models.RecurringExpense, error) {
+	return r.getAllByMonthWith(r.DB, year, month)
+}
 
-	rows, err := r.DB.Query(query)
+func (r *RecurringExpenseRepository) GetAllByMonthTx(tx *sql.Tx, year, month int) ([]models.RecurringExpense, error) {
+	return r.getAllByMonthWith(tx, year, month)
+}
+
+func (r *RecurringExpenseRepository) getAllByMonthWith(exec sqlExecutor, year, month int) ([]models.RecurringExpense, error) {
+	query := selectRecurringExpenseQuery + " WHERE plan_year = $1 AND plan_month = $2 ORDER BY day_of_month, description"
+
+	rows, err := exec.Query(query, year, month)
 	if err != nil {
 		return nil, err
 	}
@@ -86,24 +116,40 @@ func (r *RecurringExpenseRepository) GetAll() ([]models.RecurringExpense, error)
 }
 
 func (r *RecurringExpenseRepository) Update(id int, recurring models.RecurringExpense) (models.RecurringExpense, error) {
-	query := `UPDATE recurring_expenses
-		SET description = $1, amount = $2, type = $3, day_of_month = $4, category_id = $5, subcategory_id = $6, person_id = $7, payment_method_id = $8, bucket_id = $9, bank_id = $10, include_in_expenses = $11
-		WHERE id = $12`
+	return r.updateWith(r.DB, id, recurring)
+}
 
-	_, err := r.DB.Exec(
+func (r *RecurringExpenseRepository) UpdateTx(tx *sql.Tx, id int, recurring models.RecurringExpense) (models.RecurringExpense, error) {
+	return r.updateWith(tx, id, recurring)
+}
+
+func (r *RecurringExpenseRepository) updateWith(exec sqlExecutor, id int, recurring models.RecurringExpense) (models.RecurringExpense, error) {
+	query := `UPDATE recurring_expenses
+		SET description = $1, amount = $2, type = $3, day_of_month = $4, category_id = $5, subcategory_id = $6, person_id = $7, payment_method_id = $8, bucket_id = $9, bank_id = $10, include_in_expenses = $11, plan_year = $12, plan_month = $13
+		WHERE id = $14`
+
+	_, err := exec.Exec(
 		query, recurring.Description, recurring.Amount, recurring.Type, recurring.DayOfMonth,
 		recurring.CategoryID, recurring.SubcategoryID, recurring.PersonID, recurring.PaymentMethodID, recurring.BucketID, recurring.BankID,
-		recurring.IncludeInExpenses, id,
+		recurring.IncludeInExpenses, recurring.PlanYear, recurring.PlanMonth, id,
 	)
 	if err != nil {
 		return models.RecurringExpense{}, err
 	}
 
-	return r.GetByID(id)
+	return r.getByIDWith(exec, id)
 }
 
 func (r *RecurringExpenseRepository) Delete(id int) error {
-	result, err := r.DB.Exec("DELETE FROM recurring_expenses WHERE id = $1", id)
+	return r.deleteWith(r.DB, id)
+}
+
+func (r *RecurringExpenseRepository) DeleteTx(tx *sql.Tx, id int) error {
+	return r.deleteWith(tx, id)
+}
+
+func (r *RecurringExpenseRepository) deleteWith(exec sqlExecutor, id int) error {
+	result, err := exec.Exec("DELETE FROM recurring_expenses WHERE id = $1", id)
 	if err != nil {
 		return err
 	}
@@ -120,7 +166,26 @@ func (r *RecurringExpenseRepository) Delete(id int) error {
 	return nil
 }
 
-func (r *RecurringExpenseRepository) MarkGenerated(id, year, month int) error {
-	_, err := r.DB.Exec("UPDATE recurring_expenses SET last_generated_year = $1, last_generated_month = $2 WHERE id = $3", year, month, id)
+func (r *RecurringExpenseRepository) DeleteByMonthTx(tx *sql.Tx, year, month int) error {
+	_, err := tx.Exec("DELETE FROM recurring_expenses WHERE plan_year = $1 AND plan_month = $2", year, month)
 	return err
+}
+
+// LatestMonthWithData finds the most recent (year, month) strictly before the given one that has
+// at least one planning row, skipping over any months with none.
+func (r *RecurringExpenseRepository) LatestMonthWithData(beforeYear, beforeMonth int) (int, int, bool, error) {
+	query := `SELECT plan_year, plan_month FROM recurring_expenses
+		WHERE (plan_year, plan_month) < ($1, $2)
+		ORDER BY plan_year DESC, plan_month DESC LIMIT 1`
+
+	var year, month int
+	err := r.DB.QueryRow(query, beforeYear, beforeMonth).Scan(&year, &month)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, 0, false, nil
+		}
+		return 0, 0, false, err
+	}
+
+	return year, month, true, nil
 }

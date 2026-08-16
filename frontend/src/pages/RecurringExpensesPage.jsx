@@ -10,7 +10,7 @@ import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
 import { TRANSACTION_TYPES, TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import { formatCurrency } from '../utils/format'
-import { clampDayOfMonth } from '../utils/date'
+import { currentYearMonth, shiftMonth } from '../utils/date'
 import { paletteColor } from '../utils/categoryColor'
 import { useBulkSelection } from '../hooks/useBulkSelection'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -18,204 +18,24 @@ import LoadingBar from '../components/LoadingBar'
 import Modal from '../components/Modal'
 import FilterButton from '../components/FilterButton'
 import SearchInput from '../components/SearchInput'
+import MonthPicker from '../components/MonthPicker'
 import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
+import CopyPreviousPlanDialog from '../components/CopyPreviousPlanDialog'
 import SelectionToolbar from '../components/SelectionToolbar'
-import SubcategorySelect from '../components/SubcategorySelect'
+import RecurringFields from '../components/RecurringFields'
+import { emptyRecurringForm as emptyForm, isRecurringFormComplete as isFormComplete, recurringFormFromRow, recurringFormToPayload } from '../utils/recurringForm'
 
-const emptyForm = {
-  description: '',
-  amount: '',
-  type: 'expense',
-  day_of_month: '1',
-  category_id: '',
-  subcategory_id: '',
-  person_id: '',
-  payment_method_id: '',
-  bucket_id: '',
-  bank_id: '',
-  include_in_expenses: true,
-}
-
-function toPayload(form) {
-  return {
-    description: form.description.trim(),
-    amount: parseFloat(form.amount),
-    type: form.type,
-    day_of_month: Number(form.day_of_month),
-    category_id: Number(form.category_id),
-    subcategory_id: Number(form.subcategory_id),
-    person_id: Number(form.person_id),
-    payment_method_id: Number(form.payment_method_id),
-    bucket_id: Number(form.bucket_id),
-    bank_id: Number(form.bank_id),
-    include_in_expenses: Boolean(form.include_in_expenses),
-  }
-}
-
-function isFormComplete(form) {
-  return (
-    form.description.trim() &&
-    form.amount &&
-    form.day_of_month &&
-    form.category_id &&
-    form.subcategory_id &&
-    form.person_id &&
-    form.payment_method_id &&
-    form.bucket_id &&
-    form.bank_id
-  )
+function toPayload(form, selectedMonth) {
+  return { ...recurringFormToPayload(form), plan_year: selectedMonth.year, plan_month: selectedMonth.month + 1 }
 }
 
 function byId(list, id) {
   return list.find((item) => item.id === id)
 }
 
-function RecurringFields({ idPrefix, form, onChange, categories, subcategories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
-  const errCls = (invalid) => `field${attemptedSubmit && invalid ? ' field--error' : ''}`
-
-  return (
-    <>
-      <div className="field">
-        <label>Tipo</label>
-        <div className="type-toggle" role="radiogroup" aria-label="Tipo de transação">
-          {TRANSACTION_TYPES.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={form.type === option.value}
-              className={`type-toggle-option${form.type === option.value ? ' type-toggle-option--selected' : ''}`}
-              onClick={() => onChange({ ...form, type: option.value })}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className={errCls(!form.description.trim())}>
-        <label htmlFor={`${idPrefix}-description`}>Descrição</label>
-        <input
-          id={`${idPrefix}-description`}
-          type="text"
-          placeholder="Ex: Aluguel"
-          value={form.description}
-          onChange={(e) => onChange({ ...form, description: e.target.value })}
-        />
-      </div>
-
-      <div className="field-row">
-        <div className={errCls(!form.amount)}>
-          <label htmlFor={`${idPrefix}-amount`}>Valor</label>
-          <input
-            id={`${idPrefix}-amount`}
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0,00"
-            value={form.amount}
-            onChange={(e) => onChange({ ...form, amount: e.target.value })}
-          />
-        </div>
-        <div className={errCls(!form.day_of_month)}>
-          <label htmlFor={`${idPrefix}-day`}>Dia do mês</label>
-          <input
-            id={`${idPrefix}-day`}
-            type="number"
-            min="1"
-            max="31"
-            value={form.day_of_month}
-            onChange={(e) => onChange({ ...form, day_of_month: clampDayOfMonth(e.target.value) })}
-          />
-        </div>
-      </div>
-
-      <div className="field-row">
-        <div className={errCls(!form.subcategory_id)}>
-          <label htmlFor={`${idPrefix}-subcategory`}>Subcategoria</label>
-          <SubcategorySelect
-            id={`${idPrefix}-subcategory`}
-            categories={categories}
-            subcategories={subcategories}
-            value={form.subcategory_id}
-            onChange={(subcategoryId, categoryId) => onChange({ ...form, subcategory_id: subcategoryId, category_id: categoryId })}
-          />
-        </div>
-        <div className={errCls(!form.person_id)}>
-          <label htmlFor={`${idPrefix}-person`}>Responsável</label>
-          <select
-            id={`${idPrefix}-person`}
-            value={form.person_id}
-            onChange={(e) => onChange({ ...form, person_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {people.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="field-row">
-        <div className={errCls(!form.payment_method_id)}>
-          <label htmlFor={`${idPrefix}-payment-method`}>Método de pagamento</label>
-          <select
-            id={`${idPrefix}-payment-method`}
-            value={form.payment_method_id}
-            onChange={(e) => onChange({ ...form, payment_method_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {paymentMethods.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className={errCls(!form.bucket_id)}>
-          <label htmlFor={`${idPrefix}-bucket`}>Envelope</label>
-          <select
-            id={`${idPrefix}-bucket`}
-            value={form.bucket_id}
-            onChange={(e) => onChange({ ...form, bucket_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {buckets.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="field-row field-row--end">
-        <div className={errCls(!form.bank_id)}>
-          <label htmlFor={`${idPrefix}-bank`}>Banco</label>
-          <select
-            id={`${idPrefix}-bank`}
-            value={form.bank_id}
-            onChange={(e) => onChange({ ...form, bank_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {banks.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <label className="checkbox-field checkbox-field--compact" htmlFor={`${idPrefix}-include-in-expenses`}>
-          <input
-            id={`${idPrefix}-include-in-expenses`}
-            type="checkbox"
-            checked={form.include_in_expenses}
-            onChange={(e) => onChange({ ...form, include_in_expenses: e.target.checked })}
-          />
-          Lançar automaticamente
-        </label>
-      </div>
-    </>
-  )
-}
-
 function RecurringExpensesPage() {
-  const { recurrences, setRecurrences, isLoading: isLoadingRecurrences, error: loadError } = useRecurringExpenses()
+  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
+  const { recurrences, setRecurrences, isLoading: isLoadingRecurrences, error: loadError } = useRecurringExpenses(selectedMonth.year, selectedMonth.month)
   const { categories, isLoading: isLoadingCategories } = useCategories()
   const { subcategories, isLoading: isLoadingSubcategories } = useSubcategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
@@ -293,6 +113,8 @@ function RecurringExpensesPage() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [subcategoryFilter, setSubcategoryFilter] = useState('all')
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [listTab, setListTab] = useState('fixed')
+  const [isCopyOpen, setIsCopyOpen] = useState(false)
 
   const hasActiveFilters = search.trim() !== '' || typeFilter !== 'all' || subcategoryFilter !== 'all'
 
@@ -302,15 +124,20 @@ function RecurringExpensesPage() {
     setSubcategoryFilter('all')
   }
 
+  const byTab = useMemo(
+    () => recurrences.filter((r) => (listTab === 'fixed' ? r.include_in_expenses : !r.include_in_expenses)),
+    [recurrences, listTab],
+  )
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
-    return recurrences.filter((r) => {
+    return byTab.filter((r) => {
       if (typeFilter !== 'all' && r.type !== typeFilter) return false
       if (subcategoryFilter !== 'all' && String(r.subcategory_id) !== subcategoryFilter) return false
       if (term && !r.description.toLowerCase().includes(term)) return false
       return true
     })
-  }, [recurrences, search, typeFilter, subcategoryFilter])
+  }, [byTab, search, typeFilter, subcategoryFilter])
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -320,7 +147,7 @@ function RecurringExpensesPage() {
     setCreateError(null)
     setIsCreating(true)
 
-    createRecurringExpense(toPayload(effectiveCreateForm))
+    createRecurringExpense(toPayload(effectiveCreateForm, selectedMonth))
       .then((created) => {
         setRecurrences((prev) => sortByDay([...prev, created]))
         setForm(emptyForm)
@@ -335,19 +162,7 @@ function RecurringExpensesPage() {
 
   const startEditing = (recurring) => {
     setEditingId(recurring.id)
-    setEditForm({
-      description: recurring.description,
-      amount: String(recurring.amount),
-      type: recurring.type,
-      day_of_month: String(recurring.day_of_month),
-      category_id: String(recurring.category_id),
-      subcategory_id: recurring.subcategory_id ? String(recurring.subcategory_id) : '',
-      person_id: String(recurring.person_id),
-      payment_method_id: String(recurring.payment_method_id),
-      bucket_id: String(recurring.bucket_id),
-      bank_id: String(recurring.bank_id),
-      include_in_expenses: recurring.include_in_expenses,
-    })
+    setEditForm(recurringFormFromRow(recurring))
     setRowError(null)
     setEditAttemptedSubmit(false)
   }
@@ -363,7 +178,7 @@ function RecurringExpensesPage() {
 
     setRowError(null)
 
-    return updateRecurringExpense(id, toPayload(editForm))
+    return updateRecurringExpense(id, toPayload(editForm, selectedMonth))
       .then((updated) => {
         setRecurrences((prev) => sortByDay(prev.map((r) => (r.id === id ? updated : r))))
         cancelEditing()
@@ -399,9 +214,40 @@ function RecurringExpensesPage() {
         </Link>
         <h1>Planejamento Mensal</h1>
         <div className="page-header-actions">
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsCopyOpen(true)}>
+            Copiar planejamento anterior
+          </button>
           <Link to="/estimativa-mensal" className="btn btn-secondary btn-sm">
             Ver estimativa mensal
           </Link>
+        </div>
+      </div>
+
+      <div className="dashboard-toolbar">
+        <div className="month-nav">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
+            aria-label="Mês anterior"
+            title="Mês anterior"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
+            aria-label="Próximo mês"
+            title="Próximo mês"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -484,6 +330,8 @@ function RecurringExpensesPage() {
                   paymentMethods={paymentMethods}
                   buckets={buckets}
                   banks={banks}
+                  planYear={selectedMonth.year}
+                  planMonth={selectedMonth.month}
                   onRecurrencesCreated={(created) => setRecurrences((prev) => sortByDay([...prev, ...created]))}
                 />
               )}
@@ -494,7 +342,7 @@ function RecurringExpensesPage() {
 
       <section className="panel">
         <div className="panel-header panel-header--actions">
-          <h2>Gastos fixos cadastrados</h2>
+          <h2>Itens cadastrados</h2>
           <div className="panel-header-actions-group">
             <SearchInput value={search} onChange={setSearch} />
             {!isLoading && !loadError && recurrences.length > 0 && (
@@ -504,6 +352,27 @@ function RecurringExpensesPage() {
             )}
             <FilterButton onClick={() => setIsFiltersOpen(true)} active={hasActiveFilters} />
           </div>
+        </div>
+
+        <div className="type-toggle" role="tablist" aria-label="Planejado ou gasto fixo" style={{ margin: '12px 24px' }}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={listTab === 'fixed'}
+            className={`type-toggle-option${listTab === 'fixed' ? ' type-toggle-option--selected' : ''}`}
+            onClick={() => setListTab('fixed')}
+          >
+            Gasto fixo
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={listTab === 'planned'}
+            className={`type-toggle-option${listTab === 'planned' ? ' type-toggle-option--selected' : ''}`}
+            onClick={() => setListTab('planned')}
+          >
+            Somente planejamento
+          </button>
         </div>
 
         {deleteError && <p className="form-error" style={{ padding: '0 24px' }}>{deleteError}</p>}
@@ -525,7 +394,12 @@ function RecurringExpensesPage() {
         {!isLoading && !loadError && recurrences.length === 0 && (
           <p className="state-message">Nenhum gasto fixo cadastrado ainda.</p>
         )}
-        {!isLoading && !loadError && recurrences.length > 0 && filtered.length === 0 && (
+        {!isLoading && !loadError && recurrences.length > 0 && byTab.length === 0 && (
+          <p className="state-message">
+            {listTab === 'fixed' ? 'Nenhum gasto fixo lançado automaticamente.' : 'Nenhum item somente em planejamento.'}
+          </p>
+        )}
+        {!isLoading && !loadError && byTab.length > 0 && filtered.length === 0 && (
           <p className="state-message">Nenhum gasto fixo corresponde ao filtro.</p>
         )}
 
@@ -783,6 +657,20 @@ function RecurringExpensesPage() {
           })
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
+      />
+
+      <CopyPreviousPlanDialog
+        isOpen={isCopyOpen}
+        onClose={() => setIsCopyOpen(false)}
+        selectedMonth={selectedMonth}
+        hasCurrentMonthData={recurrences.length > 0}
+        categories={categories}
+        subcategories={subcategories}
+        people={people}
+        paymentMethods={paymentMethods}
+        buckets={buckets}
+        banks={banks}
+        onSaved={(created) => setRecurrences(sortByDay(created))}
       />
     </main>
   )

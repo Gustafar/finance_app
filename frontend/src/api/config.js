@@ -35,7 +35,14 @@ export async function fetchJson(path, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(`Requisição falhou com status ${response.status}`)
+    const error = new Error(`Requisição falhou com status ${response.status}`)
+    error.status = response.status
+    try {
+      error.serverMessage = (await response.clone().json())?.error
+    } catch {
+      // response body wasn't JSON — leave serverMessage unset, callers fall back to error.message
+    }
+    throw error
   }
 
   if (response.status === 204) return undefined

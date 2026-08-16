@@ -11,13 +11,12 @@ import (
 )
 
 type ExpenseService struct {
-	Repo          *repositories.ExpenseRepository
-	RecurringRepo *repositories.RecurringExpenseRepository
-	BucketRepo    *repositories.BucketRepository
+	Repo       *repositories.ExpenseRepository
+	BucketRepo *repositories.BucketRepository
 }
 
-func NewExpenseService(repo *repositories.ExpenseRepository, recurringRepo *repositories.RecurringExpenseRepository, bucketRepo *repositories.BucketRepository) *ExpenseService {
-	return &ExpenseService{Repo: repo, RecurringRepo: recurringRepo, BucketRepo: bucketRepo}
+func NewExpenseService(repo *repositories.ExpenseRepository, bucketRepo *repositories.BucketRepository) *ExpenseService {
+	return &ExpenseService{Repo: repo, BucketRepo: bucketRepo}
 }
 
 var validTransactionTypes = map[string]bool{
@@ -194,59 +193,6 @@ func addMonthsClamped(t time.Time, months int) time.Time {
 	}
 
 	return time.Date(firstOfTarget.Year(), firstOfTarget.Month(), day, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
-}
-
-// ApplyDueRecurringExpenses backfills expenses for every month a rule missed since it last ran.
-func (s *ExpenseService) ApplyDueRecurringExpenses() ([]models.Expense, error) {
-	recurrences, err := s.RecurringRepo.GetAll()
-	if err != nil {
-		return nil, err
-	}
-
-	now := time.Now().UTC()
-	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-
-	created := []models.Expense{}
-
-	for _, recurring := range recurrences {
-		cursor := time.Date(recurring.CreatedAt.Year(), recurring.CreatedAt.Month(), 1, 0, 0, 0, 0, time.UTC)
-		if recurring.LastGeneratedYear != nil && recurring.LastGeneratedMonth != nil {
-			cursor = time.Date(*recurring.LastGeneratedYear, time.Month(*recurring.LastGeneratedMonth), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0)
-		}
-
-		for !cursor.After(currentMonth) {
-			if recurring.IncludeInExpenses {
-				recurringID := recurring.ID
-
-				expense, err := s.Repo.Create(models.Expense{
-					Description:        recurring.Description,
-					Amount:             recurring.Amount,
-					Type:               recurring.Type,
-					CategoryID:         recurring.CategoryID,
-					SubcategoryID:      recurring.SubcategoryID,
-					PersonID:           recurring.PersonID,
-					PaymentMethodID:    recurring.PaymentMethodID,
-					BucketID:           recurring.BucketID,
-					BankID:             recurring.BankID,
-					Date:               dateForDay(cursor.Year(), cursor.Month(), recurring.DayOfMonth),
-					RecurringExpenseID: &recurringID,
-				})
-				if err != nil {
-					return created, err
-				}
-
-				created = append(created, expense)
-			}
-
-			if err := s.RecurringRepo.MarkGenerated(recurring.ID, cursor.Year(), int(cursor.Month())); err != nil {
-				return created, err
-			}
-
-			cursor = cursor.AddDate(0, 1, 0)
-		}
-	}
-
-	return created, nil
 }
 
 // dateForDay clamps day to the given month's last day (e.g. 31 in February becomes 28/29).

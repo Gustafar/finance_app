@@ -98,7 +98,7 @@ function isRowComplete(row, defaults) {
   )
 }
 
-function buildRowPayload(row, defaults, subcategories) {
+function buildRowPayload(row, defaults, subcategories, planYear, planMonth) {
   const subcategory = subcategories.find((s) => String(s.id) === String(row.subcategoryId))
   return {
     description: row.description.trim(),
@@ -112,10 +112,12 @@ function buildRowPayload(row, defaults, subcategories) {
     bucket_id: Number(row.bucketId || defaults.bucketId),
     bank_id: Number(row.bankId || defaults.bankId),
     include_in_expenses: Boolean(row.includeInExpenses),
+    plan_year: planYear,
+    plan_month: planMonth + 1,
   }
 }
 
-function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMethods, buckets, banks, onRecurrencesCreated }) {
+function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMethods, buckets, banks, planYear, planMonth, onRecurrencesCreated }) {
   const [rows, setRows] = useState(() => Array.from({ length: INITIAL_ROW_COUNT }, makeEmptyRow))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -207,7 +209,7 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
       }
       candidateIndices.push(index)
-      payloadRows.push(buildRowPayload(row, defaults, subcategories))
+      payloadRows.push(buildRowPayload(row, defaults, subcategories, planYear, planMonth))
       return { ...row, status: 'idle', error: null }
     })
 

@@ -62,4 +62,6 @@ var (
 	ErrEmptyRecurringExpenseName  = errors.New("recurring expense description cannot be empty")
 	ErrInvalidRecurringExpenseDay = errors.New("day of month must be between 1 and 31")
 	ErrRecurringExpenseNotFound   = errors.New("recurring expense not found")
+	ErrInvalidPlanYear            = errors.New("plan year is required")
+	ErrInvalidPlanMonth           = errors.New("plan month must be between 1 and 12")
 )

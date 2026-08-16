@@ -47,12 +47,25 @@ func scanExpense(row interface{ Scan(...any) error }) (models.Expense, error) {
 	return expense, err
 }
 
+type expenseSQLExecutor interface {
+	Exec(query string, args ...any) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
+}
+
 func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, error) {
+	return r.createWith(r.DB, expense)
+}
+
+func (r *ExpenseRepository) CreateTx(tx *sql.Tx, expense models.Expense) (models.Expense, error) {
+	return r.createWith(tx, expense)
+}
+
+func (r *ExpenseRepository) createWith(exec expenseSQLExecutor, expense models.Expense) (models.Expense, error) {
 	query := `INSERT INTO expenses (description, amount, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id, type, date, recurring_expense_id, investment_box_id, comment)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`
 
 	var id int
-	err := r.DB.QueryRow(
+	err := exec.QueryRow(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.SubcategoryID, expense.PersonID, expense.PaymentMethodID,
 		expense.BucketID, expense.BankID, expense.Type, expense.Date, expense.RecurringExpenseID, expense.InvestmentBoxID, expense.Comment,
 	).Scan(&id)
@@ -60,13 +73,34 @@ func (r *ExpenseRepository) Create(expense models.Expense) (models.Expense, erro
 		return models.Expense{}, err
 	}
 
-	return r.GetByID(id)
+	return r.getByIDWith(exec, id)
 }
 
 func (r *ExpenseRepository) GetByID(id int) (models.Expense, error) {
+	return r.getByIDWith(r.DB, id)
+}
+
+func (r *ExpenseRepository) GetByIDTx(tx *sql.Tx, id int) (models.Expense, error) {
+	return r.getByIDWith(tx, id)
+}
+
+func (r *ExpenseRepository) getByIDWith(exec expenseSQLExecutor, id int) (models.Expense, error) {
 	query := selectExpenseQuery + " WHERE e.id = $1"
 
-	expense, err := scanExpense(r.DB.QueryRow(query, id))
+	expense, err := scanExpense(exec.QueryRow(query, id))
+	if err != nil {
+		return models.Expense{}, err
+	}
+
+	return expense, nil
+}
+
+// GetByRecurringExpenseIDTx looks up the (at most one, per the DB unique index) expense generated
+// from a given recurring plan row. Returns sql.ErrNoRows if none exists.
+func (r *ExpenseRepository) GetByRecurringExpenseIDTx(tx *sql.Tx, recurringExpenseID int) (models.Expense, error) {
+	query := selectExpenseQuery + " WHERE e.recurring_expense_id = $1"
+
+	expense, err := scanExpense(tx.QueryRow(query, recurringExpenseID))
 	if err != nil {
 		return models.Expense{}, err
 	}
@@ -127,10 +161,18 @@ func (r *ExpenseRepository) getByInstallmentPurchaseID(purchaseID int) ([]models
 }
 
 func (r *ExpenseRepository) Update(id int, expense models.Expense) (models.Expense, error) {
+	return r.updateWith(r.DB, id, expense)
+}
+
+func (r *ExpenseRepository) UpdateTx(tx *sql.Tx, id int, expense models.Expense) (models.Expense, error) {
+	return r.updateWith(tx, id, expense)
+}
+
+func (r *ExpenseRepository) updateWith(exec expenseSQLExecutor, id int, expense models.Expense) (models.Expense, error) {
 	query := `UPDATE expenses SET description = $1, amount = $2, category_id = $3, subcategory_id = $4, person_id = $5, payment_method_id = $6, bucket_id = $7, bank_id = $8, type = $9, date = $10, investment_box_id = $11, comment = $12
 		WHERE id = $13`
 
-	_, err := r.DB.Exec(
+	_, err := exec.Exec(
 		query, expense.Description, expense.Amount, expense.CategoryID, expense.SubcategoryID, expense.PersonID, expense.PaymentMethodID,
 		expense.BucketID, expense.BankID, expense.Type, expense.Date, expense.InvestmentBoxID, expense.Comment, id,
 	)
@@ -138,7 +180,7 @@ func (r *ExpenseRepository) Update(id int, expense models.Expense) (models.Expen
 		return models.Expense{}, err
 	}
 
-	return r.GetByID(id)
+	return r.getByIDWith(exec, id)
 }
 
 type InstallmentSlice struct {
@@ -186,9 +228,17 @@ func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.Installmen
 }
 
 func (r *ExpenseRepository) Delete(id int) error {
+	return r.deleteWith(r.DB, id)
+}
+
+func (r *ExpenseRepository) DeleteTx(tx *sql.Tx, id int) error {
+	return r.deleteWith(tx, id)
+}
+
+func (r *ExpenseRepository) deleteWith(exec expenseSQLExecutor, id int) error {
 	query := "DELETE FROM expenses WHERE id = $1"
 
-	result, err := r.DB.Exec(query, id)
+	result, err := exec.Exec(query, id)
 	if err != nil {
 		return err
 	}
