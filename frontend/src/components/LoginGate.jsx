@@ -57,7 +57,7 @@ function LoginGate({ children }) {
     <div className="login-gate">
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="brand login-brand">
-          <span className="brand-mark">R$</span>
+          <img src="/favicon.svg" alt="" className="brand-mark" />
           <span>Minhas Finanças</span>
         </div>
 

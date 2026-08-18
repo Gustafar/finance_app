@@ -129,16 +129,9 @@
 }
 
 .brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--primary);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
+  flex-shrink: 0;
 }
 
 /* Layout */

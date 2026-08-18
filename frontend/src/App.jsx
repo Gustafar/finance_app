@@ -207,7 +207,7 @@ function App() {
             </svg>
           </button>
           <Link to="/" className="brand">
-            <span className="brand-mark">R$</span>
+            <img src="/favicon.svg" alt="" className="brand-mark" />
             <span>Minhas Finanças</span>
           </Link>
         </div>
