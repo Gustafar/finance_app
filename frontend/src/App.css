@@ -1729,7 +1729,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 50px;
   z-index: 100;
 }
 
@@ -1739,7 +1739,7 @@
   padding: 22px;
   box-shadow: var(--shadow-lg);
   position: relative;
-  max-height: calc(100svh - 32px);
+  max-height: calc(100svh - 100px);
   overflow-y: auto;
 }
 
@@ -1785,6 +1785,7 @@
 
   .modal-content {
     width: 100%;
+    max-height: calc(100svh - 24px);
   }
 }
 
