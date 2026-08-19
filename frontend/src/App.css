@@ -1330,7 +1330,7 @@
   transition: border-color 0.15s ease;
 }
 
-.bulk-grid-description-input {
+.bulk-grid input.bulk-grid-description-input {
   min-width: 200px;
 }
 
