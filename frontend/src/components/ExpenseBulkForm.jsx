@@ -10,7 +10,7 @@ import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date'
 import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
-import { resolveAmountInput } from '../utils/amountFormula'
+import { isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 import DatePicker from './DatePicker'
 import LoadingBar from './LoadingBar'
 import SubcategorySelect from './SubcategorySelect'
@@ -109,12 +109,12 @@ function isRowComplete(row, defaults, buckets) {
 
   if (row.isInstallment) {
     const count = Number(row.installmentCount)
-    return Boolean(row.amount) && Number(row.amount) > 0 && count >= 2 && count <= 60 && Boolean(row.date)
+    return !isAmountInvalid(row.amount, { allowZero: false }) && count >= 2 && count <= 60 && Boolean(row.date)
   }
 
   if (rowNeedsInvestmentBox(row, effectiveBucketId, buckets) && !effectiveInvestmentBoxId) return false
 
-  return row.amount !== '' && Number(row.amount) >= 0 && Boolean(row.date) && Boolean(row.type)
+  return !isAmountInvalid(row.amount) && Boolean(row.date) && Boolean(row.type)
 }
 
 function buildRowPayload(row, defaults, subcategories, buckets) {

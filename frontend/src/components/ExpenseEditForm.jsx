@@ -11,7 +11,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
-import { isAmountFormula, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
 
@@ -66,7 +66,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const needsInvestmentBox = type === 'investment' || isGoalWithdrawal
 
   const resolvedAmount = resolveAmountInput(amount)
-  const isAmountMissing = !resolvedAmount || isAmountFormula(resolvedAmount)
+  const isAmountMissing = isAmountInvalid(resolvedAmount)
 
   const isFormInvalid =
     !description.trim() ||

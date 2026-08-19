@@ -12,7 +12,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
-import { isAmountFormula, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 
 function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
@@ -103,8 +103,8 @@ function ExpenseForm({ onExpenseCreated }) {
   const resolvedTotalAmount = resolveAmountInput(totalAmount)
 
   const isAmountMissing = isInstallment
-    ? !resolvedTotalAmount || isAmountFormula(resolvedTotalAmount) || !installmentCount
-    : !resolvedAmount || isAmountFormula(resolvedAmount)
+    ? isAmountInvalid(resolvedTotalAmount, { allowZero: false }) || !installmentCount
+    : isAmountInvalid(resolvedAmount)
 
   const isFormInvalid =
     !description.trim() ||

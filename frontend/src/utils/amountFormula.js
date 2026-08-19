@@ -29,3 +29,15 @@ export function resolveAmountInput(text) {
 
   return String(Math.round(result * 100) / 100)
 }
+
+// True when a resolved amount value can't be submitted as-is: empty, still an unresolved
+// formula, non-numeric free text, or out of range. Run text through resolveAmountInput first.
+export function isAmountInvalid(text, { allowZero = true } = {}) {
+  if (!text) return true
+  if (isAmountFormula(text)) return true
+
+  const value = Number(text)
+  if (!Number.isFinite(value)) return true
+
+  return allowZero ? value < 0 : value <= 0
+}
