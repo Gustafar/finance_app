@@ -632,14 +632,7 @@
   gap: 8px;
 }
 
-.recurring-tab-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.recurring-tab-total {
+.recurring-tab-counts {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--text-muted);
