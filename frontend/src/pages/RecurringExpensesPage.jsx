@@ -184,6 +184,14 @@ function RecurringExpensesPage() {
     [recurrences, listTab],
   )
 
+  const tabCounts = useMemo(
+    () => ({
+      fixed: recurrences.filter((r) => r.include_in_expenses).length,
+      planned: recurrences.filter((r) => !r.include_in_expenses).length,
+    }),
+    [recurrences],
+  )
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     return byTab.filter((r) => {
@@ -220,6 +228,16 @@ function RecurringExpensesPage() {
     setEditForm(recurringFormFromRow(recurring))
     setRowError(null)
     setEditAttemptedSubmit(false)
+  }
+
+  const handleEditFromChart = (item) => {
+    const recurring = byId(recurrences, item.id)
+    if (!recurring) return
+    setListTab(recurring.include_in_expenses ? 'fixed' : 'planned')
+    setSearch('')
+    setTypeFilter('all')
+    setSubcategoryFilter('all')
+    startEditing(recurring)
   }
 
   const cancelEditing = () => {
@@ -326,6 +344,7 @@ function RecurringExpensesPage() {
                 rootLabel="Categorias"
                 caption="Todo o Planejamento Mensal, marcado ou não para lançamento automático."
                 detailEmptyMessage="Nenhum item do planejamento para exibir."
+                onEditExpense={handleEditFromChart}
                 dimensions={[
                   {
                     idKey: 'category_id',
@@ -443,6 +462,11 @@ function RecurringExpensesPage() {
         <div className="panel-header panel-header--actions">
           <h2>Itens cadastrados</h2>
           <div className="panel-header-actions-group">
+            {!isLoading && !loadError && recurrences.length > 0 && (
+              <p className="recurring-tab-counts">
+                Gasto fixo: {tabCounts.fixed} · Somente planejamento: {tabCounts.planned}
+              </p>
+            )}
             <SearchInput value={search} onChange={setSearch} />
             {!isLoading && !loadError && recurrences.length > 0 && (
               <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
