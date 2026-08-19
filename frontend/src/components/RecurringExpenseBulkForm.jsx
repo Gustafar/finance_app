@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { createRecurringExpensesBulk } from '../api/recurringExpenses'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
-import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
+import { parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
 import { clampDayOfMonth } from '../utils/date'
 import SubcategorySelect from './SubcategorySelect'
 
@@ -163,18 +163,16 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
     const anchorColIndex = PASTE_COLUMNS.indexOf(anchorColumnKey)
     if (anchorColIndex === -1) return
 
-    const lines = text.replace(/\r/g, '').split('\n')
-    if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop()
+    const lines = parseTsv(text)
     if (lines.length === 0) return
 
     setRows((current) => {
       const next = [...current]
 
-      lines.forEach((line, lineIndex) => {
+      lines.forEach((cells, lineIndex) => {
         const targetRowIndex = anchorRowIndex + lineIndex
         while (targetRowIndex >= next.length) next.push(makeEmptyRow())
 
-        const cells = line.split('\t')
         let patch = {}
         cells.forEach((cellText, cellIndex) => {
           const columnKey = PASTE_COLUMNS[anchorColIndex + cellIndex]
