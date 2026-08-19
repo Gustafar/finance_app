@@ -184,13 +184,7 @@ function RecurringExpensesPage() {
     [recurrences, listTab],
   )
 
-  const tabCounts = useMemo(
-    () => ({
-      fixed: recurrences.filter((r) => r.include_in_expenses).length,
-      planned: recurrences.filter((r) => !r.include_in_expenses).length,
-    }),
-    [recurrences],
-  )
+  const activeTabTotal = useMemo(() => sumAmount(byTab), [byTab])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -462,11 +456,6 @@ function RecurringExpensesPage() {
         <div className="panel-header panel-header--actions">
           <h2>Itens cadastrados</h2>
           <div className="panel-header-actions-group">
-            {!isLoading && !loadError && recurrences.length > 0 && (
-              <p className="recurring-tab-counts">
-                Gasto fixo: {tabCounts.fixed} · Somente planejamento: {tabCounts.planned}
-              </p>
-            )}
             <SearchInput value={search} onChange={setSearch} />
             {!isLoading && !loadError && recurrences.length > 0 && (
               <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
@@ -477,25 +466,32 @@ function RecurringExpensesPage() {
           </div>
         </div>
 
-        <div className="type-toggle" role="tablist" aria-label="Planejado ou gasto fixo" style={{ margin: '12px 24px' }}>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={listTab === 'fixed'}
-            className={`type-toggle-option${listTab === 'fixed' ? ' type-toggle-option--selected' : ''}`}
-            onClick={() => setListTab('fixed')}
-          >
-            Gasto fixo
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={listTab === 'planned'}
-            className={`type-toggle-option${listTab === 'planned' ? ' type-toggle-option--selected' : ''}`}
-            onClick={() => setListTab('planned')}
-          >
-            Somente planejamento
-          </button>
+        <div className="recurring-tab-row" style={{ margin: '12px 24px' }}>
+          <div className="type-toggle" role="tablist" aria-label="Planejado ou gasto fixo">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={listTab === 'fixed'}
+              className={`type-toggle-option${listTab === 'fixed' ? ' type-toggle-option--selected' : ''}`}
+              onClick={() => setListTab('fixed')}
+            >
+              Gasto fixo
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={listTab === 'planned'}
+              className={`type-toggle-option${listTab === 'planned' ? ' type-toggle-option--selected' : ''}`}
+              onClick={() => setListTab('planned')}
+            >
+              Somente planejamento
+            </button>
+          </div>
+          {!isLoading && !loadError && byTab.length > 0 && (
+            <p className="recurring-tab-total">
+              Total {listTab === 'fixed' ? 'gasto fixo' : 'somente planejamento'}: {formatCurrency(activeTabTotal)}
+            </p>
+          )}
         </div>
 
         {deleteError && <p className="form-error" style={{ padding: '0 24px' }}>{deleteError}</p>}
