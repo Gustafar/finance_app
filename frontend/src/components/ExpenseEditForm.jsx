@@ -11,6 +11,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
+import { isAmountFormula, resolveAmountInput } from '../utils/amountFormula'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
 
@@ -64,9 +65,12 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const isGoalWithdrawal = type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
   const needsInvestmentBox = type === 'investment' || isGoalWithdrawal
 
+  const resolvedAmount = resolveAmountInput(amount)
+  const isAmountMissing = !resolvedAmount || isAmountFormula(resolvedAmount)
+
   const isFormInvalid =
     !description.trim() ||
-    !amount ||
+    isAmountMissing ||
     !date ||
     !subcategoryId ||
     !personId ||
@@ -81,6 +85,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
     if (noSubcategories || isFormInvalid) return
 
+    setAmount(resolvedAmount)
     setShowConfirm(true)
   }
 
@@ -91,7 +96,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
     const updatedExpense = {
       description,
-      amount: parseFloat(amount),
+      amount: parseFloat(resolvedAmount),
       type,
       category_id: Number(categoryId),
       subcategory_id: Number(subcategoryId),
@@ -149,15 +154,16 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
           />
         </div>
 
-        <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
+        <div className={`field${attemptedSubmit && isAmountMissing ? ' field--error' : ''}`}>
           <label htmlFor="edit-amount">Valor</label>
           <input
             id="edit-amount"
-            type="number"
-            step="0.01"
-            min="0"
+            type="text"
+            inputMode="decimal"
+            placeholder="0,00 (ou =10+5,50)"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            onBlur={(e) => setAmount(resolveAmountInput(e.target.value))}
             required
           />
         </div>

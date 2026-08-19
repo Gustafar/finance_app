@@ -10,6 +10,7 @@ import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date'
 import { parsePastedAmount, resolveIdByName, resolveType } from '../utils/bulkPaste'
+import { resolveAmountInput } from '../utils/amountFormula'
 import DatePicker from './DatePicker'
 import LoadingBar from './LoadingBar'
 import SubcategorySelect from './SubcategorySelect'
@@ -258,7 +259,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     const candidateIndices = []
     const payloadRows = []
 
-    const nextRows = rows.map((row, index) => {
+    const nextRows = rows.map((row) => ({ ...row, amount: resolveAmountInput(row.amount) })).map((row, index) => {
       if (isRowBlank(row)) return row
       if (!isRowComplete(row, defaults, buckets)) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
@@ -367,12 +368,12 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   </td>
                   <td>
                     <input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       value={row.amount}
-                      placeholder="0,00"
+                      placeholder="0,00 (ou =10+5,50)"
                       onChange={(e) => updateRow(index, { amount: e.target.value })}
+                      onBlur={(e) => updateRow(index, { amount: resolveAmountInput(e.target.value) })}
                       onPaste={pasteHandler(index, 'amount')}
                     />
                   </td>

@@ -12,6 +12,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
+import { isAmountFormula, resolveAmountInput } from '../utils/amountFormula'
 
 function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
@@ -98,7 +99,12 @@ function ExpenseForm({ onExpenseCreated }) {
     }
   }
 
-  const isAmountMissing = isInstallment ? !totalAmount || !installmentCount : !amount
+  const resolvedAmount = resolveAmountInput(amount)
+  const resolvedTotalAmount = resolveAmountInput(totalAmount)
+
+  const isAmountMissing = isInstallment
+    ? !resolvedTotalAmount || isAmountFormula(resolvedTotalAmount) || !installmentCount
+    : !resolvedAmount || isAmountFormula(resolvedAmount)
 
   const isFormInvalid =
     !description.trim() ||
@@ -117,6 +123,8 @@ function ExpenseForm({ onExpenseCreated }) {
 
     if (noSubcategories || isFormInvalid) return
 
+    setAmount(resolvedAmount)
+    setTotalAmount(resolvedTotalAmount)
     setError(null)
     setIsSubmitting(true)
 
@@ -133,13 +141,13 @@ function ExpenseForm({ onExpenseCreated }) {
     const request = isInstallment
       ? createInstallmentPurchase({
           ...shared,
-          total_amount: parseFloat(totalAmount),
+          total_amount: parseFloat(resolvedTotalAmount),
           installment_count: Number(installmentCount),
           purchase_date: dateInputValueToISOString(date),
         })
       : createExpense({
           ...shared,
-          amount: parseFloat(amount),
+          amount: parseFloat(resolvedAmount),
           type,
           date: dateInputValueToISOString(date),
           ...(needsInvestmentBox ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
@@ -216,16 +224,16 @@ function ExpenseForm({ onExpenseCreated }) {
       {isInstallment ? (
         <>
           <div className="field-row">
-            <div className={`field${attemptedSubmit && !totalAmount ? ' field--error' : ''}`}>
+            <div className={`field${attemptedSubmit && isAmountMissing ? ' field--error' : ''}`}>
               <label htmlFor="total-amount">Valor total</label>
               <input
                 id="total-amount"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
+                type="text"
+                inputMode="decimal"
+                placeholder="0,00 (ou =10+5,50)"
                 value={totalAmount}
                 onChange={(e) => setTotalAmount(e.target.value)}
+                onBlur={(e) => setTotalAmount(resolveAmountInput(e.target.value))}
                 required
               />
             </div>
@@ -278,16 +286,16 @@ function ExpenseForm({ onExpenseCreated }) {
         </>
       ) : (
         <>
-          <div className={`field${attemptedSubmit && !amount ? ' field--error' : ''}`}>
+          <div className={`field${attemptedSubmit && isAmountMissing ? ' field--error' : ''}`}>
             <label htmlFor="amount">Valor</label>
             <input
               id="amount"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0,00"
+              type="text"
+              inputMode="decimal"
+              placeholder="0,00 (ou =10+5,50)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              onBlur={(e) => setAmount(resolveAmountInput(e.target.value))}
               required
             />
           </div>
