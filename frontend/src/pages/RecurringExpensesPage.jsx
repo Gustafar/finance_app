@@ -492,7 +492,7 @@ function RecurringExpensesPage() {
 
         {!isLoading && !loadError && recurrences.length > 0 && (
           <p className="recurring-fixed-total" style={{ margin: '0 24px 12px' }}>
-            {listTab === 'fixed' ? 'Total gasto fixo (saídas)' : 'Total planejado (saídas)'}: {formatCurrency(activeTabExpenseTotal)}
+            {listTab === 'fixed' ? 'Total gasto fixo' : 'Total planejado'}: {formatCurrency(activeTabExpenseTotal)}
           </p>
         )}
 
