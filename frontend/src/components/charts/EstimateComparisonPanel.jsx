@@ -45,8 +45,8 @@ function EstimateComparisonPanel({ expenses, selectedMonth }) {
           <h2>Estimativa x Real</h2>
           <p className="chart-caption">Planejamento mensal comparado aos lançamentos reais do mês.</p>
         </div>
-        <Link to="/estimativa-mensal" className="btn btn-secondary btn-sm">
-          Ver estimativa mensal
+        <Link to="/gastos-fixos" className="btn btn-secondary btn-sm">
+          Ver planejamento mensal
         </Link>
       </div>
 

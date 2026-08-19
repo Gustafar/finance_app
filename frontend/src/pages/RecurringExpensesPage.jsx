@@ -23,7 +23,12 @@ import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
 import CopyPreviousPlanDialog from '../components/CopyPreviousPlanDialog'
 import SelectionToolbar from '../components/SelectionToolbar'
 import RecurringFields from '../components/RecurringFields'
+import SummaryCard from '../components/SummaryCard'
+import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
 import { emptyRecurringForm as emptyForm, isRecurringFormComplete as isFormComplete, recurringFormFromRow, recurringFormToPayload } from '../utils/recurringForm'
+
+const NO_SUBCATEGORY_ID = 'none'
+const NO_SUBCATEGORY_NAME = 'Sem subcategoria'
 
 function toPayload(form, selectedMonth) {
   return { ...recurringFormToPayload(form), plan_year: selectedMonth.year, plan_month: selectedMonth.month + 1 }
@@ -31,6 +36,17 @@ function toPayload(form, selectedMonth) {
 
 function byId(list, id) {
   return list.find((item) => item.id === id)
+}
+
+// Builds a display-only date for the viewed month at the rule's day, clamped to the
+// month's last day — only used so the chart's leaf-level detail list has something to sort/show.
+function monthDateForDay({ year, month }, day) {
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  return new Date(year, month, Math.min(day, lastDay)).toISOString()
+}
+
+function sumAmount(rules) {
+  return rules.reduce((total, rule) => total + rule.amount, 0)
 }
 
 function RecurringExpensesPage() {
@@ -115,6 +131,45 @@ function RecurringExpensesPage() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [listTab, setListTab] = useState('fixed')
   const [isCopyOpen, setIsCopyOpen] = useState(false)
+
+  const plannedAsExpenses = useMemo(
+    () =>
+      recurrences.map((recurring) => {
+        const category = byId(categories, recurring.category_id)
+        const subcategory = byId(subcategories, recurring.subcategory_id)
+        const person = byId(people, recurring.person_id)
+
+        return {
+          id: recurring.id,
+          description: recurring.description,
+          date: monthDateForDay(selectedMonth, recurring.day_of_month),
+          type: recurring.type,
+          amount: recurring.amount,
+          category_id: recurring.category_id,
+          category_name: category?.name ?? '—',
+          category_color: category?.color,
+          subcategory_id: recurring.subcategory_id,
+          subcategory_name: subcategory?.name,
+          person_id: recurring.person_id,
+          person_name: person?.name ?? '—',
+          person_color: person?.color,
+          include_in_expenses: recurring.include_in_expenses,
+        }
+      }),
+    [recurrences, categories, subcategories, people, selectedMonth],
+  )
+
+  const totals = useMemo(() => {
+    const byType = (type) => recurrences.filter((r) => r.type === type)
+    const plannedOnlyExpense = recurrences.filter((r) => r.type === 'expense' && !r.include_in_expenses)
+
+    return {
+      expense: sumAmount(byType('expense')),
+      income: sumAmount(byType('income')),
+      investment: sumAmount(byType('investment')),
+      plannedOnly: sumAmount(plannedOnlyExpense),
+    }
+  }, [recurrences])
 
   const hasActiveFilters = search.trim() !== '' || typeFilter !== 'all' || subcategoryFilter !== 'all'
 
@@ -247,6 +302,53 @@ function RecurringExpensesPage() {
           </button>
         </div>
       </div>
+
+      {!isLoading && !loadError && (
+        <>
+          <section className="summary-grid">
+            <SummaryCard label="Estimativa de gasto" value={formatCurrency(totals.expense)} tone="expense" />
+            <SummaryCard label="Estimativa de recebimento" value={formatCurrency(totals.income)} tone="income" />
+            <SummaryCard label="Estimativa de investimento" value={formatCurrency(totals.investment)} tone="investment" />
+            <SummaryCard
+              label="Só planejamento"
+              value={formatCurrency(totals.plannedOnly)}
+              sub="Ainda não vira despesa real"
+            />
+          </section>
+
+          <section className="panel chart-panel">
+            <div className="panel-header">
+              <h2>Estimativa por categoria</h2>
+            </div>
+            <div className="chart-body">
+              <DrillDownBreakdownChart
+                expenses={plannedAsExpenses}
+                rootLabel="Categorias"
+                caption="Todo o Planejamento Mensal, marcado ou não para lançamento automático."
+                detailEmptyMessage="Nenhum item do planejamento para exibir."
+                dimensions={[
+                  {
+                    idKey: 'category_id',
+                    nameKey: 'category_name',
+                    colorKey: 'category_color',
+                    tableLabel: 'Categoria',
+                    emptyMessage: 'Nenhum item do planejamento para exibir por categoria.',
+                  },
+                  {
+                    idKey: 'subcategory_id',
+                    nameKey: 'subcategory_name',
+                    colorKey: 'category_color',
+                    tableLabel: 'Subcategoria',
+                    emptyMessage: 'Nenhum item nesta categoria.',
+                    noneId: NO_SUBCATEGORY_ID,
+                    noneLabel: NO_SUBCATEGORY_NAME,
+                  },
+                ]}
+              />
+            </div>
+          </section>
+        </>
+      )}
 
       <section className="panel">
         <button

@@ -15,7 +15,6 @@ import BucketManager from './components/BucketManager'
 import BankManager from './components/BankManager'
 import DashboardPage from './pages/DashboardPage'
 import RecurringExpensesPage from './pages/RecurringExpensesPage'
-import MonthlyEstimatePage from './pages/MonthlyEstimatePage'
 import InvestmentsPage from './pages/InvestmentsPage'
 import { fetchExpenses, deleteExpense } from './api/expenses'
 import { fetchSubcategories } from './api/subcategories'
@@ -503,19 +502,6 @@ function App() {
           Planejamento Mensal
         </Link>
 
-        <Link to="/estimativa-mensal" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M2.5 13.5h11M4 13.5V9M7.5 13.5V6M11 13.5V3"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Estimativa mensal
-        </Link>
-
         <Link to="/graficos" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M2 13.5h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -567,7 +553,6 @@ function App() {
           }
         />
         <Route path="/gastos-fixos" element={<RecurringExpensesPage />} />
-        <Route path="/estimativa-mensal" element={<MonthlyEstimatePage />} />
         <Route
           path="/graficos"
           element={
