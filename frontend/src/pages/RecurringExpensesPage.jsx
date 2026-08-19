@@ -184,11 +184,8 @@ function RecurringExpensesPage() {
     [recurrences, listTab],
   )
 
-  const tabCounts = useMemo(
-    () => ({
-      fixed: recurrences.filter((r) => r.include_in_expenses).length,
-      planned: recurrences.filter((r) => !r.include_in_expenses).length,
-    }),
+  const fixedExpenseTotal = useMemo(
+    () => sumAmount(recurrences.filter((r) => r.type === 'expense' && r.include_in_expenses)),
     [recurrences],
   )
 
@@ -462,11 +459,6 @@ function RecurringExpensesPage() {
         <div className="panel-header panel-header--actions">
           <h2>Itens cadastrados</h2>
           <div className="panel-header-actions-group">
-            {!isLoading && !loadError && recurrences.length > 0 && (
-              <p className="recurring-tab-counts">
-                Gasto fixo: {tabCounts.fixed} · Somente planejamento: {tabCounts.planned}
-              </p>
-            )}
             <SearchInput value={search} onChange={setSearch} />
             {!isLoading && !loadError && recurrences.length > 0 && (
               <button type="button" className="btn btn-secondary btn-sm" onClick={toggleSelecting}>
@@ -497,6 +489,12 @@ function RecurringExpensesPage() {
             Somente planejamento
           </button>
         </div>
+
+        {!isLoading && !loadError && recurrences.length > 0 && (
+          <p className="recurring-fixed-total" style={{ margin: '0 24px 12px' }}>
+            Total gasto fixo (saídas): {formatCurrency(fixedExpenseTotal)}
+          </p>
+        )}
 
         {deleteError && <p className="form-error" style={{ padding: '0 24px' }}>{deleteError}</p>}
 
