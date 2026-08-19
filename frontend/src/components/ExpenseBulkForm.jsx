@@ -19,12 +19,12 @@ import SubcategorySelect from './SubcategorySelect'
 // cell was focused when the paste happened.
 const PASTE_COLUMNS = [
   'date',
-  'description',
   'amount',
-  'type',
-  'subcategoryId',
-  'personId',
   'paymentMethodId',
+  'description',
+  'subcategoryId',
+  'type',
+  'personId',
   'bucketId',
   'bankId',
 ]
@@ -312,8 +312,8 @@ function ExpenseBulkForm({ onExpensesCreated }) {
       {isLoadingOptions && <LoadingBar variant="dialog" />}
 
       <p className="bulk-grid-hint">
-        Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Descrição, Valor, Tipo, Subcategoria,
-        Responsável, Método de pagamento, Envelope, Banco.
+        Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Valor, Método de pagamento,
+        Descrição, Subcategoria, Tipo, Responsável, Envelope, Banco.
       </p>
 
       <div className="bulk-grid-scroll">
@@ -323,12 +323,12 @@ function ExpenseBulkForm({ onExpensesCreated }) {
               <tr>
                 <th></th>
                 <th>Data</th>
-                <th>Descrição</th>
                 <th>Valor</th>
-                <th>Tipo</th>
-                <th>Subcategoria</th>
-                <th>Responsável</th>
                 <th>Método de pagamento</th>
+                <th>Descrição</th>
+                <th>Subcategoria</th>
+                <th>Tipo</th>
+                <th>Responsável</th>
                 <th>Envelope</th>
                 <th>Banco</th>
                 <th>Parcelado</th>
@@ -360,21 +360,43 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   <td>
                     <input
                       type="text"
-                      value={row.description}
-                      placeholder="Descrição"
-                      onChange={(e) => updateRow(index, { description: e.target.value })}
-                      onPaste={pasteHandler(index, 'description')}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
                       inputMode="decimal"
                       value={row.amount}
                       placeholder="0,00 (ou =10+5,50)"
                       onChange={(e) => updateRow(index, { amount: e.target.value })}
                       onBlur={(e) => updateRow(index, { amount: resolveAmountInput(e.target.value) })}
                       onPaste={pasteHandler(index, 'amount')}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      value={row.paymentMethodId || defaults.paymentMethodId}
+                      onChange={(e) => updateRow(index, { paymentMethodId: e.target.value })}
+                      onPaste={pasteHandler(index, 'paymentMethodId')}
+                      disabled={isLoadingPaymentMethods}
+                    >
+                      <option value="">Selecione…</option>
+                      {paymentMethods.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.description}
+                      placeholder="Descrição"
+                      onChange={(e) => updateRow(index, { description: e.target.value })}
+                      onPaste={pasteHandler(index, 'description')}
+                    />
+                  </td>
+                  <td onPaste={pasteHandler(index, 'subcategoryId')}>
+                    <SubcategorySelect
+                      categories={categories}
+                      subcategories={subcategories}
+                      value={row.subcategoryId}
+                      onChange={(nextSubcategoryId) => updateRow(index, { subcategoryId: nextSubcategoryId })}
+                      disabled={noSubcategories}
                     />
                   </td>
                   <td>
@@ -391,15 +413,6 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                       ))}
                     </select>
                   </td>
-                  <td onPaste={pasteHandler(index, 'subcategoryId')}>
-                    <SubcategorySelect
-                      categories={categories}
-                      subcategories={subcategories}
-                      value={row.subcategoryId}
-                      onChange={(nextSubcategoryId) => updateRow(index, { subcategoryId: nextSubcategoryId })}
-                      disabled={noSubcategories}
-                    />
-                  </td>
                   <td>
                     <select
                       value={row.personId || defaults.personId}
@@ -410,19 +423,6 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                       <option value="">Selecione…</option>
                       {people.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      value={row.paymentMethodId || defaults.paymentMethodId}
-                      onChange={(e) => updateRow(index, { paymentMethodId: e.target.value })}
-                      onPaste={pasteHandler(index, 'paymentMethodId')}
-                      disabled={isLoadingPaymentMethods}
-                    >
-                      <option value="">Selecione…</option>
-                      {paymentMethods.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
                       ))}
                     </select>
                   </td>
