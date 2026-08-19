@@ -184,9 +184,9 @@ function RecurringExpensesPage() {
     [recurrences, listTab],
   )
 
-  const fixedExpenseTotal = useMemo(
-    () => sumAmount(recurrences.filter((r) => r.type === 'expense' && r.include_in_expenses)),
-    [recurrences],
+  const activeTabExpenseTotal = useMemo(
+    () => sumAmount(byTab.filter((r) => r.type === 'expense')),
+    [byTab],
   )
 
   const filtered = useMemo(() => {
@@ -492,7 +492,7 @@ function RecurringExpensesPage() {
 
         {!isLoading && !loadError && recurrences.length > 0 && (
           <p className="recurring-fixed-total" style={{ margin: '0 24px 12px' }}>
-            Total gasto fixo (saídas): {formatCurrency(fixedExpenseTotal)}
+            {listTab === 'fixed' ? 'Total gasto fixo (saídas)' : 'Total planejado (saídas)'}: {formatCurrency(activeTabExpenseTotal)}
           </p>
         )}
 

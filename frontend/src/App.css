@@ -635,7 +635,7 @@
 .recurring-fixed-total {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-h);
+  color: var(--text-muted);
 }
 
 .panel-header--toggle:hover {
