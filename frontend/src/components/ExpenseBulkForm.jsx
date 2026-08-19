@@ -82,7 +82,14 @@ function isRowBlank(row) {
   return !row.description.trim() && !row.amount && !row.date
 }
 
-function isRowComplete(row, defaults) {
+function rowNeedsInvestmentBox(row, effectiveBucketId, buckets) {
+  if (row.type === 'investment') return true
+  if (row.isInstallment) return false
+  const selectedBucket = buckets.find((b) => String(b.id) === String(effectiveBucketId))
+  return row.type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
+}
+
+function isRowComplete(row, defaults, buckets) {
   const effectivePersonId = row.personId || defaults.personId
   const effectivePaymentMethodId = row.paymentMethodId || defaults.paymentMethodId
   const effectiveBucketId = row.bucketId || defaults.bucketId
@@ -104,20 +111,21 @@ function isRowComplete(row, defaults) {
     return Boolean(row.amount) && Number(row.amount) > 0 && count >= 2 && count <= 60 && Boolean(row.date)
   }
 
-  if (row.type === 'investment' && !effectiveInvestmentBoxId) return false
+  if (rowNeedsInvestmentBox(row, effectiveBucketId, buckets) && !effectiveInvestmentBoxId) return false
 
   return row.amount !== '' && Number(row.amount) >= 0 && Boolean(row.date) && Boolean(row.type)
 }
 
-function buildRowPayload(row, defaults, subcategories) {
+function buildRowPayload(row, defaults, subcategories, buckets) {
   const subcategory = subcategories.find((s) => String(s.id) === String(row.subcategoryId))
+  const effectiveBucketId = row.bucketId || defaults.bucketId
   const shared = {
     description: row.description.trim(),
     category_id: Number(subcategory?.category_id),
     subcategory_id: Number(row.subcategoryId),
     person_id: Number(row.personId || defaults.personId),
     payment_method_id: Number(row.paymentMethodId || defaults.paymentMethodId),
-    bucket_id: Number(row.bucketId || defaults.bucketId),
+    bucket_id: Number(effectiveBucketId),
     bank_id: Number(row.bankId || defaults.bankId),
   }
 
@@ -137,7 +145,9 @@ function buildRowPayload(row, defaults, subcategories) {
     amount: parseFloat(row.amount),
     type: row.type,
     date: dateInputValueToISOString(row.date),
-    ...(row.type === 'investment' ? { investment_box_id: Number(row.investmentBoxId || defaults.investmentBoxId) } : {}),
+    ...(rowNeedsInvestmentBox(row, effectiveBucketId, buckets)
+      ? { investment_box_id: Number(row.investmentBoxId || defaults.investmentBoxId) }
+      : {}),
   }
 }
 
@@ -250,11 +260,11 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
     const nextRows = rows.map((row, index) => {
       if (isRowBlank(row)) return row
-      if (!isRowComplete(row, defaults)) {
+      if (!isRowComplete(row, defaults, buckets)) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
       }
       candidateIndices.push(index)
-      payloadRows.push(buildRowPayload(row, defaults, subcategories))
+      payloadRows.push(buildRowPayload(row, defaults, subcategories, buckets))
       return { ...row, status: 'idle', error: null }
     })
 
@@ -326,7 +336,10 @@ function ExpenseBulkForm({ onExpensesCreated }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, index) => (
+              {rows.map((row, index) => {
+                const effectiveBucketId = row.bucketId || defaults.bucketId
+                const needsInvestmentBox = rowNeedsInvestmentBox(row, effectiveBucketId, buckets)
+                return (
                 <tr key={row.id} className={row.status === 'error' ? 'bulk-grid-row--error' : undefined}>
                   <td title={row.error || undefined}>
                     <input
@@ -461,7 +474,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                     <select
                       value={row.investmentBoxId || defaults.investmentBoxId}
                       onChange={(e) => updateRow(index, { investmentBoxId: e.target.value })}
-                      disabled={row.type !== 'investment' || isLoadingInvestmentBoxes}
+                      disabled={!needsInvestmentBox || isLoadingInvestmentBoxes}
                     >
                       <option value="">Selecione…</option>
                       {investmentBoxes.map((b) => (
@@ -470,7 +483,8 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                     </select>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </fieldset>
