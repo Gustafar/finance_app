@@ -215,6 +215,11 @@
   gap: 12px;
 }
 
+.month-nav--compact {
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
 .month-picker-trigger {
   appearance: none;
   border: 1px solid transparent;
@@ -1420,6 +1425,22 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--text-h);
+}
+
+.date-picker-month-label--btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.date-picker-month-label--btn:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
 }
 
 .date-picker-weekdays {

@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRecurringExpenses } from '../../hooks/useRecurringExpenses'
+import MonthPicker from '../MonthPicker'
 import { formatCurrency } from '../../utils/format'
-import { sameYearMonth } from '../../utils/date'
+import { sameYearMonth, shiftMonth } from '../../utils/date'
 
 const ROWS = [
   { type: 'expense', label: 'Gasto', tone: 'expense', higherIsBetter: false },
@@ -15,11 +16,12 @@ function sumByType(items, type) {
 }
 
 function EstimateComparisonPanel({ expenses, selectedMonth }) {
-  const { recurrences, isLoading } = useRecurringExpenses(selectedMonth.year, selectedMonth.month)
+  const [viewedMonth, setViewedMonth] = useState(selectedMonth)
+  const { recurrences, isLoading } = useRecurringExpenses(viewedMonth.year, viewedMonth.month)
 
   const monthExpenses = useMemo(
-    () => expenses.filter((expense) => sameYearMonth(expense.date, selectedMonth)),
-    [expenses, selectedMonth],
+    () => expenses.filter((expense) => sameYearMonth(expense.date, viewedMonth)),
+    [expenses, viewedMonth],
   )
 
   const rows = useMemo(
@@ -46,6 +48,32 @@ function EstimateComparisonPanel({ expenses, selectedMonth }) {
         <Link to="/estimativa-mensal" className="btn btn-secondary btn-sm">
           Ver estimativa mensal
         </Link>
+      </div>
+
+      <div className="month-nav month-nav--compact">
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => setViewedMonth((m) => shiftMonth(m, -1))}
+          aria-label="Mês anterior"
+          title="Mês anterior"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <MonthPicker value={viewedMonth} onChange={setViewedMonth} />
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => setViewedMonth((m) => shiftMonth(m, 1))}
+          aria-label="Próximo mês"
+          title="Próximo mês"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
 
       <div className="chart-body">

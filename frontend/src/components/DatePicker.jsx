@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { formatMonthLabel, shiftMonth, parseFlexibleDateInput, formatDateInputValue } from '../utils/date'
 
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 function todayParts() {
   const now = new Date()
@@ -37,6 +38,7 @@ function DatePicker({ id, value, onChange, onPaste, required, disabled }) {
   const [text, setText] = useState(() => formatDateInputValue(value))
   const [lastSyncedValue, setLastSyncedValue] = useState(value)
   const [isOpen, setIsOpen] = useState(false)
+  const [pickerMode, setPickerMode] = useState('days')
   const [popoverStyle, setPopoverStyle] = useState(null)
   const [view, setView] = useState(() => {
     if (/^\d{4}-\d{2}-\d{2}$/.test(value || '')) {
@@ -114,6 +116,7 @@ function DatePicker({ id, value, onChange, onPaste, required, disabled }) {
     }
 
     setPopoverStyle(null)
+    setPickerMode('days')
     setIsOpen(true)
   }
 
@@ -135,6 +138,11 @@ function DatePicker({ id, value, onChange, onPaste, required, disabled }) {
   const pickDay = (year, month, day) => {
     commit(toISODate(year, month, day))
     setIsOpen(false)
+  }
+
+  const pickMonth = (month) => {
+    setView((v) => ({ ...v, month }))
+    setPickerMode('days')
   }
 
   const selectToday = () => {
@@ -188,73 +196,125 @@ function DatePicker({ id, value, onChange, onPaste, required, disabled }) {
       {isOpen &&
         createPortal(
           <div className="date-picker-popover" style={popoverStyle} ref={popoverRef}>
-            <div className="date-picker-header">
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setView((v) => shiftMonth(v, -1))}
-                aria-label="Mês anterior"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <span className="date-picker-month-label">{formatMonthLabel(view)}</span>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setView((v) => shiftMonth(v, 1))}
-                aria-label="Próximo mês"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="date-picker-weekdays">
-              {WEEKDAY_LABELS.map((label) => (
-                <span key={label}>{label}</span>
-              ))}
-            </div>
-
-            <div className="date-picker-grid">
-              {cells.map(({ day, monthOffset }, index) => {
-                const cellMonth = view.month + monthOffset
-                const cellDate = new Date(view.year, cellMonth, day)
-                const isSelected =
-                  selected && selected[0] === cellDate.getFullYear() && selected[1] === cellDate.getMonth() + 1 && selected[2] === day
-                const isToday =
-                  today.year === cellDate.getFullYear() && today.month === cellDate.getMonth() && today.day === day
-
-                return (
+            {pickerMode === 'days' ? (
+              <>
+                <div className="date-picker-header">
                   <button
                     type="button"
-                    key={index}
-                    className={[
-                      'date-picker-day',
-                      monthOffset !== 0 ? 'date-picker-day--muted' : '',
-                      isSelected ? 'date-picker-day--selected' : '',
-                      isToday && !isSelected ? 'date-picker-day--today' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    onClick={() => pickDay(cellDate.getFullYear(), cellDate.getMonth(), day)}
+                    className="icon-btn"
+                    onClick={() => setView((v) => shiftMonth(v, -1))}
+                    aria-label="Mês anterior"
                   >
-                    {day}
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
-                )
-              })}
-            </div>
+                  <button
+                    type="button"
+                    className="date-picker-month-label date-picker-month-label--btn"
+                    onClick={() => setPickerMode('months')}
+                  >
+                    {formatMonthLabel(view)}
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => setView((v) => shiftMonth(v, 1))}
+                    aria-label="Próximo mês"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
 
-            <div className="date-picker-footer">
-              <button type="button" className="date-picker-footer-btn" onClick={selectToday}>
-                Hoje
-              </button>
-              <button type="button" className="date-picker-footer-btn" onClick={clear}>
-                Limpar
-              </button>
-            </div>
+                <div className="date-picker-weekdays">
+                  {WEEKDAY_LABELS.map((label) => (
+                    <span key={label}>{label}</span>
+                  ))}
+                </div>
+
+                <div className="date-picker-grid">
+                  {cells.map(({ day, monthOffset }, index) => {
+                    const cellMonth = view.month + monthOffset
+                    const cellDate = new Date(view.year, cellMonth, day)
+                    const isSelected =
+                      selected && selected[0] === cellDate.getFullYear() && selected[1] === cellDate.getMonth() + 1 && selected[2] === day
+                    const isToday =
+                      today.year === cellDate.getFullYear() && today.month === cellDate.getMonth() && today.day === day
+
+                    return (
+                      <button
+                        type="button"
+                        key={index}
+                        className={[
+                          'date-picker-day',
+                          monthOffset !== 0 ? 'date-picker-day--muted' : '',
+                          isSelected ? 'date-picker-day--selected' : '',
+                          isToday && !isSelected ? 'date-picker-day--today' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        onClick={() => pickDay(cellDate.getFullYear(), cellDate.getMonth(), day)}
+                      >
+                        {day}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="date-picker-footer">
+                  <button type="button" className="date-picker-footer-btn" onClick={selectToday}>
+                    Hoje
+                  </button>
+                  <button type="button" className="date-picker-footer-btn" onClick={clear}>
+                    Limpar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="date-picker-header">
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => setView((v) => ({ ...v, year: v.year - 1 }))}
+                    aria-label="Ano anterior"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <span className="date-picker-month-label">{view.year}</span>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => setView((v) => ({ ...v, year: v.year + 1 }))}
+                    aria-label="Próximo ano"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="month-picker-grid">
+                  {MONTH_LABELS.map((label, month) => {
+                    const isSelected = view.month === month
+                    return (
+                      <button
+                        type="button"
+                        key={label}
+                        className={`month-picker-month${isSelected ? ' month-picker-month--selected' : ''}`}
+                        onClick={() => pickMonth(month)}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
           </div>,
           document.body
         )}
