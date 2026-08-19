@@ -217,7 +217,8 @@
 
 .month-nav--compact {
   justify-content: flex-start;
-  margin-top: 4px;
+  position: relative;
+  top: -200px;
 }
 
 .month-picker-trigger {

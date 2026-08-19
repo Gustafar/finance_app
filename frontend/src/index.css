@@ -124,7 +124,13 @@ button {
   font: inherit;
 }
 
-input {
+input,
+select {
   font: inherit;
+  color: var(--text-h);
+}
+
+option {
+  background: var(--surface);
   color: var(--text-h);
 }
