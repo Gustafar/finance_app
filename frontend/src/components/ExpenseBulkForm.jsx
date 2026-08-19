@@ -248,6 +248,8 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     applyPaste(rowIndex, columnKey, e.clipboardData.getData('text'))
   }
 
+  const filledRowCount = rows.filter((row) => !isRowBlank(row)).length
+
   const hasSelected = rows.some((row) => row.selected)
 
   const handleSubmit = () => {
@@ -312,6 +314,9 @@ function ExpenseBulkForm({ onExpensesCreated }) {
       <p className="bulk-grid-hint">
         Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Valor, Método de pagamento,
         Descrição, Subcategoria, Tipo, Responsável, Envelope, Banco.
+      </p>
+      <p className="bulk-grid-row-count">
+        {filledRowCount} {filledRowCount === 1 ? 'linha preenchida' : 'linhas preenchidas'} de {rows.length}
       </p>
 
       <div className="bulk-grid-scroll">
