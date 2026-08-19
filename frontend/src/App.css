@@ -1322,6 +1322,10 @@
   transition: border-color 0.15s ease;
 }
 
+.bulk-grid-description-input {
+  min-width: 200px;
+}
+
 .bulk-grid input[type='checkbox'] {
   width: 16px;
   height: 16px;

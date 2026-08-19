@@ -382,6 +382,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   <td>
                     <input
                       type="text"
+                      className="bulk-grid-description-input"
                       value={row.description}
                       placeholder="Descrição"
                       onChange={(e) => updateRow(index, { description: e.target.value })}
