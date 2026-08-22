@@ -257,9 +257,15 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     })
   }
 
+  // Free-text inputs where a paste should behave like a normal paste (insert at the cursor,
+  // keep surrounding text) when it's just plain single-cell text rather than spreadsheet data.
+  const FREE_TEXT_COLUMNS = new Set(['description'])
+
   const pasteHandler = (rowIndex, columnKey) => (e) => {
+    const text = e.clipboardData.getData('text')
+    if (FREE_TEXT_COLUMNS.has(columnKey) && !/[\t\n]/.test(text)) return
     e.preventDefault()
-    applyPaste(rowIndex, columnKey, e.clipboardData.getData('text'))
+    applyPaste(rowIndex, columnKey, text)
   }
 
   const filledRowCount = rows.filter((row) => !isRowBlank(row)).length

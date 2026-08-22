@@ -7,15 +7,16 @@ import { clampDayOfMonth } from '../utils/date'
 import SubcategorySelect from './SubcategorySelect'
 
 // Fixed left-to-right order pasted spreadsheet columns are mapped to, starting from whichever
-// cell was focused when the paste happened. Matches RecurringFields' own field order.
+// cell was focused when the paste happened. Matches the column order used across all bulk
+// expense grids (see ExpenseBulkForm's PASTE_COLUMNS).
 const PASTE_COLUMNS = [
-  'type',
-  'description',
-  'amount',
   'dayOfMonth',
-  'subcategoryId',
-  'personId',
+  'amount',
   'paymentMethodId',
+  'description',
+  'subcategoryId',
+  'type',
+  'personId',
   'bucketId',
   'bankId',
 ]
@@ -202,9 +203,15 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
     })
   }
 
+  // Free-text inputs where a paste should behave like a normal paste (insert at the cursor,
+  // keep surrounding text) when it's just plain single-cell text rather than spreadsheet data.
+  const FREE_TEXT_COLUMNS = new Set(['description'])
+
   const pasteHandler = (rowIndex, columnKey) => (e) => {
+    const text = e.clipboardData.getData('text')
+    if (FREE_TEXT_COLUMNS.has(columnKey) && !/[\t\n]/.test(text)) return
     e.preventDefault()
-    applyPaste(rowIndex, columnKey, e.clipboardData.getData('text'))
+    applyPaste(rowIndex, columnKey, text)
   }
 
   const hasSelected = rows.some((row) => row.selected)
@@ -267,8 +274,8 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
   return (
     <div className="bulk-grid-form">
       <p className="bulk-grid-hint">
-        Cole dados do Excel a partir da coluna Tipo — ordem das colunas: Tipo, Descrição, Valor, Dia do mês,
-        Subcategoria, Responsável, Método de pagamento, Envelope, Banco.
+        Cole dados do Excel a partir da coluna Dia do mês — ordem das colunas: Dia do mês, Valor, Método de
+        pagamento, Descrição, Subcategoria, Tipo, Responsável, Envelope, Banco.
       </p>
 
       <div className="bulk-grid-scroll">
@@ -277,13 +284,13 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
             <thead>
               <tr>
                 <th></th>
-                <th>Tipo</th>
-                <th>Descrição</th>
-                <th>Valor</th>
                 <th>Dia do mês</th>
-                <th>Subcategoria</th>
-                <th>Responsável</th>
+                <th>Valor</th>
                 <th>Método de pagamento</th>
+                <th>Descrição</th>
+                <th>Subcategoria</th>
+                <th>Tipo</th>
+                <th>Responsável</th>
                 <th>Envelope</th>
                 <th>Banco</th>
                 <th>Lança</th>
@@ -301,23 +308,13 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                     />
                   </td>
                   <td>
-                    <select
-                      value={row.type}
-                      onChange={(e) => updateRow(index, { type: e.target.value })}
-                      onPaste={pasteHandler(index, 'type')}
-                    >
-                      {TRANSACTION_TYPES.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
                     <input
-                      type="text"
-                      value={row.description}
-                      placeholder="Descrição"
-                      onChange={(e) => updateRow(index, { description: e.target.value })}
-                      onPaste={pasteHandler(index, 'description')}
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={row.dayOfMonth}
+                      onChange={(e) => updateRow(index, { dayOfMonth: clampDayOfMonth(e.target.value) })}
+                      onPaste={pasteHandler(index, 'dayOfMonth')}
                     />
                   </td>
                   <td>
@@ -332,13 +329,24 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                     />
                   </td>
                   <td>
+                    <select
+                      value={row.paymentMethodId || defaults.paymentMethodId}
+                      onChange={(e) => updateRow(index, { paymentMethodId: e.target.value })}
+                      onPaste={pasteHandler(index, 'paymentMethodId')}
+                    >
+                      <option value="">Selecione…</option>
+                      {paymentMethods.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
                     <input
-                      type="number"
-                      min="1"
-                      max="31"
-                      value={row.dayOfMonth}
-                      onChange={(e) => updateRow(index, { dayOfMonth: clampDayOfMonth(e.target.value) })}
-                      onPaste={pasteHandler(index, 'dayOfMonth')}
+                      type="text"
+                      value={row.description}
+                      placeholder="Descrição"
+                      onChange={(e) => updateRow(index, { description: e.target.value })}
+                      onPaste={pasteHandler(index, 'description')}
                     />
                   </td>
                   <td onPaste={pasteHandler(index, 'subcategoryId')}>
@@ -351,6 +359,17 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                   </td>
                   <td>
                     <select
+                      value={row.type}
+                      onChange={(e) => updateRow(index, { type: e.target.value })}
+                      onPaste={pasteHandler(index, 'type')}
+                    >
+                      {TRANSACTION_TYPES.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
                       value={row.personId || defaults.personId}
                       onChange={(e) => updateRow(index, { personId: e.target.value })}
                       onPaste={pasteHandler(index, 'personId')}
@@ -358,18 +377,6 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                       <option value="">Selecione…</option>
                       {people.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      value={row.paymentMethodId || defaults.paymentMethodId}
-                      onChange={(e) => updateRow(index, { paymentMethodId: e.target.value })}
-                      onPaste={pasteHandler(index, 'paymentMethodId')}
-                    >
-                      <option value="">Selecione…</option>
-                      {paymentMethods.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
                       ))}
                     </select>
                   </td>

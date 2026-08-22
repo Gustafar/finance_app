@@ -638,7 +638,7 @@ function RecurringExpensesPage() {
         )}
       </section>
 
-      <Modal isOpen={isFiltersOpen} onClose={() => setIsFiltersOpen(false)}>
+      <Modal isOpen={isFiltersOpen} onClose={() => setIsFiltersOpen(false)} contentClassName="modal-content--align-top">
         <h2 className="modal-title">Filtros</h2>
 
         <div className="field-row">

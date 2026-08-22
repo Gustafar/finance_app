@@ -1761,6 +1761,10 @@
   overflow-y: auto;
 }
 
+.modal-content--align-top {
+  align-self: flex-start;
+}
+
 .modal-content--scrollable-body {
   display: flex;
   flex-direction: column;

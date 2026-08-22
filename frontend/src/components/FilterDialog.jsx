@@ -5,7 +5,7 @@ import { EMPTY_FILTERS, hasActiveFilters } from '../utils/filters'
 
 function FilterDialog({ isOpen, onClose, filters, onChange, subcategories, people, paymentMethods, buckets, banks, isLoading }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} contentClassName="modal-content--align-top">
       {isLoading && <LoadingBar variant="dialog" />}
 
       <h2 className="modal-title">Filtros</h2>
