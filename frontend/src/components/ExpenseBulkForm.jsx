@@ -215,6 +215,20 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     })
   }
 
+  const duplicateSelected = () => {
+    setRows((current) => {
+      const selectedRows = current.filter((row) => row.selected)
+      if (selectedRows.length === 0) return current
+
+      const lastSelectedIndex = current.reduce((last, row, index) => (row.selected ? index : last), -1)
+      const duplicates = selectedRows.map((row) => ({ ...row, id: nextRowId++, selected: false, status: 'idle', error: null }))
+
+      const next = [...current]
+      next.splice(lastSelectedIndex + 1, 0, ...duplicates)
+      return next
+    })
+  }
+
   const applyPaste = (anchorRowIndex, anchorColumnKey, text) => {
     const anchorColIndex = PASTE_COLUMNS.indexOf(anchorColumnKey)
     if (anchorColIndex === -1) return
@@ -509,6 +523,9 @@ function ExpenseBulkForm({ onExpensesCreated }) {
       <div className="bulk-grid-actions">
         <button type="button" className="btn btn-secondary" onClick={addRow} disabled={isSubmitting}>
           + Adicionar linha
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={duplicateSelected} disabled={isSubmitting || !hasSelected}>
+          Duplicar selecionadas
         </button>
         <button type="button" className="btn btn-secondary" onClick={removeSelected} disabled={isSubmitting || !hasSelected}>
           Remover selecionadas
