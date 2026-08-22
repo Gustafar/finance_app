@@ -10,7 +10,7 @@ import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date'
 import { parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
-import { isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 import DatePicker from './DatePicker'
 import LoadingBar from './LoadingBar'
 import SubcategorySelect from './SubcategorySelect'
@@ -39,6 +39,7 @@ function makeEmptyRow() {
     date: '',
     description: '',
     amount: '',
+    amountFormula: null,
     type: 'expense',
     subcategoryId: '',
     personId: '',
@@ -144,6 +145,7 @@ function buildRowPayload(row, defaults, subcategories, buckets) {
     is_installment: false,
     ...shared,
     amount: parseFloat(row.amount),
+    amount_formula: row.amountFormula || null,
     type: row.type,
     date: dateInputValueToISOString(row.date),
     ...(rowNeedsInvestmentBox(row, effectiveBucketId, buckets)
@@ -279,7 +281,13 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     const candidateIndices = []
     const payloadRows = []
 
-    const nextRows = rows.map((row) => ({ ...row, amount: resolveAmountInput(row.amount) })).map((row, index) => {
+    const nextRows = rows
+      .map((row) => ({
+        ...row,
+        amountFormula: isAmountFormula(row.amount) ? row.amount : row.amountFormula,
+        amount: resolveAmountInput(row.amount),
+      }))
+      .map((row, index) => {
       if (isRowBlank(row)) return row
       if (!isRowComplete(row, defaults, buckets)) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
@@ -387,7 +395,17 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                       value={row.amount}
                       placeholder="0,00 (ou =10+5,50)"
                       onChange={(e) => updateRow(index, { amount: e.target.value })}
-                      onBlur={(e) => updateRow(index, { amount: resolveAmountInput(e.target.value) })}
+                      onFocus={() => {
+                        if (row.amountFormula) updateRow(index, { amount: row.amountFormula })
+                      }}
+                      onBlur={(e) => {
+                        const text = e.target.value
+                        if (isAmountFormula(text)) {
+                          updateRow(index, { amountFormula: text, amount: resolveAmountInput(text) })
+                        } else {
+                          updateRow(index, { amountFormula: null, amount: resolveAmountInput(text) })
+                        }
+                      }}
                       onPaste={pasteHandler(index, 'amount')}
                     />
                   </td>

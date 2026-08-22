@@ -12,7 +12,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
-import { isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 
 function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
@@ -28,6 +28,7 @@ function ExpenseForm({ onExpenseCreated }) {
   const [description, setDescription] = useState('')
   const [comment, setComment] = useState('')
   const [amount, setAmount] = useState('')
+  const [amountFormula, setAmountFormula] = useState(null)
   const [totalAmount, setTotalAmount] = useState('')
   const [installmentCount, setInstallmentCount] = useState('2')
   const [date, setDate] = useState(todayDateInputValue)
@@ -123,7 +124,9 @@ function ExpenseForm({ onExpenseCreated }) {
 
     if (noSubcategories || isFormInvalid) return
 
+    const effectiveAmountFormula = isAmountFormula(amount) ? amount : amountFormula
     setAmount(resolvedAmount)
+    setAmountFormula(effectiveAmountFormula)
     setTotalAmount(resolvedTotalAmount)
     setError(null)
     setIsSubmitting(true)
@@ -148,6 +151,7 @@ function ExpenseForm({ onExpenseCreated }) {
       : createExpense({
           ...shared,
           amount: parseFloat(resolvedAmount),
+          amount_formula: effectiveAmountFormula,
           type,
           date: dateInputValueToISOString(date),
           ...(needsInvestmentBox ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
@@ -160,6 +164,7 @@ function ExpenseForm({ onExpenseCreated }) {
         setDescription('')
         setComment('')
         setAmount('')
+        setAmountFormula(null)
         setTotalAmount('')
         setInstallmentCount('2')
         setDate(todayDateInputValue())
@@ -295,7 +300,19 @@ function ExpenseForm({ onExpenseCreated }) {
               placeholder="0,00 (ou =10+5,50)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              onBlur={(e) => setAmount(resolveAmountInput(e.target.value))}
+              onFocus={() => {
+                if (amountFormula) setAmount(amountFormula)
+              }}
+              onBlur={(e) => {
+                const text = e.target.value
+                if (isAmountFormula(text)) {
+                  setAmountFormula(text)
+                  setAmount(resolveAmountInput(text))
+                } else {
+                  setAmountFormula(null)
+                  setAmount(resolveAmountInput(text))
+                }
+              }}
               required
             />
           </div>

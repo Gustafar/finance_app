@@ -930,6 +930,24 @@
   font-variant-numeric: tabular-nums;
 }
 
+.expense-amount-formula-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--info);
+  color: var(--bg);
+  font-size: 10px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
 .expense-amount--income {
   color: var(--success);
 }

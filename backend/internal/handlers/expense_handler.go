@@ -122,6 +122,7 @@ type bulkExpenseRow struct {
 	Date            time.Time `json:"date"`
 	InvestmentBoxID *int      `json:"investment_box_id,omitempty"`
 	Comment         *string   `json:"comment,omitempty"`
+	AmountFormula   *string   `json:"amount_formula,omitempty"`
 
 	TotalAmount      float64   `json:"total_amount"`
 	InstallmentCount int       `json:"installment_count"`
@@ -192,6 +193,7 @@ func (h *ExpenseHandler) CreateBulk(w http.ResponseWriter, r *http.Request) {
 				BankID:          row.BankID,
 				InvestmentBoxID: row.InvestmentBoxID,
 				Comment:         row.Comment,
+				AmountFormula:   row.AmountFormula,
 			},
 		}
 	}

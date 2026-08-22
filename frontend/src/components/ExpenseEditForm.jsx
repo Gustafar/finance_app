@@ -11,7 +11,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
-import { isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 import ConfirmDialog from './ConfirmDialog'
 import LoadingBar from './LoadingBar'
 
@@ -28,6 +28,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [description, setDescription] = useState(expense.description)
   const [comment, setComment] = useState(expense.comment || '')
   const [amount, setAmount] = useState(String(expense.amount))
+  const [amountFormula, setAmountFormula] = useState(expense.amount_formula || null)
   const [date, setDate] = useState(isoStringToDateInputValue(expense.date))
   const [categoryId, setCategoryId] = useState(String(expense.category_id))
   const [subcategoryId, setSubcategoryId] = useState(expense.subcategory_id ? String(expense.subcategory_id) : '')
@@ -85,6 +86,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
     if (noSubcategories || isFormInvalid) return
 
+    if (isAmountFormula(amount)) setAmountFormula(amount)
     setAmount(resolvedAmount)
     setShowConfirm(true)
   }
@@ -105,6 +107,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       bucket_id: Number(bucketId),
       bank_id: Number(bankId),
       date: dateInputValueToISOString(date),
+      amount_formula: amountFormula,
       ...(needsInvestmentBox ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
       ...(comment.trim() ? { comment: comment.trim() } : {}),
     }
@@ -163,7 +166,19 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
             placeholder="0,00 (ou =10+5,50)"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            onBlur={(e) => setAmount(resolveAmountInput(e.target.value))}
+            onFocus={() => {
+              if (amountFormula) setAmount(amountFormula)
+            }}
+            onBlur={(e) => {
+              const text = e.target.value
+              if (isAmountFormula(text)) {
+                setAmountFormula(text)
+                setAmount(resolveAmountInput(text))
+              } else {
+                setAmountFormula(null)
+                setAmount(resolveAmountInput(text))
+              }
+            }}
             required
           />
         </div>

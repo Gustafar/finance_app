@@ -109,6 +109,19 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
                 <span className={`expense-amount ${amountConfig.className}`}>
                   {amountConfig.prefix}
                   {formatCurrency(expense.amount)}
+                  {expense.amount_formula && (
+                    <span
+                      className="expense-amount-formula-badge"
+                      title={expense.amount_formula}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEdit(expense)
+                      }}
+                      aria-label={`Valor calculado por fórmula: ${expense.amount_formula}`}
+                    >
+                      ƒ
+                    </span>
+                  )}
                 </span>
                 {expense.installment_count && (
                   <span className="expense-amount-total">
