@@ -1,5 +1,6 @@
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { clampDayOfMonth } from '../utils/date'
+import { normalizeAmountSeparators } from '../utils/amountFormula'
 import SubcategorySelect from './SubcategorySelect'
 
 function RecurringFields({ idPrefix, form, onChange, categories, subcategories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
@@ -41,12 +42,12 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
           <label htmlFor={`${idPrefix}-amount`}>Valor</label>
           <input
             id={`${idPrefix}-amount`}
-            type="number"
-            step="0.01"
-            min="0"
+            type="text"
+            inputMode="decimal"
             placeholder="0,00"
             value={form.amount}
             onChange={(e) => onChange({ ...form, amount: e.target.value })}
+            onBlur={(e) => onChange({ ...form, amount: normalizeAmountSeparators(e.target.value) })}
           />
         </div>
         <div className={errCls(!form.day_of_month)}>

@@ -6,6 +6,22 @@ export function isAmountFormula(text) {
   return typeof text === 'string' && text.trim().startsWith('=')
 }
 
+// Normalizes pt-BR style decimal input (comma as decimal separator, e.g. "10,50" from an
+// iPhone numeric keypad, or "1.234,56" with a thousands separator) to a dot-decimal string
+// that Number()/parseFloat() can parse.
+export function normalizeAmountSeparators(text) {
+  if (typeof text !== 'string') return text
+
+  const trimmed = text.trim()
+  if (trimmed.includes(',') && trimmed.includes('.')) {
+    return trimmed.replace(/\./g, '').replace(',', '.')
+  }
+  if (trimmed.includes(',')) {
+    return trimmed.replace(',', '.')
+  }
+  return trimmed
+}
+
 // Returns the computed number, or null if the formula is empty/invalid/unsafe.
 export function evaluateAmountFormula(text) {
   const expression = text.trim().slice(1).trim().replace(/,/g, '.')
@@ -22,7 +38,7 @@ export function evaluateAmountFormula(text) {
 // Resolves a raw amount field value to its final text: evaluates "=..." formulas, rounded to
 // cents, and leaves plain numeric input untouched.
 export function resolveAmountInput(text) {
-  if (!isAmountFormula(text)) return text
+  if (!isAmountFormula(text)) return normalizeAmountSeparators(text)
 
   const result = evaluateAmountFormula(text)
   if (result === null) return text
@@ -36,7 +52,7 @@ export function isAmountInvalid(text, { allowZero = true } = {}) {
   if (!text) return true
   if (isAmountFormula(text)) return true
 
-  const value = Number(text)
+  const value = Number(normalizeAmountSeparators(text))
   if (!Number.isFinite(value)) return true
 
   return allowZero ? value < 0 : value <= 0

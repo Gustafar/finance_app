@@ -1,3 +1,5 @@
+import { normalizeAmountSeparators } from './amountFormula'
+
 export const emptyRecurringForm = {
   description: '',
   amount: '',
@@ -15,7 +17,7 @@ export const emptyRecurringForm = {
 export function recurringFormToPayload(form) {
   return {
     description: form.description.trim(),
-    amount: parseFloat(form.amount),
+    amount: parseFloat(normalizeAmountSeparators(form.amount)),
     type: form.type,
     day_of_month: Number(form.day_of_month),
     category_id: Number(form.category_id),

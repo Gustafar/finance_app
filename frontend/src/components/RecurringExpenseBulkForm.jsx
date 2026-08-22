@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { createRecurringExpensesBulk } from '../api/recurringExpenses'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
+import { normalizeAmountSeparators } from '../utils/amountFormula'
 import { clampDayOfMonth } from '../utils/date'
 import SubcategorySelect from './SubcategorySelect'
 
@@ -90,7 +91,7 @@ function isRowComplete(row, defaults) {
       effectiveBucketId &&
       effectiveBankId &&
       row.amount &&
-      Number(row.amount) > 0 &&
+      Number(normalizeAmountSeparators(row.amount)) > 0 &&
       row.dayOfMonth &&
       day >= 1 &&
       day <= 31 &&
@@ -102,7 +103,7 @@ function buildRowPayload(row, defaults, subcategories, planYear, planMonth) {
   const subcategory = subcategories.find((s) => String(s.id) === String(row.subcategoryId))
   return {
     description: row.description.trim(),
-    amount: parseFloat(row.amount),
+    amount: parseFloat(normalizeAmountSeparators(row.amount)),
     type: row.type,
     day_of_month: Number(row.dayOfMonth),
     category_id: Number(subcategory?.category_id),
@@ -307,12 +308,12 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                   </td>
                   <td>
                     <input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       value={row.amount}
                       placeholder="0,00"
                       onChange={(e) => updateRow(index, { amount: e.target.value })}
+                      onBlur={(e) => updateRow(index, { amount: normalizeAmountSeparators(e.target.value) })}
                       onPaste={pasteHandler(index, 'amount')}
                     />
                   </td>
