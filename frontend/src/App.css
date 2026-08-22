@@ -2226,11 +2226,45 @@
 }
 
 .chart-table-toggle summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12.5px;
   color: var(--primary);
   cursor: pointer;
   font-weight: 600;
   padding: 4px 0;
+}
+
+.chart-table-settings-btn {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.table-settings-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 16px 0 8px;
+}
+
+.table-settings-label:first-of-type {
+  margin-top: 0;
+}
+
+.table-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chart-table-stat-row td {
+  font-weight: 700;
+  color: var(--text-h);
+  border-top: 2px solid var(--border);
 }
 
 .chart-table {

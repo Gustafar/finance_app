@@ -67,13 +67,13 @@ function ChartsPage({
       {!isLoading && !loadError && (
         <>
           <section className="panel chart-panel">
-            <div className="panel-header">
-              <h2>Evolução mensal</h2>
-              <p className="chart-caption">{trendCaption}</p>
-            </div>
-            <div className="chart-body">
-              <MonthlyTrendChart expenses={trendExpenses} dateFrom={trendDateFrom} dateTo={trendDateTo} />
-            </div>
+            <MonthlyTrendChart
+              title="Evolução mensal"
+              caption={trendCaption}
+              expenses={trendExpenses}
+              dateFrom={trendDateFrom}
+              dateTo={trendDateTo}
+            />
           </section>
 
           <EstimateComparisonPanel expenses={expenses} selectedMonth={selectedMonth} />
