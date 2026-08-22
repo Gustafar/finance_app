@@ -680,8 +680,16 @@ function RecurringExpensesPage() {
       </Modal>
 
       <Modal isOpen={editingId !== null} onClose={cancelEditing}>
-        <h2 className="modal-title">Editar gasto fixo</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form
+          className="expense-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            setEditAttemptedSubmit(true)
+            if (!isFormComplete(editForm)) return
+            setPendingUpdateId(editingId)
+          }}
+        >
+          <h2>Editar gasto fixo</h2>
           <RecurringFields
             idPrefix="edit"
             form={editForm}
@@ -697,24 +705,11 @@ function RecurringExpensesPage() {
           {editAttemptedSubmit && !isFormComplete(editForm) && (
             <p className="form-error">Preencha os campos destacados antes de continuar.</p>
           )}
-          <div className="entity-actions">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                setEditAttemptedSubmit(true)
-                if (!isFormComplete(editForm)) return
-                setPendingUpdateId(editingId)
-              }}
-            >
-              Salvar
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={cancelEditing}>
-              Cancelar
-            </button>
-          </div>
           {rowError && <p className="form-error">{rowError}</p>}
-        </div>
+          <button type="submit" className="btn btn-primary">
+            Salvar
+          </button>
+        </form>
       </Modal>
 
       <ConfirmDialog
