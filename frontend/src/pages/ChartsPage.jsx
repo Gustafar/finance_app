@@ -27,6 +27,7 @@ function ChartsPage({
   loadError,
   periodFilterActive,
   selectedMonth,
+  filters,
   trendDateFrom,
   trendDateTo,
   onOpenFilters,
@@ -37,6 +38,10 @@ function ChartsPage({
 }) {
   const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
   const caption = `Filtros ativos · ${scopeLabel}`
+  // Identifies the current scope (month + all active filters) so the drill-down charts only
+  // reset their position when the scope actually changes — not on every reload triggered by
+  // saving an edit inside a drilled-in card.
+  const resetKey = `${selectedMonth}|${JSON.stringify(filters)}`
   const trendCaption = periodFilterActive
     ? 'Despesas, receitas e investimentos no período selecionado.'
     : 'Despesas, receitas e investimentos nos últimos 6 meses.'
@@ -78,6 +83,7 @@ function ChartsPage({
               <DrillDownBreakdownChart
                 title="Gastos por categoria"
                 expenses={filteredExpenses}
+                resetKey={resetKey}
                 rootLabel="Categorias"
                 caption={caption}
                 detailEmptyMessage="Nenhuma despesa para exibir."
@@ -99,6 +105,7 @@ function ChartsPage({
               <DrillDownBreakdownChart
                 title="Gastos por responsável"
                 expenses={filteredExpenses}
+                resetKey={resetKey}
                 rootLabel="Responsáveis"
                 caption={caption}
                 detailEmptyMessage="Nenhuma despesa para exibir."

@@ -2340,6 +2340,15 @@
   text-overflow: ellipsis;
 }
 
+.chart-detail-comment {
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chart-detail-date {
   font-size: 11.5px;
   color: var(--text-muted);

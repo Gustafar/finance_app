@@ -567,6 +567,7 @@ function App() {
                 loadError={loadError}
                 periodFilterActive={hasPeriodFilter}
                 selectedMonth={selectedMonth}
+                filters={filters}
                 trendDateFrom={filters.dateFrom}
                 trendDateTo={filters.dateTo}
                 onOpenFilters={() => setIsFiltersOpen(true)}

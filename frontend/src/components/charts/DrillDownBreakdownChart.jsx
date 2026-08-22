@@ -17,6 +17,9 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
         <li key={expense.id} className="chart-detail-row">
           <div className="chart-detail-main">
             <span className="chart-detail-description" title={expense.description}>{expense.description}</span>
+            {expense.comment && (
+              <span className="chart-detail-comment" title={expense.comment}>{expense.comment}</span>
+            )}
             <span className="chart-detail-date">{formatDate(expense.date)} · {expense.person_name}</span>
           </div>
           <span className="chart-detail-amount">{formatCurrency(expense.amount)}</span>
@@ -50,15 +53,17 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
 // — noneId/noneLabel group expenses missing that field (e.g. legacy expenses without a
 // subcategory) under a synthetic bucket instead of dropping them. Clicking a bar drills one
 // level deeper; the last level's clicks reveal the individual expenses behind it.
-function DrillDownBreakdownChart({ title, expenses, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense }) {
+function DrillDownBreakdownChart({ title, expenses, resetKey, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense }) {
   const [drillPath, setDrillPath] = useState([])
   const [sortBy, setSortBy] = useState('date')
 
-  // Reset the drill whenever the underlying scope changes (month, filters, period). Adjusting
-  // state during render avoids an extra commit for this reset.
-  const [scopeForDrill, setScopeForDrill] = useState(expenses)
-  if (scopeForDrill !== expenses) {
-    setScopeForDrill(expenses)
+  // Reset the drill whenever the underlying scope changes (month, filters, period) — but not
+  // when `expenses` merely gets a new array reference from an in-place edit (e.g. saving an
+  // expense reloads the list). `resetKey` is caller-supplied and only changes with real scope
+  // changes, so drilling in and editing an item there doesn't bounce back to the top level.
+  const [scopeForDrill, setScopeForDrill] = useState(resetKey)
+  if (scopeForDrill !== resetKey) {
+    setScopeForDrill(resetKey)
     setDrillPath([])
   }
 
