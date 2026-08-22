@@ -527,57 +527,7 @@ function RecurringExpensesPage() {
         {!isLoading && !loadError && filtered.length > 0 && (
           <ul className="expense-list recurring-list">
             {filtered.map((recurring) => {
-              const isEditing = editingId === recurring.id
               const amountConfig = TRANSACTION_TYPE_AMOUNT_STYLE[recurring.type] ?? TRANSACTION_TYPE_AMOUNT_STYLE.expense
-
-              if (isEditing) {
-                return (
-                  <li className="entity-row entity-row--inline-edit" key={recurring.id}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      <RecurringFields
-                        idPrefix={`edit-${recurring.id}`}
-                        form={editForm}
-                        onChange={setEditForm}
-                        categories={categories}
-                        subcategories={subcategories}
-                        people={people}
-                        paymentMethods={paymentMethods}
-                        buckets={buckets}
-                        banks={banks}
-                        attemptedSubmit={editAttemptedSubmit}
-                      />
-                      {editAttemptedSubmit && !isFormComplete(editForm) && (
-                        <p className="form-error">Preencha os campos destacados antes de continuar.</p>
-                      )}
-                      <div className="entity-actions">
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          onClick={() => {
-                            setEditAttemptedSubmit(true)
-                            if (!isFormComplete(editForm)) return
-                            setPendingUpdateId(recurring.id)
-                          }}
-                        >
-                          Salvar
-                        </button>
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          onClick={cancelEditing}
-                          aria-label="Cancelar edição"
-                          title="Cancelar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      </div>
-                      {rowError && <p className="form-error">{rowError}</p>}
-                    </div>
-                  </li>
-                )
-              }
 
               const category = byId(categories, recurring.category_id)
               const subcategory = byId(subcategories, recurring.subcategory_id)
@@ -727,6 +677,44 @@ function RecurringExpensesPage() {
             </button>
           </div>
         )}
+      </Modal>
+
+      <Modal isOpen={editingId !== null} onClose={cancelEditing}>
+        <h2 className="modal-title">Editar gasto fixo</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <RecurringFields
+            idPrefix="edit"
+            form={editForm}
+            onChange={setEditForm}
+            categories={categories}
+            subcategories={subcategories}
+            people={people}
+            paymentMethods={paymentMethods}
+            buckets={buckets}
+            banks={banks}
+            attemptedSubmit={editAttemptedSubmit}
+          />
+          {editAttemptedSubmit && !isFormComplete(editForm) && (
+            <p className="form-error">Preencha os campos destacados antes de continuar.</p>
+          )}
+          <div className="entity-actions">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setEditAttemptedSubmit(true)
+                if (!isFormComplete(editForm)) return
+                setPendingUpdateId(editingId)
+              }}
+            >
+              Salvar
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={cancelEditing}>
+              Cancelar
+            </button>
+          </div>
+          {rowError && <p className="form-error">{rowError}</p>}
+        </div>
       </Modal>
 
       <ConfirmDialog
