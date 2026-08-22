@@ -25,6 +25,7 @@ import { fetchBanks } from './api/banks'
 import { currentYearMonth, sameYearMonth, shiftMonth } from './utils/date'
 import { EMPTY_FILTERS, hasActiveFilters, matchesFilters } from './utils/filters'
 import { useTheme } from './hooks/useTheme'
+import { useCategories } from './hooks/useCategories'
 import './App.css'
 
 const ChartsPage = lazy(() => import('./pages/ChartsPage'))
@@ -55,6 +56,7 @@ function App() {
   const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(true)
   const location = useLocation()
   const { theme, cycleTheme } = useTheme()
+  const { categories } = useCategories()
 
   const loadExpenses = () => {
     return fetchExpenses()
@@ -601,6 +603,7 @@ function App() {
         onClose={() => setIsFiltersOpen(false)}
         filters={filters}
         onChange={setFilters}
+        categories={categories}
         subcategories={subcategories}
         people={people}
         paymentMethods={paymentMethods}

@@ -1990,12 +1990,45 @@
   padding: 16px 20px 20px;
 }
 
-.chart-panel-header--with-action {
+.panel-header.chart-panel-header--with-action {
   display: flex;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.chart-sort-toggle {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.chart-sort-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.chart-sort-btn:hover {
+  color: var(--text-h);
+}
+
+.chart-sort-btn--active {
+  background: var(--surface);
+  color: var(--text-h);
+  box-shadow: var(--shadow-sm);
 }
 
 .estimate-compare-grid {
@@ -2281,7 +2314,6 @@
 .chart-detail-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 8px 4px;
   border-bottom: 1px solid var(--border);
@@ -2296,6 +2328,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .chart-detail-description {

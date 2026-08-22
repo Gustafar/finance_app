@@ -2,8 +2,10 @@ import { useState } from 'react'
 import BreakdownBarChart from './BreakdownBarChart'
 import { formatCurrency, formatDate } from '../../utils/format'
 
-function ExpenseDetailList({ expenses, emptyMessage, onEditExpense }) {
-  const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
+function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
+  const sorted = [...expenses].sort((a, b) =>
+    sortBy === 'amount' ? b.amount - a.amount : new Date(b.date) - new Date(a.date)
+  )
 
   if (sorted.length === 0) {
     return <p className="state-message">{emptyMessage}</p>
@@ -48,8 +50,9 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense }) {
 // — noneId/noneLabel group expenses missing that field (e.g. legacy expenses without a
 // subcategory) under a synthetic bucket instead of dropping them. Clicking a bar drills one
 // level deeper; the last level's clicks reveal the individual expenses behind it.
-function DrillDownBreakdownChart({ expenses, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense }) {
+function DrillDownBreakdownChart({ title, expenses, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense }) {
   const [drillPath, setDrillPath] = useState([])
+  const [sortBy, setSortBy] = useState('date')
 
   // Reset the drill whenever the underlying scope changes (month, filters, period). Adjusting
   // state during render avoids an extra commit for this reset.
@@ -65,6 +68,7 @@ function DrillDownBreakdownChart({ expenses, dimensions, rootLabel, caption, det
   }, expenses)
 
   const currentDimension = dimensions[drillPath.length]
+  const isLeaf = !currentDimension
 
   const chartExpenses =
     currentDimension && currentDimension.noneId
@@ -77,48 +81,77 @@ function DrillDownBreakdownChart({ expenses, dimensions, rootLabel, caption, det
 
   return (
     <>
-      {drillPath.length > 0 ? (
-        <p className="chart-breadcrumb">
-          <button type="button" className="chart-breadcrumb-link" onClick={() => setDrillPath([])}>
-            {rootLabel}
-          </button>
-          {drillPath.map((step, index) => {
-            const isLast = index === drillPath.length - 1
-            return (
-              <span key={`${step.id}-${index}`}>
-                <span className="chart-breadcrumb-sep">›</span>
-                {isLast ? (
-                  <span className="chart-breadcrumb-current">{step.name}</span>
-                ) : (
-                  <button
-                    type="button"
-                    className="chart-breadcrumb-link"
-                    onClick={() => setDrillPath(drillPath.slice(0, index + 1))}
-                  >
-                    {step.name}
-                  </button>
-                )}
-              </span>
-            )
-          })}
-        </p>
-      ) : (
-        <p className="chart-caption">{caption}</p>
-      )}
+      <div className={`panel-header${isLeaf ? ' chart-panel-header--with-action' : ''}`}>
+        <h2>{title}</h2>
+        {isLeaf && (
+          <div className="chart-sort-toggle" role="group" aria-label="Ordenar por">
+            <button
+              type="button"
+              className={sortBy === 'date' ? 'chart-sort-btn chart-sort-btn--active' : 'chart-sort-btn'}
+              onClick={() => setSortBy('date')}
+            >
+              Data
+            </button>
+            <button
+              type="button"
+              className={sortBy === 'amount' ? 'chart-sort-btn chart-sort-btn--active' : 'chart-sort-btn'}
+              onClick={() => setSortBy('amount')}
+            >
+              Valor
+            </button>
+          </div>
+        )}
+      </div>
 
-      {currentDimension ? (
-        <BreakdownBarChart
-          expenses={chartExpenses}
-          idKey={currentDimension.idKey}
-          nameKey={currentDimension.nameKey}
-          colorKey={currentDimension.colorKey}
-          tableLabel={currentDimension.tableLabel}
-          emptyMessage={currentDimension.emptyMessage}
-          onBarClick={(item) => setDrillPath([...drillPath, { id: item.id, name: item.name }])}
-        />
-      ) : (
-        <ExpenseDetailList expenses={scopedExpenses} emptyMessage={detailEmptyMessage} onEditExpense={onEditExpense} />
-      )}
+      <div className="chart-body">
+        {drillPath.length > 0 ? (
+          <p className="chart-breadcrumb">
+            <button type="button" className="chart-breadcrumb-link" onClick={() => setDrillPath([])}>
+              {rootLabel}
+            </button>
+            {drillPath.map((step, index) => {
+              const isLast = index === drillPath.length - 1
+              return (
+                <span key={`${step.id}-${index}`}>
+                  <span className="chart-breadcrumb-sep">›</span>
+                  {isLast ? (
+                    <span className="chart-breadcrumb-current">{step.name}</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="chart-breadcrumb-link"
+                      onClick={() => setDrillPath(drillPath.slice(0, index + 1))}
+                    >
+                      {step.name}
+                    </button>
+                  )}
+                </span>
+              )
+            })}
+          </p>
+        ) : (
+          <p className="chart-caption">{caption}</p>
+        )}
+
+        {currentDimension ? (
+          <BreakdownBarChart
+            expenses={chartExpenses}
+            idKey={currentDimension.idKey}
+            nameKey={currentDimension.nameKey}
+            colorKey={currentDimension.colorKey}
+            tableLabel={currentDimension.tableLabel}
+            emptyMessage={currentDimension.emptyMessage}
+            onBarClick={(item) => setDrillPath([...drillPath, { id: item.id, name: item.name }])}
+          />
+        ) : (
+          <ExpenseDetailList
+            expenses={scopedExpenses}
+            emptyMessage={detailEmptyMessage}
+            onEditExpense={onEditExpense}
+            sortBy={sortBy}
+          />
+        )}
+      </div>
     </>
   )
 }

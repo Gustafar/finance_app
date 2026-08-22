@@ -75,60 +75,52 @@ function ChartsPage({
 
           <div className="charts-grid">
             <section className="panel chart-panel">
-              <div className="panel-header">
-                <h2>Gastos por categoria</h2>
-              </div>
-              <div className="chart-body">
-                <DrillDownBreakdownChart
-                  expenses={filteredExpenses}
-                  rootLabel="Categorias"
-                  caption={caption}
-                  detailEmptyMessage="Nenhuma despesa para exibir."
-                  onEditExpense={onEditExpense}
-                  dimensions={[
-                    {
-                      idKey: 'category_id',
-                      nameKey: 'category_name',
-                      colorKey: 'category_color',
-                      tableLabel: 'Categoria',
-                      emptyMessage: 'Nenhuma despesa no período para exibir por categoria.',
-                    },
-                    subcategoryDimension,
-                  ]}
-                />
-              </div>
+              <DrillDownBreakdownChart
+                title="Gastos por categoria"
+                expenses={filteredExpenses}
+                rootLabel="Categorias"
+                caption={caption}
+                detailEmptyMessage="Nenhuma despesa para exibir."
+                onEditExpense={onEditExpense}
+                dimensions={[
+                  {
+                    idKey: 'category_id',
+                    nameKey: 'category_name',
+                    colorKey: 'category_color',
+                    tableLabel: 'Categoria',
+                    emptyMessage: 'Nenhuma despesa no período para exibir por categoria.',
+                  },
+                  subcategoryDimension,
+                ]}
+              />
             </section>
 
             <section className="panel chart-panel">
-              <div className="panel-header">
-                <h2>Gastos por responsável</h2>
-              </div>
-              <div className="chart-body">
-                <DrillDownBreakdownChart
-                  expenses={filteredExpenses}
-                  rootLabel="Responsáveis"
-                  caption={caption}
-                  detailEmptyMessage="Nenhuma despesa para exibir."
-                  onEditExpense={onEditExpense}
-                  dimensions={[
-                    {
-                      idKey: 'person_id',
-                      nameKey: 'person_name',
-                      colorKey: 'person_color',
-                      tableLabel: 'Responsável',
-                      emptyMessage: 'Nenhuma despesa no período para exibir por responsável.',
-                    },
-                    {
-                      idKey: 'category_id',
-                      nameKey: 'category_name',
-                      colorKey: 'category_color',
-                      tableLabel: 'Categoria',
-                      emptyMessage: 'Nenhuma despesa deste responsável.',
-                    },
-                    subcategoryDimension,
-                  ]}
-                />
-              </div>
+              <DrillDownBreakdownChart
+                title="Gastos por responsável"
+                expenses={filteredExpenses}
+                rootLabel="Responsáveis"
+                caption={caption}
+                detailEmptyMessage="Nenhuma despesa para exibir."
+                onEditExpense={onEditExpense}
+                dimensions={[
+                  {
+                    idKey: 'person_id',
+                    nameKey: 'person_name',
+                    colorKey: 'person_color',
+                    tableLabel: 'Responsável',
+                    emptyMessage: 'Nenhuma despesa no período para exibir por responsável.',
+                  },
+                  {
+                    idKey: 'category_id',
+                    nameKey: 'category_name',
+                    colorKey: 'category_color',
+                    tableLabel: 'Categoria',
+                    emptyMessage: 'Nenhuma despesa deste responsável.',
+                  },
+                  subcategoryDimension,
+                ]}
+              />
             </section>
           </div>
         </>

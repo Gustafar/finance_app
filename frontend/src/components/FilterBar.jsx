@@ -1,7 +1,7 @@
 import DatePicker from './DatePicker'
 import MultiSelectField from './MultiSelectField'
 
-function FilterBar({ filters, onChange, subcategories, people, paymentMethods, buckets, banks }) {
+function FilterBar({ filters, onChange, categories, subcategories, people, paymentMethods, buckets, banks }) {
   const handleField = (field) => (event) => {
     onChange({ ...filters, [field]: event.target.value })
   }
@@ -10,14 +10,41 @@ function FilterBar({ filters, onChange, subcategories, people, paymentMethods, b
     onChange({ ...filters, [field]: value })
   }
 
+  // Picking a category narrows which subcategories are offered below; any already-selected
+  // subcategory outside the new category set is dropped so the two fields never disagree.
+  const handleCategoryChange = (value) => {
+    const allowedSubcategoryIds = new Set(
+      subcategories.filter((s) => value.includes(String(s.category_id))).map((s) => String(s.id))
+    )
+    const nextSubcategoryId =
+      value.length === 0 ? filters.subcategoryId : filters.subcategoryId.filter((id) => allowedSubcategoryIds.has(id))
+    onChange({ ...filters, categoryId: value, subcategoryId: nextSubcategoryId })
+  }
+
+  const visibleSubcategories =
+    filters.categoryId.length === 0
+      ? subcategories
+      : subcategories.filter((s) => filters.categoryId.includes(String(s.category_id)))
+
   return (
     <div className="filter-bar">
+      <div className="filter-field">
+        <label htmlFor="filter-category">Categoria</label>
+        <MultiSelectField
+          id="filter-category"
+          allLabel="Todas"
+          options={categories}
+          selected={filters.categoryId}
+          onChange={handleCategoryChange}
+        />
+      </div>
+
       <div className="filter-field">
         <label htmlFor="filter-subcategory">Subcategoria</label>
         <MultiSelectField
           id="filter-subcategory"
           allLabel="Todas"
-          options={subcategories}
+          options={visibleSubcategories}
           selected={filters.subcategoryId}
           onChange={handleMultiField('subcategoryId')}
         />
