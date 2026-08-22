@@ -22,6 +22,7 @@ const TABLE_STAT_ROWS = [
 ]
 
 const DEFAULT_TABLE_COLUMNS = ['expense']
+const DEFAULT_VISIBLE_SERIES = ['expense', 'income', 'investment']
 
 function mean(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length
@@ -33,19 +34,19 @@ function stdDev(values) {
   return Math.sqrt(variance)
 }
 
-function LineTooltip({ active, payload, label }) {
+function LineTooltip({ active, payload, label, series }) {
   if (!active || !payload?.length) return null
 
   return (
     <div className="chart-tooltip chart-tooltip--multi">
       <span className="chart-tooltip-label">{label}</span>
-      {SERIES.map((series) => {
-        const entry = payload.find((item) => item.dataKey === series.key)
+      {series.map((item) => {
+        const entry = payload.find((point) => point.dataKey === item.key)
         if (!entry) return null
         return (
-          <div key={series.key} className="chart-tooltip-row">
-            <span className="chart-tooltip-key" style={{ background: series.color }} />
-            <span className="chart-tooltip-row-label">{series.label}</span>
+          <div key={item.key} className="chart-tooltip-row">
+            <span className="chart-tooltip-key" style={{ background: item.color }} />
+            <span className="chart-tooltip-row-label">{item.label}</span>
             <span className="chart-tooltip-row-value">{formatCurrency(entry.value)}</span>
           </div>
         )
@@ -58,6 +59,9 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
   const [tableColumns, setTableColumns] = useState(DEFAULT_TABLE_COLUMNS)
   const [tableStatRows, setTableStatRows] = useState([])
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [visibleSeries, setVisibleSeries] = useState(DEFAULT_VISIBLE_SERIES)
+  const [averageSeries, setAverageSeries] = useState([])
+  const [isChartSettingsOpen, setIsChartSettingsOpen] = useState(false)
 
   const toggleTableColumn = (key) => {
     setTableColumns((current) =>
@@ -68,6 +72,18 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
   const toggleTableStatRow = (key) => {
     setTableStatRows((current) =>
       current.includes(key) ? current.filter((row) => row !== key) : [...current, key]
+    )
+  }
+
+  const toggleVisibleSeries = (key) => {
+    setVisibleSeries((current) =>
+      current.includes(key) ? current.filter((series) => series !== key) : [...current, key]
+    )
+  }
+
+  const toggleAverageSeries = (key) => {
+    setAverageSeries((current) =>
+      current.includes(key) ? current.filter((series) => series !== key) : [...current, key]
     )
   }
 
@@ -83,22 +99,52 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
     return { label: formatShortMonthLabel(month, showYear), ...totals }
   })
 
+  averageSeries.forEach((key) => {
+    const avg = mean(data.map((month) => month[key]))
+    data.forEach((month) => {
+      month[`${key}Avg`] = avg
+    })
+  })
+
+  const activeSeries = SERIES.filter((series) => visibleSeries.includes(series.key))
   const hasData = data.some((month) => month.expense || month.income || month.investment)
 
   return (
     <>
-      <div className="panel-header">
-        <h2>{title}</h2>
-        <p className="chart-caption">{caption}</p>
+      <div className="panel-header chart-panel-header--with-action">
+        <div>
+          <h2>{title}</h2>
+          <p className="chart-caption">{caption}</p>
+        </div>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => setIsChartSettingsOpen(true)}
+          aria-label="Configurar gráfico"
+          title="Configurar gráfico"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+          </svg>
+        </button>
       </div>
 
       <div className="chart-body">
         {!hasData ? (
           <p className="state-message">Sem dados suficientes para exibir a evolução mensal.</p>
+        ) : activeSeries.length === 0 ? (
+          <p className="state-message">Nenhuma série selecionada. Ajuste as configurações do gráfico.</p>
         ) : (
           <>
             <div className="chart-legend">
-              {SERIES.map((series) => (
+              {activeSeries.map((series) => (
                 <span key={series.key} className="chart-legend-item">
                   <span className="chart-legend-swatch" style={{ background: series.color }} />
                   {series.label}
@@ -117,7 +163,7 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                       tickLine={false}
                       width={56}
                     />
-                    {SERIES.map((series) => (
+                    {activeSeries.map((series) => (
                       <Line
                         key={series.key}
                         type="monotone"
@@ -144,8 +190,11 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                       tickLine={false}
                     />
                     <YAxis hide width={0} />
-                    <Tooltip content={<LineTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
-                    {SERIES.map((series) => (
+                    <Tooltip
+                      content={<LineTooltip series={activeSeries} />}
+                      cursor={{ stroke: 'var(--border)', strokeWidth: 1 }}
+                    />
+                    {activeSeries.map((series) => (
                       <Line
                         key={series.key}
                         type="monotone"
@@ -157,6 +206,23 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                         activeDot={{ r: 5, fill: series.color, stroke: 'var(--surface)', strokeWidth: 2 }}
                       />
                     ))}
+                    {activeSeries
+                      .filter((series) => averageSeries.includes(series.key))
+                      .map((series) => (
+                        <Line
+                          key={`${series.key}-avg`}
+                          type="monotone"
+                          dataKey={`${series.key}Avg`}
+                          name={`Média (${series.label})`}
+                          stroke={series.color}
+                          strokeOpacity={0.5}
+                          strokeWidth={2}
+                          strokeDasharray="6 4"
+                          dot={false}
+                          activeDot={false}
+                          legendType="none"
+                        />
+                      ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -254,6 +320,39 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                 onChange={() => toggleTableStatRow(row.key)}
               />
               {row.label}
+            </label>
+          ))}
+        </div>
+      </Modal>
+
+      <Modal isOpen={isChartSettingsOpen} onClose={() => setIsChartSettingsOpen(false)}>
+        <h2 className="modal-title">Configurar gráfico</h2>
+
+        <p className="table-settings-label">Exibir</p>
+        <div className="table-settings-group">
+          {SERIES.map((series) => (
+            <label key={series.key} className="checkbox-field">
+              <input
+                type="checkbox"
+                checked={visibleSeries.includes(series.key)}
+                onChange={() => toggleVisibleSeries(series.key)}
+              />
+              {series.label}
+            </label>
+          ))}
+        </div>
+
+        <p className="table-settings-label">Mostrar média (linha tracejada)</p>
+        <div className="table-settings-group">
+          {SERIES.map((series) => (
+            <label key={series.key} className="checkbox-field">
+              <input
+                type="checkbox"
+                checked={averageSeries.includes(series.key)}
+                disabled={!visibleSeries.includes(series.key)}
+                onChange={() => toggleAverageSeries(series.key)}
+              />
+              {series.label}
             </label>
           ))}
         </div>
