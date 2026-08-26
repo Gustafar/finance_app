@@ -104,6 +104,7 @@ type InstallmentPurchaseInput struct {
 	PaymentMethodID  int
 	BucketID         int
 	BankID           int
+	Comment          *string
 }
 
 func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInput) ([]models.Expense, error) {
@@ -148,7 +149,7 @@ func (s *ExpenseService) CreateInstallmentPurchase(input InstallmentPurchaseInpu
 		BankID:           input.BankID,
 	}
 
-	created, err := s.Repo.CreateInstallmentPurchase(purchase, installmentSlices(input.TotalAmount, input.InstallmentCount, input.PurchaseDate))
+	created, err := s.Repo.CreateInstallmentPurchase(purchase, installmentSlices(input.TotalAmount, input.InstallmentCount, input.PurchaseDate), input.Comment)
 	if err != nil {
 		if refErr := referencedEntityError(err); refErr != nil {
 			return nil, refErr

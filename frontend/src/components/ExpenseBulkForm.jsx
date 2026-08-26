@@ -27,6 +27,7 @@ const PASTE_COLUMNS = [
   'personId',
   'bucketId',
   'bankId',
+  'comment',
 ]
 
 const INITIAL_ROW_COUNT = 6
@@ -49,6 +50,7 @@ function makeEmptyRow() {
     isInstallment: false,
     installmentCount: '2',
     investmentBoxId: '',
+    comment: '',
     selected: false,
     status: 'idle',
     error: null,
@@ -75,6 +77,8 @@ function parseCellForColumn(columnKey, text, lookups) {
       return { bucketId: resolveIdByName(lookups.buckets, text) }
     case 'bankId':
       return { bankId: resolveIdByName(lookups.banks, text) }
+    case 'comment':
+      return { comment: text.trim() }
     default:
       return {}
   }
@@ -138,6 +142,7 @@ function buildRowPayload(row, defaults, subcategories, buckets) {
       total_amount: parseFloat(row.amount),
       installment_count: Number(row.installmentCount),
       purchase_date: dateInputValueToISOString(row.date),
+      ...(row.comment.trim() ? { comment: row.comment.trim() } : {}),
     }
   }
 
@@ -151,6 +156,7 @@ function buildRowPayload(row, defaults, subcategories, buckets) {
     ...(rowNeedsInvestmentBox(row, effectiveBucketId, buckets)
       ? { investment_box_id: Number(row.investmentBoxId || defaults.investmentBoxId) }
       : {}),
+    ...(row.comment.trim() ? { comment: row.comment.trim() } : {}),
   }
 }
 
@@ -341,7 +347,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
       <p className="bulk-grid-hint">
         Cole dados do Excel a partir da coluna Data — ordem das colunas: Data, Valor, Método de pagamento,
-        Descrição, Subcategoria, Tipo, Responsável, Envelope, Banco.
+        Descrição, Subcategoria, Tipo, Responsável, Envelope, Banco, Comentário.
       </p>
       <p className="bulk-grid-row-count">
         {filledRowCount} {filledRowCount === 1 ? 'linha preenchida' : 'linhas preenchidas'} de {rows.length}
@@ -365,6 +371,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                 <th>Parcelado</th>
                 <th>Parcelas</th>
                 <th>Caixinha</th>
+                <th>Comentário</th>
               </tr>
             </thead>
             <tbody>
@@ -524,6 +531,15 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.comment}
+                      placeholder="Opcional"
+                      onChange={(e) => updateRow(index, { comment: e.target.value })}
+                      onPaste={pasteHandler(index, 'comment')}
+                    />
                   </td>
                 </tr>
                 )

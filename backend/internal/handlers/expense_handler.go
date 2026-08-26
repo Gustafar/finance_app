@@ -76,6 +76,7 @@ type createInstallmentsRequest struct {
 	BucketID         int       `json:"bucket_id"`
 	BankID           int       `json:"bank_id"`
 	PurchaseDate     time.Time `json:"purchase_date"`
+	Comment          *string   `json:"comment,omitempty"`
 }
 
 func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Request) {
@@ -97,6 +98,7 @@ func (h *ExpenseHandler) CreateInstallments(w http.ResponseWriter, r *http.Reque
 		PaymentMethodID:  req.PaymentMethodID,
 		BucketID:         req.BucketID,
 		BankID:           req.BankID,
+		Comment:          req.Comment,
 	})
 	if err != nil {
 		if isClientValidationError(err) {
@@ -174,6 +176,7 @@ func (h *ExpenseHandler) CreateBulk(w http.ResponseWriter, r *http.Request) {
 					PaymentMethodID:  row.PaymentMethodID,
 					BucketID:         row.BucketID,
 					BankID:           row.BankID,
+					Comment:          row.Comment,
 				},
 			}
 			continue

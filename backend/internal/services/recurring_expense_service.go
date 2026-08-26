@@ -95,6 +95,7 @@ func expenseFromPlanRow(row models.RecurringExpense) models.Expense {
 		BucketID:           row.BucketID,
 		BankID:             row.BankID,
 		Date:               dateForDay(row.PlanYear, time.Month(row.PlanMonth), row.DayOfMonth),
+		Comment:            row.Comment,
 		RecurringExpenseID: &recurringID,
 	}
 }

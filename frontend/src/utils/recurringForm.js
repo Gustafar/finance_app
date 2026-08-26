@@ -12,6 +12,7 @@ export const emptyRecurringForm = {
   bucket_id: '',
   bank_id: '',
   include_in_expenses: true,
+  comment: '',
 }
 
 export function recurringFormToPayload(form) {
@@ -27,6 +28,7 @@ export function recurringFormToPayload(form) {
     bucket_id: Number(form.bucket_id),
     bank_id: Number(form.bank_id),
     include_in_expenses: Boolean(form.include_in_expenses),
+    ...(form.comment.trim() ? { comment: form.comment.trim() } : {}),
   }
 }
 
@@ -57,5 +59,6 @@ export function recurringFormFromRow(recurring) {
     bucket_id: String(recurring.bucket_id),
     bank_id: String(recurring.bank_id),
     include_in_expenses: recurring.include_in_expenses,
+    comment: recurring.comment ?? '',
   }
 }

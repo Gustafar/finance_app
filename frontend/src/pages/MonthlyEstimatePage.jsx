@@ -133,35 +133,31 @@ function MonthlyEstimatePage() {
           </section>
 
           <section className="panel chart-panel">
-            <div className="panel-header">
-              <h2>Estimativa por categoria</h2>
-            </div>
-            <div className="chart-body">
-              <DrillDownBreakdownChart
-                expenses={plannedAsExpenses}
-                rootLabel="Categorias"
-                caption="Todo o Planejamento Mensal, marcado ou não para lançamento automático."
-                detailEmptyMessage="Nenhum item do planejamento para exibir."
-                dimensions={[
-                  {
-                    idKey: 'category_id',
-                    nameKey: 'category_name',
-                    colorKey: 'category_color',
-                    tableLabel: 'Categoria',
-                    emptyMessage: 'Nenhum item do planejamento para exibir por categoria.',
-                  },
-                  {
-                    idKey: 'subcategory_id',
-                    nameKey: 'subcategory_name',
-                    colorKey: 'category_color',
-                    tableLabel: 'Subcategoria',
-                    emptyMessage: 'Nenhum item nesta categoria.',
-                    noneId: NO_SUBCATEGORY_ID,
-                    noneLabel: NO_SUBCATEGORY_NAME,
-                  },
-                ]}
-              />
-            </div>
+            <DrillDownBreakdownChart
+              title="Estimativa por categoria"
+              expenses={plannedAsExpenses}
+              rootLabel="Categorias"
+              caption="Todo o Planejamento Mensal, marcado ou não para lançamento automático."
+              detailEmptyMessage="Nenhum item do planejamento para exibir."
+              dimensions={[
+                {
+                  idKey: 'category_id',
+                  nameKey: 'category_name',
+                  colorKey: 'category_color',
+                  tableLabel: 'Categoria',
+                  emptyMessage: 'Nenhum item do planejamento para exibir por categoria.',
+                },
+                {
+                  idKey: 'subcategory_id',
+                  nameKey: 'subcategory_name',
+                  colorKey: 'category_color',
+                  tableLabel: 'Subcategoria',
+                  emptyMessage: 'Nenhum item nesta categoria.',
+                  noneId: NO_SUBCATEGORY_ID,
+                  noneLabel: NO_SUBCATEGORY_NAME,
+                },
+              ]}
+            />
           </section>
 
           <section className="panel">

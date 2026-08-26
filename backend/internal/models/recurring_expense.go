@@ -17,5 +17,6 @@ type RecurringExpense struct {
 	IncludeInExpenses bool      `json:"include_in_expenses"`
 	PlanYear          int       `json:"plan_year"`
 	PlanMonth         int       `json:"plan_month"`
+	Comment           *string   `json:"comment,omitempty"`
 	CreatedAt         time.Time `json:"created_at"`
 }

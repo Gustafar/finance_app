@@ -189,7 +189,7 @@ type InstallmentSlice struct {
 	Date   time.Time
 }
 
-func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.InstallmentPurchase, slices []InstallmentSlice) ([]models.Expense, error) {
+func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.InstallmentPurchase, slices []InstallmentSlice, comment *string) ([]models.Expense, error) {
 	tx, err := r.DB.Begin()
 	if err != nil {
 		return nil, err
@@ -208,13 +208,13 @@ func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.Installmen
 	}
 
 	insertExpense := `INSERT INTO expenses
-		(description, amount, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id, type, date, installment_purchase_id, installment_number)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'expense', $9, $10, $11)`
+		(description, amount, category_id, subcategory_id, person_id, payment_method_id, bucket_id, bank_id, type, date, installment_purchase_id, installment_number, comment)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'expense', $9, $10, $11, $12)`
 
 	for _, slice := range slices {
 		if _, err := tx.Exec(
 			insertExpense, purchase.Description, slice.Amount, purchase.CategoryID, purchase.SubcategoryID, purchase.PersonID,
-			purchase.PaymentMethodID, purchase.BucketID, purchase.BankID, slice.Date, purchaseID, slice.Number,
+			purchase.PaymentMethodID, purchase.BucketID, purchase.BankID, slice.Date, purchaseID, slice.Number, comment,
 		); err != nil {
 			return nil, err
 		}

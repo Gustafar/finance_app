@@ -19,6 +19,7 @@ const PASTE_COLUMNS = [
   'personId',
   'bucketId',
   'bankId',
+  'comment',
 ]
 
 const INITIAL_ROW_COUNT = 6
@@ -37,6 +38,7 @@ function makeEmptyRow() {
     paymentMethodId: '',
     bucketId: '',
     bankId: '',
+    comment: '',
     includeInExpenses: true,
     selected: false,
     status: 'idle',
@@ -68,6 +70,8 @@ function parseCellForColumn(columnKey, text, lookups) {
       return { bucketId: resolveIdByName(lookups.buckets, text) }
     case 'bankId':
       return { bankId: resolveIdByName(lookups.banks, text) }
+    case 'comment':
+      return { comment: text.trim() }
     default:
       return {}
   }
@@ -116,6 +120,7 @@ function buildRowPayload(row, defaults, subcategories, planYear, planMonth) {
     include_in_expenses: Boolean(row.includeInExpenses),
     plan_year: planYear,
     plan_month: planMonth + 1,
+    ...(row.comment.trim() ? { comment: row.comment.trim() } : {}),
   }
 }
 
@@ -275,7 +280,7 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
     <div className="bulk-grid-form">
       <p className="bulk-grid-hint">
         Cole dados do Excel a partir da coluna Dia do mês — ordem das colunas: Dia do mês, Valor, Método de
-        pagamento, Descrição, Subcategoria, Tipo, Responsável, Envelope, Banco.
+        pagamento, Descrição, Subcategoria, Tipo, Responsável, Envelope, Banco, Comentário.
       </p>
 
       <div className="bulk-grid-scroll">
@@ -293,6 +298,7 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                 <th>Responsável</th>
                 <th>Envelope</th>
                 <th>Banco</th>
+                <th>Comentário</th>
                 <th>Lança</th>
               </tr>
             </thead>
@@ -403,6 +409,15 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.comment}
+                      placeholder="Opcional"
+                      onChange={(e) => updateRow(index, { comment: e.target.value })}
+                      onPaste={pasteHandler(index, 'comment')}
+                    />
                   </td>
                   <td>
                     <input

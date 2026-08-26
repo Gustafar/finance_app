@@ -147,6 +147,7 @@ function ExpenseForm({ onExpenseCreated }) {
           total_amount: parseFloat(resolvedTotalAmount),
           installment_count: Number(installmentCount),
           purchase_date: dateInputValueToISOString(date),
+          ...(comment.trim() ? { comment: comment.trim() } : {}),
         })
       : createExpense({
           ...shared,

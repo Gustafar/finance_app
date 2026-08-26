@@ -63,6 +63,17 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
         </div>
       </div>
 
+      <div className="field">
+        <label htmlFor={`${idPrefix}-comment`}>Comentário (opcional)</label>
+        <input
+          id={`${idPrefix}-comment`}
+          type="text"
+          placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
+          value={form.comment}
+          onChange={(e) => onChange({ ...form, comment: e.target.value })}
+        />
+      </div>
+
       <div className="field-row">
         <div className={errCls(!form.subcategory_id)}>
           <label htmlFor={`${idPrefix}-subcategory`}>Subcategoria</label>
