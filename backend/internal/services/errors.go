@@ -14,7 +14,10 @@ var (
 	ErrExpenseNotFound    = errors.New("expense not found")
 	ErrInvalidType        = errors.New("type must be income, expense or investment")
 
-	ErrInvalidInstallmentCount = errors.New("installment count must be between 2 and 60")
+	ErrInvalidInstallmentCount  = errors.New("installment count must be between 2 and 60")
+	ErrNotInstallment           = errors.New("expense does not belong to an installment purchase")
+	ErrInvalidAnticipationDate  = errors.New("anticipation date cannot be after the installment's original date")
+	ErrInvalidAnticipationCount = errors.New("installment count to anticipate must be between 1 and the number of installments remaining")
 
 	ErrEmptyCategoryName           = errors.New("category name cannot be empty")
 	ErrInvalidCategoryColor        = errors.New("invalid category color")

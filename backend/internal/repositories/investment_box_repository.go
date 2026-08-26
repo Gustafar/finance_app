@@ -116,7 +116,8 @@ func (r *InvestmentBoxRepository) SetDefault(id int) error {
 	return tx.Commit()
 }
 
-// Delete reassigns referencing expenses to the default investment box first, so deleting never orphans data.
+// Delete clears the investment box from referencing expenses first (they keep their amount, date
+// and other data — they just become unlinked), so deleting never orphans or destroys expense data.
 func (r *InvestmentBoxRepository) Delete(id int) error {
 	tx, err := r.DB.Begin()
 	if err != nil {
@@ -124,13 +125,7 @@ func (r *InvestmentBoxRepository) Delete(id int) error {
 	}
 	defer tx.Rollback()
 
-	var defaultID int
-	err = tx.QueryRow("SELECT id FROM investment_boxes WHERE is_default = TRUE LIMIT 1").Scan(&defaultID)
-	if err != nil {
-		return err
-	}
-
-	if _, err := tx.Exec("UPDATE expenses SET investment_box_id = $1 WHERE investment_box_id = $2", defaultID, id); err != nil {
+	if _, err := tx.Exec("UPDATE expenses SET investment_box_id = NULL WHERE investment_box_id = $1", id); err != nil {
 		return err
 	}
 

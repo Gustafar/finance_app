@@ -39,7 +39,10 @@ func isClientValidationError(err error) bool {
 		errors.Is(err, services.ErrBucketNotFound) ||
 		errors.Is(err, services.ErrBankNotFound) ||
 		errors.Is(err, services.ErrInvestmentBoxNotFound) ||
-		errors.Is(err, services.ErrSubcategoryNotFound)
+		errors.Is(err, services.ErrSubcategoryNotFound) ||
+		errors.Is(err, services.ErrNotInstallment) ||
+		errors.Is(err, services.ErrInvalidAnticipationDate) ||
+		errors.Is(err, services.ErrInvalidAnticipationCount)
 }
 
 func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -250,6 +253,13 @@ func (h *ExpenseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, expense)
 }
 
+// updateExpenseRequest is a models.Expense plus the installment scope for the edit ("this" if
+// omitted, "future", or "all" — see services.InstallmentScope).
+type updateExpenseRequest struct {
+	models.Expense
+	Scope services.InstallmentScope `json:"scope,omitempty"`
+}
+
 func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 
@@ -259,14 +269,14 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var expense models.Expense
-	err = json.NewDecoder(r.Body).Decode(&expense)
+	var req updateExpenseRequest
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	updated, err := h.Service.Update(id, expense)
+	updated, err := h.Service.UpdateWithScope(id, req.Expense, req.Scope)
 	if err != nil {
 		if errors.Is(err, services.ErrExpenseNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
@@ -293,7 +303,9 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Service.Delete(id)
+	scope := services.InstallmentScope(r.URL.Query().Get("scope"))
+
+	err = h.Service.DeleteWithScope(id, scope)
 	if err != nil {
 		if errors.Is(err, services.ErrExpenseNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
@@ -305,4 +317,44 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type anticipateInstallmentsRequest struct {
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
+}
+
+// AnticipateInstallments moves the expense at id, and the following req.Count-1 installments of the
+// same installment purchase, to the given date — paying them off ahead of their original schedule.
+func (h *ExpenseHandler) AnticipateInstallments(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	var req anticipateInstallmentsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	updated, err := h.Service.AnticipateInstallments(id, req.Date, req.Count)
+	if err != nil {
+		if errors.Is(err, services.ErrExpenseNotFound) {
+			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if isClientValidationError(err) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, updated)
 }

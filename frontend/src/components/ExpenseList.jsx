@@ -3,11 +3,12 @@ import { formatCurrency, formatDate } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
 import { TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import ConfirmDialog from './ConfirmDialog'
+import InstallmentScopeDialog from './InstallmentScopeDialog'
 import SelectionToolbar from './SelectionToolbar'
 
 function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, toggleId, toggleSelecting }) {
   const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
-  const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [pendingDeleteExpense, setPendingDeleteExpense] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -167,7 +168,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
                       className="icon-btn icon-btn--danger"
                       onClick={(e) => {
                         e.stopPropagation()
-                        setPendingDeleteId(expense.id)
+                        setPendingDeleteExpense(expense)
                       }}
                       aria-label="Excluir despesa"
                       title="Excluir"
@@ -190,22 +191,41 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
         })}
       </ul>
 
-      <ConfirmDialog
-        isOpen={pendingDeleteId !== null}
-        title="Excluir transação"
-        message="Tem certeza que deseja excluir esta transação? Essa ação não pode ser desfeita."
-        confirmLabel="Excluir"
-        danger
-        isConfirming={isDeleting}
-        onConfirm={() => {
-          setIsDeleting(true)
-          onDelete(pendingDeleteId).finally(() => {
-            setIsDeleting(false)
-            setPendingDeleteId(null)
-          })
-        }}
-        onCancel={() => setPendingDeleteId(null)}
-      />
+      {pendingDeleteExpense?.installment_purchase_id ? (
+        <InstallmentScopeDialog
+          isOpen={pendingDeleteExpense !== null}
+          title="Excluir transação"
+          message="Esta transação faz parte de uma compra parcelada. O que deseja excluir? Essa ação não pode ser desfeita."
+          confirmLabel="Excluir"
+          danger
+          isConfirming={isDeleting}
+          onConfirm={(scope) => {
+            setIsDeleting(true)
+            onDelete(pendingDeleteExpense.id, scope).finally(() => {
+              setIsDeleting(false)
+              setPendingDeleteExpense(null)
+            })
+          }}
+          onCancel={() => setPendingDeleteExpense(null)}
+        />
+      ) : (
+        <ConfirmDialog
+          isOpen={pendingDeleteExpense !== null}
+          title="Excluir transação"
+          message="Tem certeza que deseja excluir esta transação? Essa ação não pode ser desfeita."
+          confirmLabel="Excluir"
+          danger
+          isConfirming={isDeleting}
+          onConfirm={() => {
+            setIsDeleting(true)
+            onDelete(pendingDeleteExpense.id).finally(() => {
+              setIsDeleting(false)
+              setPendingDeleteExpense(null)
+            })
+          }}
+          onCancel={() => setPendingDeleteExpense(null)}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={isBulkDeleteOpen}

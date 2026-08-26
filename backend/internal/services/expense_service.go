@@ -335,3 +335,120 @@ func (s *ExpenseService) Delete(id int) error {
 
 	return nil
 }
+
+// InstallmentScope controls how far an installment edit/delete reaches: just the one installment,
+// this one and every later installment of the same purchase, or every installment of the purchase.
+type InstallmentScope string
+
+const (
+	InstallmentScopeThis   InstallmentScope = "this"
+	InstallmentScopeFuture InstallmentScope = "future"
+	InstallmentScopeAll    InstallmentScope = "all"
+)
+
+// UpdateWithScope updates the expense at id as usual, then — if it belongs to an installment
+// purchase and scope reaches beyond it — propagates the shared fields (everything but amount, date
+// and amount_formula, which are inherently per-installment) to the rest of the purchase's installments.
+func (s *ExpenseService) UpdateWithScope(id int, expense models.Expense, scope InstallmentScope) (models.Expense, error) {
+	current, err := s.Repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Expense{}, ErrExpenseNotFound
+		}
+		return models.Expense{}, err
+	}
+
+	updated, err := s.Update(id, expense)
+	if err != nil {
+		return models.Expense{}, err
+	}
+
+	if (scope == InstallmentScopeFuture || scope == InstallmentScopeAll) && current.InstallmentPurchaseID != nil {
+		fromNumber := 0
+		if scope == InstallmentScopeFuture {
+			fromNumber = *current.InstallmentNumber
+		}
+
+		if err := s.Repo.UpdateInstallmentScope(*current.InstallmentPurchaseID, id, fromNumber, updated); err != nil {
+			if refErr := referencedEntityError(err); refErr != nil {
+				return models.Expense{}, refErr
+			}
+			return models.Expense{}, err
+		}
+	}
+
+	return updated, nil
+}
+
+// DeleteWithScope deletes the expense at id; if it belongs to an installment purchase and scope
+// reaches beyond it, it also deletes the later (or all) installments of that purchase.
+func (s *ExpenseService) DeleteWithScope(id int, scope InstallmentScope) error {
+	if scope != InstallmentScopeFuture && scope != InstallmentScopeAll {
+		return s.Delete(id)
+	}
+
+	current, err := s.Repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrExpenseNotFound
+		}
+		return err
+	}
+
+	if current.InstallmentPurchaseID == nil {
+		return s.Delete(id)
+	}
+
+	fromNumber := 0
+	if scope == InstallmentScopeFuture {
+		fromNumber = *current.InstallmentNumber
+	}
+
+	return s.Repo.DeleteInstallmentScope(*current.InstallmentPurchaseID, fromNumber)
+}
+
+// AnticipateInstallments moves the expense at id, and the following count-1 installments of the same
+// purchase, to newDate — paying them off ahead of their originally scheduled dates. The remaining,
+// non-anticipated installments (if any) are then pulled forward to continue monthly right after
+// newDate, so the purchase's schedule compresses instead of leaving a gap. count must cover at least
+// the anchor installment itself and no more than the installments remaining in the purchase; newDate
+// must not be after the anchor installment's own date, since that would be postponing it rather than
+// anticipating it.
+func (s *ExpenseService) AnticipateInstallments(id int, newDate time.Time, count int) (models.Expense, error) {
+	current, err := s.Repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Expense{}, ErrExpenseNotFound
+		}
+		return models.Expense{}, err
+	}
+
+	if current.InstallmentPurchaseID == nil {
+		return models.Expense{}, ErrNotInstallment
+	}
+	if newDate.After(current.Date) {
+		return models.Expense{}, ErrInvalidAnticipationDate
+	}
+
+	remaining := *current.InstallmentCount - *current.InstallmentNumber + 1
+	if count < 1 || count > remaining {
+		return models.Expense{}, ErrInvalidAnticipationCount
+	}
+
+	fromNumber := *current.InstallmentNumber
+	toNumber := fromNumber + count - 1
+
+	dates := make(map[int]time.Time, remaining)
+	for n := fromNumber; n <= toNumber; n++ {
+		dates[n] = newDate
+	}
+	for n := toNumber + 1; n <= *current.InstallmentCount; n++ {
+		dates[n] = addMonthsClamped(newDate, n-toNumber)
+	}
+
+	if err := s.Repo.RescheduleInstallmentDates(*current.InstallmentPurchaseID, dates); err != nil {
+		return models.Expense{}, err
+	}
+
+	return s.Repo.GetByID(id)
+}

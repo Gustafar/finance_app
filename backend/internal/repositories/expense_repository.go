@@ -227,6 +227,71 @@ func (r *ExpenseRepository) CreateInstallmentPurchase(purchase models.Installmen
 	return r.getByInstallmentPurchaseID(purchaseID)
 }
 
+// UpdateInstallmentScope applies the shared installment fields (everything except amount, date and
+// amount_formula, which stay per-installment) to every expense of purchaseID from fromNumber onward,
+// excluding excludeID (already updated separately by the caller).
+func (r *ExpenseRepository) UpdateInstallmentScope(purchaseID, excludeID, fromNumber int, expense models.Expense) error {
+	query := `UPDATE expenses SET description = $1, category_id = $2, subcategory_id = $3, person_id = $4, payment_method_id = $5, bucket_id = $6, bank_id = $7, type = $8, investment_box_id = $9, comment = $10
+		WHERE installment_purchase_id = $11 AND installment_number >= $12 AND id != $13`
+
+	_, err := r.DB.Exec(
+		query, expense.Description, expense.CategoryID, expense.SubcategoryID, expense.PersonID, expense.PaymentMethodID,
+		expense.BucketID, expense.BankID, expense.Type, expense.InvestmentBoxID, expense.Comment, purchaseID, fromNumber, excludeID,
+	)
+	return err
+}
+
+// DeleteInstallmentScope deletes every expense of purchaseID with installment_number >= fromNumber,
+// then drops the installment_purchases row itself once no expense references it anymore.
+func (r *ExpenseRepository) DeleteInstallmentScope(purchaseID, fromNumber int) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(
+		"DELETE FROM expenses WHERE installment_purchase_id = $1 AND installment_number >= $2",
+		purchaseID, fromNumber,
+	); err != nil {
+		return err
+	}
+
+	var remaining int
+	if err := tx.QueryRow("SELECT COUNT(*) FROM expenses WHERE installment_purchase_id = $1", purchaseID).Scan(&remaining); err != nil {
+		return err
+	}
+
+	if remaining == 0 {
+		if _, err := tx.Exec("DELETE FROM installment_purchases WHERE id = $1", purchaseID); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+// RescheduleInstallmentDates sets the date of each installment_number of purchaseID listed in dates,
+// one UPDATE per entry inside a single transaction.
+func (r *ExpenseRepository) RescheduleInstallmentDates(purchaseID int, dates map[int]time.Time) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for number, date := range dates {
+		if _, err := tx.Exec(
+			"UPDATE expenses SET date = $1 WHERE installment_purchase_id = $2 AND installment_number = $3",
+			date, purchaseID, number,
+		); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (r *ExpenseRepository) Delete(id int) error {
 	return r.deleteWith(r.DB, id)
 }

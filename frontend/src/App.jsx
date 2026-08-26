@@ -125,20 +125,28 @@ function App() {
     setExpenses((prevExpenses) => [...prevExpenses, ...created])
   }
 
-  const handleDelete = (id) => {
-    return deleteExpense(id)
+  const handleDelete = (id, scope) => {
+    return deleteExpense(id, scope)
       .then(() => {
+        if (scope === 'future' || scope === 'all') {
+          loadExpenses()
+          return
+        }
         setExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== id))
       })
       .catch((error) => console.error('Erro ao excluir despesa:', error))
   }
 
-  const handleExpenseUpdated = (updatedExpense) => {
-    setExpenses((prevExpenses) =>
-      prevExpenses.map((expense) =>
-        expense.id === updatedExpense.id ? updatedExpense : expense
+  const handleExpenseUpdated = (updatedExpense, scope) => {
+    if (scope === 'future' || scope === 'all') {
+      loadExpenses()
+    } else {
+      setExpenses((prevExpenses) =>
+        prevExpenses.map((expense) =>
+          expense.id === updatedExpense.id ? updatedExpense : expense
+        )
       )
-    )
+    }
     setEditingExpense(null)
   }
 

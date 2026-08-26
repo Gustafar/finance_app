@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
-import { updateExpense } from '../api/expenses'
+import { updateExpense, anticipateInstallments } from '../api/expenses'
 import SubcategorySelect from './SubcategorySelect'
 import DatePicker from './DatePicker'
+import AnticipateInstallmentsDialog from './AnticipateInstallmentsDialog'
 import { useCategories } from '../hooks/useCategories'
 import { useSubcategories } from '../hooks/useSubcategories'
 import { usePeople } from '../hooks/usePeople'
@@ -13,6 +14,7 @@ import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
 import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 import ConfirmDialog from './ConfirmDialog'
+import InstallmentScopeDialog from './InstallmentScopeDialog'
 import LoadingBar from './LoadingBar'
 
 function ExpenseEditForm({ expense, onExpenseUpdated }) {
@@ -43,8 +45,12 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [error, setError] = useState(null)
   const [showConfirm, setShowConfirm] = useState(false)
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
+  const [showAnticipate, setShowAnticipate] = useState(false)
+  const [isAnticipating, setIsAnticipating] = useState(false)
 
   const noSubcategories = !isLoadingSubcategories && subcategories.length === 0
+  const isInstallment = Boolean(expense.installment_purchase_id)
+  const isFutureInstallment = isInstallment && new Date(expense.date) > new Date()
 
   const isLoadingOptions =
     isLoadingCategories ||
@@ -91,7 +97,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
     setShowConfirm(true)
   }
 
-  const performUpdate = () => {
+  const performUpdate = (scope) => {
     setShowConfirm(false)
     setError(null)
     setIsSubmitting(true)
@@ -112,13 +118,28 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       ...(comment.trim() ? { comment: comment.trim() } : {}),
     }
 
-    updateExpense(expense.id, updatedExpense)
-      .then((data) => onExpenseUpdated(data))
+    updateExpense(expense.id, updatedExpense, isInstallment ? scope : undefined)
+      .then((data) => onExpenseUpdated(data, isInstallment ? scope : undefined))
       .catch((err) => {
         console.error('Erro ao atualizar despesa:', err)
         setError('Não foi possível salvar as alterações. Tente novamente.')
       })
       .finally(() => setIsSubmitting(false))
+  }
+
+  const performAnticipate = (newDate, count) => {
+    setIsAnticipating(true)
+
+    anticipateInstallments(expense.id, dateInputValueToISOString(newDate), count)
+      .then((data) => {
+        setShowAnticipate(false)
+        onExpenseUpdated(data, 'future')
+      })
+      .catch((err) => {
+        console.error('Erro ao antecipar parcelas:', err)
+        setError('Não foi possível antecipar as parcelas. Tente novamente.')
+      })
+      .finally(() => setIsAnticipating(false))
   }
 
   return (
@@ -306,19 +327,53 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         {error && <p className="form-error">{error}</p>}
 
+        {isFutureInstallment && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setShowAnticipate(true)}
+            disabled={isSubmitting}
+          >
+            Antecipar parcelas
+          </button>
+        )}
+
         <button type="submit" className="btn btn-primary" disabled={isSubmitting || noSubcategories}>
           {isSubmitting ? 'Salvando…' : 'Salvar alterações'}
         </button>
       </form>
 
-      <ConfirmDialog
-        isOpen={showConfirm}
-        title="Salvar alterações"
-        message="Confirma as alterações nesta transação?"
-        confirmLabel="Salvar"
-        onConfirm={performUpdate}
-        onCancel={() => setShowConfirm(false)}
-      />
+      {isInstallment ? (
+        <InstallmentScopeDialog
+          isOpen={showConfirm}
+          title="Salvar alterações"
+          message="Esta transação faz parte de uma compra parcelada. O que deseja alterar?"
+          confirmLabel="Salvar"
+          isConfirming={isSubmitting}
+          onConfirm={performUpdate}
+          onCancel={() => setShowConfirm(false)}
+        />
+      ) : (
+        <ConfirmDialog
+          isOpen={showConfirm}
+          title="Salvar alterações"
+          message="Confirma as alterações nesta transação?"
+          confirmLabel="Salvar"
+          onConfirm={performUpdate}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
+
+      {isFutureInstallment && (
+        <AnticipateInstallmentsDialog
+          isOpen={showAnticipate}
+          maxDate={isoStringToDateInputValue(expense.date)}
+          remainingCount={expense.installment_count - expense.installment_number + 1}
+          isConfirming={isAnticipating}
+          onConfirm={performAnticipate}
+          onCancel={() => setShowAnticipate(false)}
+        />
+      )}
     </>
   )
 }
