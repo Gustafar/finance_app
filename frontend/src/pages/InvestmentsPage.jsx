@@ -69,16 +69,20 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
     })
   }
 
+  // Only active (non-deleted) boxes count toward totals — a deleted box's past movements stay in
+  // its own history for record-keeping, but shouldn't inflate "Total investido" anymore.
+  const activeBoxIds = useMemo(() => new Set(investmentBoxes.map((box) => box.id)), [investmentBoxes])
+
   const totalsByBoxId = useMemo(() => {
     const totals = {}
     expenses
-      .filter((expense) => expense.investment_box_id && (expense.type === 'investment' || expense.type === 'expense'))
+      .filter((expense) => expense.investment_box_id && activeBoxIds.has(expense.investment_box_id) && (expense.type === 'investment' || expense.type === 'expense'))
       .forEach((expense) => {
         const signedAmount = expense.type === 'investment' ? expense.amount : -expense.amount
         totals[expense.investment_box_id] = (totals[expense.investment_box_id] ?? 0) + signedAmount
       })
     return totals
-  }, [expenses])
+  }, [expenses, activeBoxIds])
 
   const totalInvested = Object.values(totalsByBoxId).reduce((sum, value) => sum + value, 0)
 
