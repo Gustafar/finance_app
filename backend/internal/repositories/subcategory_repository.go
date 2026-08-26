@@ -38,7 +38,7 @@ func (r *SubcategoryRepository) GetByID(id int) (models.Subcategory, error) {
 }
 
 func (r *SubcategoryRepository) GetAll() ([]models.Subcategory, error) {
-	query := "SELECT id, name, category_id FROM subcategories ORDER BY name"
+	query := "SELECT id, name, category_id FROM subcategories WHERE deleted_at IS NULL ORDER BY name"
 
 	rows, err := r.DB.Query(query)
 	if err != nil {
@@ -87,10 +87,11 @@ func (r *SubcategoryRepository) Update(id int, subcategory models.Subcategory) (
 	return subcategory, nil
 }
 
-// Delete relies on ON DELETE SET NULL on expenses/installment_purchases/recurring_expenses'
-// subcategory_id FK, so referencing rows never need manual reassignment here.
+// Delete soft-deletes the subcategory instead of removing its row, so expenses, installment
+// purchases and recurring expenses that reference it keep showing its original name for history,
+// while it drops out of GetAll and can no longer be selected for new/edited transactions.
 func (r *SubcategoryRepository) Delete(id int) error {
-	query := "DELETE FROM subcategories WHERE id = $1"
+	query := "UPDATE subcategories SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL"
 
 	result, err := r.DB.Exec(query, id)
 	if err != nil {

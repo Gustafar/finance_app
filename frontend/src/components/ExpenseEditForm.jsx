@@ -72,6 +72,9 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const selectedInvestmentBox = investmentBoxes.find((b) => String(b.id) === investmentBoxId)
   const isInvestmentBoxDeleted = !isLoadingInvestmentBoxes && Boolean(investmentBoxId) && !selectedInvestmentBox
 
+  const selectedSubcategory = subcategories.find((s) => String(s.id) === subcategoryId)
+  const isSubcategoryDeleted = !isLoadingSubcategories && Boolean(subcategoryId) && !selectedSubcategory
+
   const selectedBucket = buckets.find((b) => String(b.id) === bucketId)
   const isGoalWithdrawal = type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
   const needsInvestmentBox = type === 'investment' || isGoalWithdrawal
@@ -227,17 +230,27 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
           <div className={`field${attemptedSubmit && !subcategoryId ? ' field--error' : ''}`}>
             <label htmlFor="edit-subcategory">Subcategoria</label>
-            <SubcategorySelect
-              id="edit-subcategory"
-              categories={categories}
-              subcategories={subcategories}
-              value={subcategoryId}
-              onChange={(nextSubcategoryId, nextCategoryId) => {
-                setSubcategoryId(nextSubcategoryId)
-                setCategoryId(nextCategoryId)
-              }}
-              disabled={noSubcategories}
-            />
+            {isSubcategoryDeleted ? (
+              <input
+                id="edit-subcategory"
+                type="text"
+                value={`${expense.subcategory_name} (excluída)`}
+                disabled
+                readOnly
+              />
+            ) : (
+              <SubcategorySelect
+                id="edit-subcategory"
+                categories={categories}
+                subcategories={subcategories}
+                value={subcategoryId}
+                onChange={(nextSubcategoryId, nextCategoryId) => {
+                  setSubcategoryId(nextSubcategoryId)
+                  setCategoryId(nextCategoryId)
+                }}
+                disabled={noSubcategories}
+              />
+            )}
           </div>
         </div>
 

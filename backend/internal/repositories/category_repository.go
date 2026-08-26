@@ -63,7 +63,7 @@ func (r *CategoryRepository) GetByID(id int) (models.Category, error) {
 }
 
 func (r *CategoryRepository) GetAll() ([]models.Category, error) {
-	query := "SELECT id, name, color, is_default FROM categories ORDER BY name"
+	query := "SELECT id, name, color, is_default FROM categories WHERE deleted_at IS NULL ORDER BY name"
 
 	rows, err := r.DB.Query(query)
 	if err != nil {
@@ -141,33 +141,11 @@ func (r *CategoryRepository) SetDefault(id int) error {
 	return tx.Commit()
 }
 
-// Delete reassigns referencing expenses to the default category first, so deleting never orphans data.
+// Delete soft-deletes the category instead of removing its row, so expenses, installment purchases
+// and recurring expenses that reference it keep showing its original name/color for history,
+// while it drops out of GetAll and can no longer be selected for new/edited transactions.
 func (r *CategoryRepository) Delete(id int) error {
-	tx, err := r.DB.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	var defaultID int
-	err = tx.QueryRow("SELECT id FROM categories WHERE is_default = TRUE LIMIT 1").Scan(&defaultID)
-	if err != nil {
-		return err
-	}
-
-	if _, err := tx.Exec("UPDATE expenses SET category_id = $1 WHERE category_id = $2", defaultID, id); err != nil {
-		return err
-	}
-
-	if _, err := tx.Exec("UPDATE installment_purchases SET category_id = $1 WHERE category_id = $2", defaultID, id); err != nil {
-		return err
-	}
-
-	if _, err := tx.Exec("UPDATE recurring_expenses SET category_id = $1 WHERE category_id = $2", defaultID, id); err != nil {
-		return err
-	}
-
-	result, err := tx.Exec("DELETE FROM categories WHERE id = $1", id)
+	result, err := r.DB.Exec("UPDATE categories SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL", id)
 	if err != nil {
 		return err
 	}
@@ -181,5 +159,5 @@ func (r *CategoryRepository) Delete(id int) error {
 		return sql.ErrNoRows
 	}
 
-	return tx.Commit()
+	return nil
 }
