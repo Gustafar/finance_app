@@ -1650,12 +1650,19 @@
 
 .entity-create-form-row {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.entity-create-form-row .btn {
+  height: 34px;
 }
 
 .entity-create-form input:not([type='checkbox']) {
   flex: 1;
   min-width: 0;
+  height: 34px;
+  font-size: 13px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 9px 12px;
@@ -1773,6 +1780,8 @@
 .entity-edit-input {
   flex: 1;
   min-width: 0;
+  height: 34px;
+  font-size: 13px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 7px 10px;
@@ -1794,6 +1803,21 @@
 
 .entity-row .color-swatches {
   margin-top: 8px;
+}
+
+.field--narrow {
+  flex: 0 0 130px;
+}
+
+.entity-filter-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.entity-filter-row .selection-toolbar {
+  flex-shrink: 0;
 }
 
 /* Modal */

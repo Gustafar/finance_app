@@ -31,7 +31,13 @@ function SubcategoryManager() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
+  const [filterCategoryId, setFilterCategoryId] = useState('')
+
   const effectiveNewCategoryId = newCategoryId || (categories[0] ? String(categories[0].id) : '')
+
+  const visibleSubcategories = filterCategoryId
+    ? subcategories.filter((s) => String(s.category_id) === filterCategoryId)
+    : subcategories
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -112,21 +118,21 @@ function SubcategoryManager() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
+          <div className="field field--narrow">
+            <select
+              aria-label="Categoria"
+              value={effectiveNewCategoryId}
+              onChange={(e) => setNewCategoryId(e.target.value)}
+              disabled={noCategories}
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
           <button type="submit" className="btn btn-primary" disabled={isCreating || !newName.trim() || noCategories}>
             {isCreating ? 'Adicionando…' : 'Adicionar'}
           </button>
-        </div>
-        <div className="field">
-          <select
-            aria-label="Categoria"
-            value={effectiveNewCategoryId}
-            onChange={(e) => setNewCategoryId(e.target.value)}
-            disabled={noCategories}
-          >
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
         </div>
       </form>
       {createError && <p className="form-error">{createError}</p>}
@@ -140,17 +146,36 @@ function SubcategoryManager() {
       )}
 
       {!isLoading && !loadError && subcategories.length > 0 && (
-        <SelectionToolbar
-          isSelecting={isSelecting}
-          count={selectedIds.size}
-          onToggle={toggleSelecting}
-          onDeleteClick={() => setIsBulkDeleteOpen(true)}
-        />
+        <div className="entity-filter-row">
+          <div className="field field--narrow">
+            <label htmlFor="subcategory-filter">Filtrar por categoria</label>
+            <select
+              id="subcategory-filter"
+              value={filterCategoryId}
+              onChange={(e) => setFilterCategoryId(e.target.value)}
+            >
+              <option value="">Todas as categorias</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <SelectionToolbar
+            isSelecting={isSelecting}
+            count={selectedIds.size}
+            onToggle={toggleSelecting}
+            onDeleteClick={() => setIsBulkDeleteOpen(true)}
+          />
+        </div>
       )}
 
-      {!isLoading && !loadError && subcategories.length > 0 && (
+      {!isLoading && !loadError && subcategories.length > 0 && visibleSubcategories.length === 0 && (
+        <p className="state-message">Nenhuma subcategoria nessa categoria.</p>
+      )}
+
+      {!isLoading && !loadError && visibleSubcategories.length > 0 && (
         <ul className="entity-list">
-          {subcategories.map((subcategory) => {
+          {visibleSubcategories.map((subcategory) => {
             const category = categories.find((c) => c.id === subcategory.category_id)
             const color = paletteColor(category?.color)
             const isEditing = editingId === subcategory.id
@@ -172,7 +197,7 @@ function SubcategoryManager() {
                         onChange={(e) => setEditingName(e.target.value)}
                         autoFocus
                       />
-                      <div className="field">
+                      <div className="field field--narrow">
                         <select aria-label="Categoria" value={editingCategoryId} onChange={(e) => setEditingCategoryId(e.target.value)}>
                           {categories.map((c) => (
                             <option key={c.id} value={c.id}>{c.name}</option>
