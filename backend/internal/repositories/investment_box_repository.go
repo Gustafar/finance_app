@@ -38,7 +38,7 @@ func (r *InvestmentBoxRepository) GetByID(id int) (models.InvestmentBox, error) 
 }
 
 func (r *InvestmentBoxRepository) GetAll() ([]models.InvestmentBox, error) {
-	query := "SELECT id, name, color, is_default, goal_amount, goal_month, goal_year FROM investment_boxes ORDER BY name"
+	query := "SELECT id, name, color, is_default, goal_amount, goal_month, goal_year FROM investment_boxes WHERE deleted_at IS NULL ORDER BY name"
 
 	rows, err := r.DB.Query(query)
 	if err != nil {
@@ -116,20 +116,11 @@ func (r *InvestmentBoxRepository) SetDefault(id int) error {
 	return tx.Commit()
 }
 
-// Delete clears the investment box from referencing expenses first (they keep their amount, date
-// and other data — they just become unlinked), so deleting never orphans or destroys expense data.
+// Delete soft-deletes the investment box instead of removing its row, so expenses that reference
+// it keep showing its original name/color for history, while it drops out of GetAll and can no
+// longer be selected for new/edited transactions.
 func (r *InvestmentBoxRepository) Delete(id int) error {
-	tx, err := r.DB.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	if _, err := tx.Exec("UPDATE expenses SET investment_box_id = NULL WHERE investment_box_id = $1", id); err != nil {
-		return err
-	}
-
-	result, err := tx.Exec("DELETE FROM investment_boxes WHERE id = $1", id)
+	result, err := r.DB.Exec("UPDATE investment_boxes SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL", id)
 	if err != nil {
 		return err
 	}
@@ -143,5 +134,5 @@ func (r *InvestmentBoxRepository) Delete(id int) error {
 		return sql.ErrNoRows
 	}
 
-	return tx.Commit()
+	return nil
 }

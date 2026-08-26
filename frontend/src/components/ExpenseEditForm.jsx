@@ -69,8 +69,10 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const requiresInvestmentBox = type === 'investment'
   const effectiveInvestmentBoxId = investmentBoxId || (requiresInvestmentBox ? defaultInvestmentBoxId : '')
 
+  const selectedInvestmentBox = investmentBoxes.find((b) => String(b.id) === investmentBoxId)
+  const isInvestmentBoxDeleted = !isLoadingInvestmentBoxes && Boolean(investmentBoxId) && !selectedInvestmentBox
+
   const selectedBucket = buckets.find((b) => String(b.id) === bucketId)
-  const isBucketDeleted = !isLoadingBuckets && Boolean(bucketId) && !selectedBucket
   const isGoalWithdrawal = type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
   const needsInvestmentBox = type === 'investment' || isGoalWithdrawal
 
@@ -273,22 +275,18 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         <div className={`field${attemptedSubmit && !bucketId ? ' field--error' : ''}`}>
           <label htmlFor="edit-bucket">Envelope</label>
-          {isBucketDeleted ? (
-            <input id="edit-bucket" type="text" value={`${expense.bucket_name} (excluído)`} disabled readOnly />
-          ) : (
-            <select
-              id="edit-bucket"
-              value={bucketId}
-              onChange={(e) => setBucketId(e.target.value)}
-              required
-              disabled={isLoadingBuckets}
-            >
-              <option value="" disabled>Selecione…</option>
-              {buckets.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          )}
+          <select
+            id="edit-bucket"
+            value={bucketId}
+            onChange={(e) => setBucketId(e.target.value)}
+            required
+            disabled={isLoadingBuckets}
+          >
+            <option value="" disabled>Selecione…</option>
+            {buckets.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className={`field${attemptedSubmit && !bankId ? ' field--error' : ''}`}>
@@ -312,18 +310,28 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
             <label htmlFor="edit-investment-box">
               {isGoalWithdrawal ? 'Retirar da caixinha de investimento (opcional)' : 'Caixinha de investimento'}
             </label>
-            <select
-              id="edit-investment-box"
-              value={effectiveInvestmentBoxId}
-              onChange={(e) => setInvestmentBoxId(e.target.value)}
-              required={requiresInvestmentBox}
-              disabled={isLoadingInvestmentBoxes}
-            >
-              <option value="">Selecione…</option>
-              {investmentBoxes.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
+            {isInvestmentBoxDeleted ? (
+              <input
+                id="edit-investment-box"
+                type="text"
+                value={`${expense.investment_box_name} (excluída)`}
+                disabled
+                readOnly
+              />
+            ) : (
+              <select
+                id="edit-investment-box"
+                value={effectiveInvestmentBoxId}
+                onChange={(e) => setInvestmentBoxId(e.target.value)}
+                required={requiresInvestmentBox}
+                disabled={isLoadingInvestmentBoxes}
+              >
+                <option value="">Selecione…</option>
+                {investmentBoxes.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            )}
           </div>
         )}
 
