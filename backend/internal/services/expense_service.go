@@ -41,13 +41,20 @@ func (s *ExpenseService) isGoalWithdrawal(bucketID int) bool {
 	return bucket.IsGoalWithdrawal
 }
 
-// requiresInvestmentBox reports whether the expense must carry an investment_box_id: either it's
+// allowsInvestmentBox reports whether the expense may carry an investment_box_id: either it's
 // a contribution (type=investment) or it's a withdrawal from a "Meta" envelope (type=expense).
-func (s *ExpenseService) requiresInvestmentBox(expense models.Expense) bool {
+func (s *ExpenseService) allowsInvestmentBox(expense models.Expense) bool {
 	if expense.Type == "investment" {
 		return true
 	}
 	return expense.Type == "expense" && s.isGoalWithdrawal(expense.BucketID)
+}
+
+// requiresInvestmentBox reports whether the expense must carry an investment_box_id. Only
+// investment contributions require it; a "Meta" envelope withdrawal may optionally specify
+// which investment box the money comes from.
+func (s *ExpenseService) requiresInvestmentBox(expense models.Expense) bool {
+	return expense.Type == "investment"
 }
 
 func (s *ExpenseService) validate(expense models.Expense) error {
@@ -87,7 +94,7 @@ func (s *ExpenseService) validate(expense models.Expense) error {
 // normalizeExpense clears the investment box unless the transaction is either an investment
 // contribution or a withdrawal from a "Meta" envelope, since it only applies to those two cases.
 func (s *ExpenseService) normalizeExpense(expense models.Expense) models.Expense {
-	if !s.requiresInvestmentBox(expense) {
+	if !s.allowsInvestmentBox(expense) {
 		expense.InvestmentBoxID = nil
 	}
 	return expense

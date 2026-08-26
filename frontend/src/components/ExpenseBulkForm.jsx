@@ -95,12 +95,17 @@ function rowNeedsInvestmentBox(row, effectiveBucketId, buckets) {
   return row.type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
 }
 
-function isRowComplete(row, defaults, buckets) {
+function rowRequiresInvestmentBox(row) {
+  return row.type === 'investment'
+}
+
+function isRowComplete(row, defaults) {
   const effectivePersonId = row.personId || defaults.personId
   const effectivePaymentMethodId = row.paymentMethodId || defaults.paymentMethodId
   const effectiveBucketId = row.bucketId || defaults.bucketId
   const effectiveBankId = row.bankId || defaults.bankId
-  const effectiveInvestmentBoxId = row.investmentBoxId || defaults.investmentBoxId
+  const effectiveInvestmentBoxId =
+    row.investmentBoxId || (rowRequiresInvestmentBox(row) ? defaults.investmentBoxId : '')
 
   const sharedOk =
     row.description.trim() &&
@@ -117,7 +122,7 @@ function isRowComplete(row, defaults, buckets) {
     return !isAmountInvalid(row.amount, { allowZero: false }) && count >= 2 && count <= 60 && Boolean(row.date)
   }
 
-  if (rowNeedsInvestmentBox(row, effectiveBucketId, buckets) && !effectiveInvestmentBoxId) return false
+  if (rowRequiresInvestmentBox(row) && !effectiveInvestmentBoxId) return false
 
   return !isAmountInvalid(row.amount) && Boolean(row.date) && Boolean(row.type)
 }
@@ -125,6 +130,8 @@ function isRowComplete(row, defaults, buckets) {
 function buildRowPayload(row, defaults, subcategories, buckets) {
   const subcategory = subcategories.find((s) => String(s.id) === String(row.subcategoryId))
   const effectiveBucketId = row.bucketId || defaults.bucketId
+  const effectiveInvestmentBoxId =
+    row.investmentBoxId || (rowRequiresInvestmentBox(row) ? defaults.investmentBoxId : '')
   const shared = {
     description: row.description.trim(),
     category_id: Number(subcategory?.category_id),
@@ -153,8 +160,8 @@ function buildRowPayload(row, defaults, subcategories, buckets) {
     amount_formula: row.amountFormula || null,
     type: row.type,
     date: dateInputValueToISOString(row.date),
-    ...(rowNeedsInvestmentBox(row, effectiveBucketId, buckets)
-      ? { investment_box_id: Number(row.investmentBoxId || defaults.investmentBoxId) }
+    ...(rowNeedsInvestmentBox(row, effectiveBucketId, buckets) && effectiveInvestmentBoxId
+      ? { investment_box_id: Number(effectiveInvestmentBoxId) }
       : {}),
     ...(row.comment.trim() ? { comment: row.comment.trim() } : {}),
   }
@@ -295,7 +302,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
       }))
       .map((row, index) => {
       if (isRowBlank(row)) return row
-      if (!isRowComplete(row, defaults, buckets)) {
+      if (!isRowComplete(row, defaults)) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
       }
       candidateIndices.push(index)
@@ -378,6 +385,8 @@ function ExpenseBulkForm({ onExpensesCreated }) {
               {rows.map((row, index) => {
                 const effectiveBucketId = row.bucketId || defaults.bucketId
                 const needsInvestmentBox = rowNeedsInvestmentBox(row, effectiveBucketId, buckets)
+                const rowEffectiveInvestmentBoxId =
+                  row.investmentBoxId || (rowRequiresInvestmentBox(row) ? defaults.investmentBoxId : '')
                 return (
                 <tr key={row.id} className={row.status === 'error' ? 'bulk-grid-row--error' : undefined}>
                   <td title={row.error || undefined}>
@@ -522,7 +531,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                   </td>
                   <td>
                     <select
-                      value={row.investmentBoxId || defaults.investmentBoxId}
+                      value={rowEffectiveInvestmentBoxId}
                       onChange={(e) => updateRow(index, { investmentBoxId: e.target.value })}
                       disabled={!needsInvestmentBox || isLoadingInvestmentBoxes}
                     >

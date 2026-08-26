@@ -66,7 +66,8 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
     return defaultBox ? String(defaultBox.id) : investmentBoxes[0] ? String(investmentBoxes[0].id) : ''
   }, [investmentBoxes])
 
-  const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
+  const requiresInvestmentBox = type === 'investment'
+  const effectiveInvestmentBoxId = investmentBoxId || (requiresInvestmentBox ? defaultInvestmentBoxId : '')
 
   const selectedBucket = buckets.find((b) => String(b.id) === bucketId)
   const isGoalWithdrawal = type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
@@ -84,7 +85,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
     !paymentMethodId ||
     !bucketId ||
     !bankId ||
-    (needsInvestmentBox && !effectiveInvestmentBoxId)
+    (requiresInvestmentBox && !effectiveInvestmentBoxId)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -114,7 +115,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
       bank_id: Number(bankId),
       date: dateInputValueToISOString(date),
       amount_formula: amountFormula,
-      ...(needsInvestmentBox ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
+      ...(needsInvestmentBox && effectiveInvestmentBoxId ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
       ...(comment.trim() ? { comment: comment.trim() } : {}),
     }
 
@@ -302,18 +303,18 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
         </div>
 
         {needsInvestmentBox && (
-          <div className={`field${attemptedSubmit && !effectiveInvestmentBoxId ? ' field--error' : ''}`}>
+          <div className={`field${attemptedSubmit && requiresInvestmentBox && !effectiveInvestmentBoxId ? ' field--error' : ''}`}>
             <label htmlFor="edit-investment-box">
-              {isGoalWithdrawal ? 'Retirar da caixinha de investimento' : 'Caixinha de investimento'}
+              {isGoalWithdrawal ? 'Retirar da caixinha de investimento (opcional)' : 'Caixinha de investimento'}
             </label>
             <select
               id="edit-investment-box"
               value={effectiveInvestmentBoxId}
               onChange={(e) => setInvestmentBoxId(e.target.value)}
-              required
+              required={requiresInvestmentBox}
               disabled={isLoadingInvestmentBoxes}
             >
-              <option value="" disabled>Selecione…</option>
+              <option value="">Selecione…</option>
               {investmentBoxes.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}

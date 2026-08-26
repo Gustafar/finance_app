@@ -87,7 +87,8 @@ function ExpenseForm({ onExpenseCreated }) {
     return defaultBox ? String(defaultBox.id) : investmentBoxes[0] ? String(investmentBoxes[0].id) : ''
   }, [investmentBoxes])
 
-  const effectiveInvestmentBoxId = investmentBoxId || defaultInvestmentBoxId
+  const requiresInvestmentBox = type === 'investment'
+  const effectiveInvestmentBoxId = investmentBoxId || (requiresInvestmentBox ? defaultInvestmentBoxId : '')
 
   const selectedBucket = buckets.find((b) => String(b.id) === effectiveBucketId)
   const isGoalWithdrawal = type === 'expense' && !isInstallment && Boolean(selectedBucket?.is_goal_withdrawal)
@@ -115,7 +116,7 @@ function ExpenseForm({ onExpenseCreated }) {
     !effectivePaymentMethodId ||
     !effectiveBucketId ||
     !effectiveBankId ||
-    (needsInvestmentBox && !effectiveInvestmentBoxId) ||
+    (requiresInvestmentBox && !effectiveInvestmentBoxId) ||
     isAmountMissing
 
   const handleSubmit = (e) => {
@@ -155,7 +156,7 @@ function ExpenseForm({ onExpenseCreated }) {
           amount_formula: effectiveAmountFormula,
           type,
           date: dateInputValueToISOString(date),
-          ...(needsInvestmentBox ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
+          ...(needsInvestmentBox && effectiveInvestmentBoxId ? { investment_box_id: Number(effectiveInvestmentBoxId) } : {}),
           ...(comment.trim() ? { comment: comment.trim() } : {}),
         })
 
@@ -422,18 +423,18 @@ function ExpenseForm({ onExpenseCreated }) {
       </div>
 
       {needsInvestmentBox && (
-        <div className={`field${attemptedSubmit && !effectiveInvestmentBoxId ? ' field--error' : ''}`}>
+        <div className={`field${attemptedSubmit && requiresInvestmentBox && !effectiveInvestmentBoxId ? ' field--error' : ''}`}>
           <label htmlFor="investment-box">
-            {isGoalWithdrawal ? 'Retirar da caixinha de investimento' : 'Caixinha de investimento'}
+            {isGoalWithdrawal ? 'Retirar da caixinha de investimento (opcional)' : 'Caixinha de investimento'}
           </label>
           <select
             id="investment-box"
             value={effectiveInvestmentBoxId}
             onChange={(e) => setInvestmentBoxId(e.target.value)}
-            required
+            required={requiresInvestmentBox}
             disabled={isLoadingInvestmentBoxes}
           >
-            <option value="" disabled>Selecione…</option>
+            <option value="">Selecione…</option>
             {investmentBoxes.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
