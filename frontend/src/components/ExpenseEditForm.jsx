@@ -70,6 +70,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const effectiveInvestmentBoxId = investmentBoxId || (requiresInvestmentBox ? defaultInvestmentBoxId : '')
 
   const selectedBucket = buckets.find((b) => String(b.id) === bucketId)
+  const isBucketDeleted = !isLoadingBuckets && Boolean(bucketId) && !selectedBucket
   const isGoalWithdrawal = type === 'expense' && Boolean(selectedBucket?.is_goal_withdrawal)
   const needsInvestmentBox = type === 'investment' || isGoalWithdrawal
 
@@ -272,18 +273,22 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         <div className={`field${attemptedSubmit && !bucketId ? ' field--error' : ''}`}>
           <label htmlFor="edit-bucket">Envelope</label>
-          <select
-            id="edit-bucket"
-            value={bucketId}
-            onChange={(e) => setBucketId(e.target.value)}
-            required
-            disabled={isLoadingBuckets}
-          >
-            <option value="" disabled>Selecione…</option>
-            {buckets.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          {isBucketDeleted ? (
+            <input id="edit-bucket" type="text" value={`${expense.bucket_name} (excluído)`} disabled readOnly />
+          ) : (
+            <select
+              id="edit-bucket"
+              value={bucketId}
+              onChange={(e) => setBucketId(e.target.value)}
+              required
+              disabled={isLoadingBuckets}
+            >
+              <option value="" disabled>Selecione…</option>
+              {buckets.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className={`field${attemptedSubmit && !bankId ? ' field--error' : ''}`}>
