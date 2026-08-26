@@ -116,6 +116,7 @@ function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
             <tr>
               <th>{tableLabel}</th>
               <th>Valor</th>
+              <th>%</th>
             </tr>
           </thead>
           <tbody>
@@ -127,6 +128,7 @@ function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
               >
                 <td>{item.name}</td>
                 <td>{formatCurrency(item.amount)}</td>
+                <td>{item.share.toFixed(1)}%</td>
               </tr>
             ))}
           </tbody>
