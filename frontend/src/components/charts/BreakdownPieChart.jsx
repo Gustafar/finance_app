@@ -17,6 +17,27 @@ function PieTooltip({ active, payload }) {
   )
 }
 
+function renderPercentLabel({ cx, cy, midAngle, outerRadius, percent, payload }) {
+  const RADIAN = Math.PI / 180
+  const radius = outerRadius + 18
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill={payload.color}
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight={600}
+    >
+      {(percent * 100).toFixed(1)}%
+    </text>
+  )
+}
+
 function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, tableLabel, onSliceClick }) {
   const data = expenses
     .filter((expense) => expense.type === 'expense')
@@ -48,8 +69,8 @@ function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
 
   return (
     <>
-      <ResponsiveContainer width="100%" height={260}>
-        <PieChart>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart margin={{ top: 24, right: 40, bottom: 24, left: 40 }}>
           <Pie
             data={data}
             dataKey="amount"
@@ -57,8 +78,10 @@ function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
             cx="50%"
             cy="50%"
             innerRadius={64}
-            outerRadius={100}
+            outerRadius={92}
             paddingAngle={2}
+            label={renderPercentLabel}
+            labelLine={false}
           >
             {data.map((entry) => (
               <Cell
