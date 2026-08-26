@@ -1,6 +1,6 @@
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { clampDayOfMonth } from '../utils/date'
-import { normalizeAmountSeparators } from '../utils/amountFormula'
+import { normalizeAmountSeparators, maskAmountInput } from '../utils/amountFormula'
 import SubcategorySelect from './SubcategorySelect'
 
 function RecurringFields({ idPrefix, form, onChange, categories, subcategories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
@@ -46,7 +46,7 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
             inputMode="decimal"
             placeholder="0,00"
             value={form.amount}
-            onChange={(e) => onChange({ ...form, amount: e.target.value })}
+            onChange={(e) => onChange({ ...form, amount: maskAmountInput(e.target.value) })}
             onBlur={(e) => onChange({ ...form, amount: normalizeAmountSeparators(e.target.value) })}
           />
         </div>

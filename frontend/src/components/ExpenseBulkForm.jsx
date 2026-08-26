@@ -10,7 +10,7 @@ import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date'
 import { parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
-import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountFormula, isAmountInvalid, maskAmountInput, resolveAmountInput, formatAmountForDisplay } from '../utils/amountFormula'
 import DatePicker from './DatePicker'
 import LoadingBar from './LoadingBar'
 import SubcategorySelect from './SubcategorySelect'
@@ -64,7 +64,7 @@ function parseCellForColumn(columnKey, text, lookups) {
     case 'description':
       return { description: text.trim() }
     case 'amount':
-      return { amount: parsePastedAmount(text) }
+      return { amount: formatAmountForDisplay(parsePastedAmount(text)) }
     case 'type':
       return { type: resolveType(text) || 'expense' }
     case 'subcategoryId':
@@ -401,7 +401,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                       inputMode="decimal"
                       value={row.amount}
                       placeholder="0,00 (ou =10+5,50)"
-                      onChange={(e) => updateRow(index, { amount: e.target.value })}
+                      onChange={(e) => updateRow(index, { amount: maskAmountInput(e.target.value) })}
                       onFocus={() => {
                         if (row.amountFormula) updateRow(index, { amount: row.amountFormula })
                       }}

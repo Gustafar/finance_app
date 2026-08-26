@@ -35,6 +35,29 @@ export function evaluateAmountFormula(text) {
   }
 }
 
+// Live input mask for amount fields: as the user types digits, formats them as pt-BR currency
+// (thousands "." separator, "," decimal, always 2 decimals) by treating the typed digits as
+// cents — e.g. "1" -> "0,01", "12345" -> "123,45", "1234567" -> "12.345,67". Formula input
+// ("=10+5,50") is left untouched so the calculator flow in resolveAmountInput keeps working.
+export function maskAmountInput(text) {
+  if (typeof text !== 'string') return text
+  if (isAmountFormula(text)) return text
+
+  const digits = text.replace(/\D/g, '')
+  if (!digits) return ''
+
+  const cents = parseInt(digits, 10)
+  return (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// Formats a stored numeric amount (e.g. loaded from the API as 1234.5) as masked display text
+// ("1.234,50") for initializing an amount field that uses maskAmountInput.
+export function formatAmountForDisplay(value) {
+  const num = typeof value === 'number' ? value : parseFloat(value)
+  if (!Number.isFinite(num)) return ''
+  return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 // Resolves a raw amount field value to its final text: evaluates "=..." formulas, rounded to
 // cents, and leaves plain numeric input untouched.
 export function resolveAmountInput(text) {

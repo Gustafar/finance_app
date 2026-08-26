@@ -12,7 +12,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
-import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountFormula, isAmountInvalid, maskAmountInput, resolveAmountInput, formatAmountForDisplay } from '../utils/amountFormula'
 import ConfirmDialog from './ConfirmDialog'
 import InstallmentScopeDialog from './InstallmentScopeDialog'
 import LoadingBar from './LoadingBar'
@@ -29,7 +29,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
   const [type, setType] = useState(expense.type)
   const [description, setDescription] = useState(expense.description)
   const [comment, setComment] = useState(expense.comment || '')
-  const [amount, setAmount] = useState(String(expense.amount))
+  const [amount, setAmount] = useState(formatAmountForDisplay(expense.amount))
   const [amountFormula, setAmountFormula] = useState(expense.amount_formula || null)
   const [date, setDate] = useState(isoStringToDateInputValue(expense.date))
   const [categoryId, setCategoryId] = useState(String(expense.category_id))
@@ -186,7 +186,7 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
             inputMode="decimal"
             placeholder="0,00 (ou =10+5,50)"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(maskAmountInput(e.target.value))}
             onFocus={() => {
               if (amountFormula) setAmount(amountFormula)
             }}

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { createRecurringExpensesBulk } from '../api/recurringExpenses'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
-import { normalizeAmountSeparators } from '../utils/amountFormula'
+import { normalizeAmountSeparators, maskAmountInput, formatAmountForDisplay } from '../utils/amountFormula'
 import { clampDayOfMonth } from '../utils/date'
 import SubcategorySelect from './SubcategorySelect'
 
@@ -57,7 +57,7 @@ function parseCellForColumn(columnKey, text, lookups) {
     case 'description':
       return { description: text.trim() }
     case 'amount':
-      return { amount: parsePastedAmount(text) }
+      return { amount: formatAmountForDisplay(parsePastedAmount(text)) }
     case 'dayOfMonth':
       return { dayOfMonth: parsePastedDayOfMonth(text) }
     case 'subcategoryId':
@@ -329,7 +329,7 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                       inputMode="decimal"
                       value={row.amount}
                       placeholder="0,00"
-                      onChange={(e) => updateRow(index, { amount: e.target.value })}
+                      onChange={(e) => updateRow(index, { amount: maskAmountInput(e.target.value) })}
                       onBlur={(e) => updateRow(index, { amount: normalizeAmountSeparators(e.target.value) })}
                       onPaste={pasteHandler(index, 'amount')}
                     />

@@ -1,4 +1,4 @@
-import { normalizeAmountSeparators } from './amountFormula'
+import { normalizeAmountSeparators, formatAmountForDisplay } from './amountFormula'
 
 export const emptyRecurringForm = {
   description: '',
@@ -49,7 +49,7 @@ export function isRecurringFormComplete(form) {
 export function recurringFormFromRow(recurring) {
   return {
     description: recurring.description,
-    amount: String(recurring.amount),
+    amount: formatAmountForDisplay(recurring.amount),
     type: recurring.type,
     day_of_month: String(recurring.day_of_month),
     category_id: String(recurring.category_id),

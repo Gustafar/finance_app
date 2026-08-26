@@ -12,7 +12,7 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
-import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
+import { isAmountFormula, isAmountInvalid, maskAmountInput, resolveAmountInput } from '../utils/amountFormula'
 
 function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
@@ -238,7 +238,7 @@ function ExpenseForm({ onExpenseCreated }) {
                 inputMode="decimal"
                 placeholder="0,00 (ou =10+5,50)"
                 value={totalAmount}
-                onChange={(e) => setTotalAmount(e.target.value)}
+                onChange={(e) => setTotalAmount(maskAmountInput(e.target.value))}
                 onBlur={(e) => setTotalAmount(resolveAmountInput(e.target.value))}
                 required
               />
@@ -300,7 +300,7 @@ function ExpenseForm({ onExpenseCreated }) {
               inputMode="decimal"
               placeholder="0,00 (ou =10+5,50)"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => setAmount(maskAmountInput(e.target.value))}
               onFocus={() => {
                 if (amountFormula) setAmount(amountFormula)
               }}

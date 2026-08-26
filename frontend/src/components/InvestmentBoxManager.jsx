@@ -4,6 +4,7 @@ import { paletteColor, COLOR_KEYS } from '../utils/categoryColor'
 import { sortByName } from '../hooks/useInvestmentBoxes'
 import { useBulkSelection } from '../hooks/useBulkSelection'
 import { MONTH_NAMES_PT, currentYearMonth } from '../utils/date'
+import { maskAmountInput, normalizeAmountSeparators, formatAmountForDisplay } from '../utils/amountFormula'
 import ColorSwatchPicker from './ColorSwatchPicker'
 import ConfirmDialog from './ConfirmDialog'
 import SelectionToolbar from './SelectionToolbar'
@@ -14,13 +15,12 @@ function GoalFields({ amount, onAmountChange, month, onMonthChange, year, onYear
   return (
     <div className="entity-goal-fields">
       <input
-        type="number"
-        min="0"
-        step="0.01"
+        type="text"
+        inputMode="decimal"
         placeholder="Meta (R$)"
         aria-label="Valor da meta"
         value={amount}
-        onChange={(e) => onAmountChange(e.target.value)}
+        onChange={(e) => onAmountChange(maskAmountInput(e.target.value))}
       />
       <select aria-label="Mês da meta" value={month} onChange={(e) => onMonthChange(e.target.value)}>
         <option value="">Mês</option>
@@ -73,7 +73,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
       return { goal_amount: null, goal_month: null, goal_year: null }
     }
     return {
-      goal_amount: parseFloat(amount),
+      goal_amount: parseFloat(normalizeAmountSeparators(amount)),
       goal_month: Number(month),
       goal_year: Number(year),
     }
@@ -107,7 +107,7 @@ function InvestmentBoxManager({ investmentBoxes, setInvestmentBoxes, isLoading, 
     setEditingId(box.id)
     setEditingName(box.name)
     setEditingColor(box.color)
-    setEditingGoalAmount(box.goal_amount ?? '')
+    setEditingGoalAmount(formatAmountForDisplay(box.goal_amount))
     setEditingGoalMonth(box.goal_month ?? '')
     setEditingGoalYear(box.goal_year ?? '')
     setRowError(null)
