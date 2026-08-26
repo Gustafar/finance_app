@@ -103,6 +103,36 @@ function ChartsPage({
 
             <section className="panel chart-panel">
               <DrillDownBreakdownChart
+                title="Gastos por envelope"
+                expenses={filteredExpenses}
+                resetKey={resetKey}
+                rootLabel="Envelopes"
+                caption={caption}
+                detailEmptyMessage="Nenhuma despesa para exibir."
+                onEditExpense={onEditExpense}
+                dimensions={[
+                  {
+                    idKey: 'bucket_id',
+                    nameKey: 'bucket_name',
+                    colorKey: 'bucket_color',
+                    tableLabel: 'Envelope',
+                    emptyMessage: 'Nenhuma despesa no período para exibir por envelope.',
+                    chartType: 'pie',
+                  },
+                  {
+                    idKey: 'category_id',
+                    nameKey: 'category_name',
+                    colorKey: 'category_color',
+                    tableLabel: 'Categoria',
+                    emptyMessage: 'Nenhuma despesa deste envelope.',
+                  },
+                  subcategoryDimension,
+                ]}
+              />
+            </section>
+
+            <section className="panel chart-panel">
+              <DrillDownBreakdownChart
                 title="Gastos por responsável"
                 expenses={filteredExpenses}
                 resetKey={resetKey}

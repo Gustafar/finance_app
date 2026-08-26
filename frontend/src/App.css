@@ -2231,6 +2231,14 @@
   flex-shrink: 0;
 }
 
+.chart-legend-item--clickable {
+  cursor: pointer;
+}
+
+.chart-legend-item--clickable:hover {
+  color: var(--text-h);
+}
+
 .chart-tooltip {
   display: flex;
   flex-direction: column;

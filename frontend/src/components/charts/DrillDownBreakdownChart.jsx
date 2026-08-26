@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import BreakdownBarChart from './BreakdownBarChart'
+import BreakdownPieChart from './BreakdownPieChart'
 import { formatCurrency, formatDate } from '../../utils/format'
 
 function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
@@ -49,10 +50,11 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
 }
 
 // dimensions: ordered chain of grouping levels to drill through, e.g. responsável → categoria →
-// subcategoria. Each is { idKey, nameKey, colorKey, tableLabel, emptyMessage, noneId?, noneLabel? }
-// — noneId/noneLabel group expenses missing that field (e.g. legacy expenses without a
-// subcategory) under a synthetic bucket instead of dropping them. Clicking a bar drills one
-// level deeper; the last level's clicks reveal the individual expenses behind it.
+// subcategoria. Each is { idKey, nameKey, colorKey, tableLabel, emptyMessage, chartType?, noneId?,
+// noneLabel? } — chartType picks 'bar' (default) or 'pie' for that level. noneId/noneLabel group
+// expenses missing that field (e.g. legacy expenses without a subcategory) under a synthetic
+// bucket instead of dropping them. Clicking a bar/slice drills one level deeper; the last level's
+// clicks reveal the individual expenses behind it.
 function DrillDownBreakdownChart({ title, expenses, resetKey, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense }) {
   const [drillPath, setDrillPath] = useState([])
   const [sortBy, setSortBy] = useState('date')
@@ -138,7 +140,17 @@ function DrillDownBreakdownChart({ title, expenses, resetKey, dimensions, rootLa
           <p className="chart-caption">{caption}</p>
         )}
 
-        {currentDimension ? (
+        {currentDimension && currentDimension.chartType === 'pie' ? (
+          <BreakdownPieChart
+            expenses={chartExpenses}
+            idKey={currentDimension.idKey}
+            nameKey={currentDimension.nameKey}
+            colorKey={currentDimension.colorKey}
+            tableLabel={currentDimension.tableLabel}
+            emptyMessage={currentDimension.emptyMessage}
+            onSliceClick={(item) => setDrillPath([...drillPath, { id: item.id, name: item.name }])}
+          />
+        ) : currentDimension ? (
           <BreakdownBarChart
             expenses={chartExpenses}
             idKey={currentDimension.idKey}
