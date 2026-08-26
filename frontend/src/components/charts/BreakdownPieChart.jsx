@@ -5,19 +5,19 @@ import { paletteColor } from '../../utils/categoryColor'
 function PieTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
 
-  const { name, amount, percent, color } = payload[0].payload
+  const { name, amount, share, color } = payload[0].payload
 
   return (
     <div className="chart-tooltip">
       <span className="chart-tooltip-value" style={{ color }}>
-        {formatCurrency(amount)} · {percent.toFixed(1)}%
+        {formatCurrency(amount)} · {share.toFixed(1)}%
       </span>
       <span className="chart-tooltip-label">{name}</span>
     </div>
   )
 }
 
-function renderPercentLabel({ cx, cy, midAngle, outerRadius, percent, payload }) {
+function renderPercentLabel({ cx, cy, midAngle, outerRadius, payload }) {
   const RADIAN = Math.PI / 180
   const radius = outerRadius + 18
   const x = cx + radius * Math.cos(-midAngle * RADIAN)
@@ -33,7 +33,7 @@ function renderPercentLabel({ cx, cy, midAngle, outerRadius, percent, payload })
       fontSize={12}
       fontWeight={600}
     >
-      {(percent * 100).toFixed(1)}%
+      {payload.share.toFixed(1)}%
     </text>
   )
 }
@@ -64,7 +64,7 @@ function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
 
   const total = data.reduce((sum, item) => sum + item.amount, 0)
   data.forEach((item) => {
-    item.percent = total > 0 ? (item.amount / total) * 100 : 0
+    item.share = total > 0 ? (item.amount / total) * 100 : 0
   })
 
   return (
