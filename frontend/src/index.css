@@ -21,6 +21,18 @@
   --radius-md: 12px;
   --radius-lg: 16px;
 
+  --input-height: 34px;
+  --input-height-sm: 30px;
+  --input-padding-x: 10px;
+  --input-padding-x-sm: 8px;
+  --input-font-size: 13px;
+  --input-font-size-sm: 12px;
+
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
   --sans: 'Segoe UI', system-ui, Roboto, sans-serif;
 
   font: 16px/145% var(--sans);

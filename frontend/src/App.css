@@ -359,12 +359,12 @@
 .filter-field select,
 .filter-field input {
   width: 100%;
-  height: 30px;
+  height: var(--input-height-sm);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--input-font-size-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0 8px;
+  padding: 0 var(--input-padding-x-sm);
   background: var(--bg);
   outline: none;
   transition: border-color 0.15s ease;
@@ -412,12 +412,12 @@
 
 .search-input input {
   width: 150px;
-  height: 30px;
+  height: var(--input-height-sm);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--input-font-size-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0 8px 0 26px;
+  padding: 0 var(--input-padding-x-sm) 0 26px;
   background: var(--bg);
   outline: none;
   transition: border-color 0.15s ease;
@@ -443,12 +443,12 @@
   justify-content: space-between;
   gap: 6px;
   width: 100%;
-  height: 30px;
+  height: var(--input-height-sm);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--input-font-size-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0 8px;
+  padding: 0 var(--input-padding-x-sm);
   background: var(--bg);
   color: var(--text);
   outline: none;
@@ -599,7 +599,7 @@
 }
 
 .panel-header {
-  padding: 20px 24px;
+  padding: 20px var(--space-lg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -753,7 +753,7 @@
 
 .plan-copy-warning {
   margin: 12px 0 0;
-  padding: 12px 14px;
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
   font-size: 13px;
   line-height: 1.5;
@@ -828,7 +828,7 @@
 }
 
 .selection-toolbar--panel {
-  padding: 8px 24px;
+  padding: 8px var(--space-lg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -873,7 +873,7 @@
   grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(130px, 1fr) auto auto;
   align-items: center;
   gap: 12px;
-  padding: 14px 24px;
+  padding: 14px var(--space-lg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -1219,12 +1219,12 @@
 .field input,
 .field select {
   width: 100%;
-  height: 34px;
+  height: var(--input-height);
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--input-font-size);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 7px 10px;
+  padding: 0 var(--input-padding-x);
   background: var(--bg);
   outline: none;
   transition: border-color 0.15s ease;
@@ -1252,7 +1252,7 @@
 }
 
 .field input::placeholder {
-  font-size: 13px;
+  font-size: var(--input-font-size);
   color: var(--text-muted);
 }
 
@@ -1383,12 +1383,12 @@
 .bulk-grid select {
   width: 100%;
   min-width: 92px;
-  height: 30px;
+  height: var(--input-height-sm);
   font-family: inherit;
-  font-size: 12.5px;
+  font-size: var(--input-font-size-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 4px 6px;
+  padding: 0 var(--input-padding-x-sm);
   background: var(--bg);
   outline: none;
   transition: border-color 0.15s ease;
@@ -1661,11 +1661,11 @@
 .entity-create-form input:not([type='checkbox']) {
   flex: 1;
   min-width: 0;
-  height: 34px;
-  font-size: 13px;
+  height: var(--input-height);
+  font-size: var(--input-font-size);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 9px 12px;
+  padding: 0 var(--input-padding-x);
   background: var(--bg);
   outline: none;
   transition: border-color 0.15s ease;
@@ -1684,9 +1684,11 @@
 .entity-goal-fields select {
   flex: 1;
   min-width: 0;
+  height: var(--input-height);
+  font-size: var(--input-font-size);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 9px 10px;
+  padding: 0 var(--input-padding-x);
   background: var(--bg);
   color: var(--text);
   outline: none;
@@ -1767,7 +1769,7 @@
 }
 
 .entity-row--inline-edit {
-  padding: 14px 24px;
+  padding: 14px var(--space-lg);
 }
 
 .entity-row-main {
@@ -1780,11 +1782,11 @@
 .entity-edit-input {
   flex: 1;
   min-width: 0;
-  height: 34px;
-  font-size: 13px;
+  height: var(--input-height);
+  font-size: var(--input-font-size);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 7px 10px;
+  padding: 0 var(--input-padding-x);
   background: var(--bg);
   outline: none;
   transition: border-color 0.15s ease;
@@ -1836,7 +1838,7 @@
 .modal-content {
   background: var(--surface);
   border-radius: var(--radius-lg);
-  padding: 22px;
+  padding: var(--space-lg);
   box-shadow: var(--shadow-lg);
   position: relative;
   max-height: calc(100svh - 100px);
@@ -2108,7 +2110,7 @@
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 12px 14px;
+  padding: var(--space-sm) var(--space-md);
 }
 
 .estimate-compare-card-header {
@@ -2484,7 +2486,7 @@
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: var(--space-sm) var(--space-md);
 }
 
 .investment-box-total {
