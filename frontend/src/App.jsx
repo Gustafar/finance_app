@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import AddExpenseModal from './components/AddExpenseModal'
 import ExpenseEditForm from './components/ExpenseEditForm'
@@ -26,6 +26,7 @@ import { currentYearMonth, sameYearMonth, shiftMonth } from './utils/date'
 import { EMPTY_FILTERS, hasActiveFilters, matchesFilters } from './utils/filters'
 import { useTheme } from './hooks/useTheme'
 import { useCategories } from './hooks/useCategories'
+import { useInvestmentBoxes } from './hooks/useInvestmentBoxes'
 import './App.css'
 
 const ChartsPage = lazy(() => import('./pages/ChartsPage'))
@@ -57,6 +58,19 @@ function App() {
   const location = useLocation()
   const { theme, cycleTheme } = useTheme()
   const { categories } = useCategories()
+  const { investmentBoxes } = useInvestmentBoxes()
+
+  // A deleted investment box stays referenced by its past expenses for history, but shouldn't
+  // keep inflating investment totals across the app — so any 'investment' row pointing at a box
+  // that's no longer active is excluded from aggregate sums (though it still shows in lists/edits).
+  const activeInvestmentBoxIds = useMemo(
+    () => new Set(investmentBoxes.map((box) => box.id)),
+    [investmentBoxes]
+  )
+  const countsTowardInvestmentTotals = useCallback(
+    (expense) => expense.type !== 'investment' || activeInvestmentBoxIds.has(expense.investment_box_id),
+    [activeInvestmentBoxIds]
+  )
 
   const loadExpenses = () => {
     return fetchExpenses()
@@ -171,13 +185,20 @@ function App() {
   )
 
   const trendExpenses = useMemo(
-    () => expenses.filter((expense) => matchesFilters(expense, filters)),
-    [expenses, filters]
+    () => expenses.filter((expense) => matchesFilters(expense, filters) && countsTowardInvestmentTotals(expense)),
+    [expenses, filters, countsTowardInvestmentTotals]
+  )
+
+  const investmentSafeExpenses = useMemo(
+    () => expenses.filter(countsTowardInvestmentTotals),
+    [expenses, countsTowardInvestmentTotals]
   )
 
   const summary = useMemo(() => {
     const totalByType = (type) =>
-      filteredExpenses.filter((expense) => expense.type === type).reduce((sum, expense) => sum + expense.amount, 0)
+      filteredExpenses
+        .filter((expense) => expense.type === type && countsTowardInvestmentTotals(expense))
+        .reduce((sum, expense) => sum + expense.amount, 0)
 
     const totalsByCategory = filteredExpenses
       .filter((expense) => expense.type === 'expense')
@@ -196,7 +217,7 @@ function App() {
       topCategory: topCategory ? topCategory[0] : '—',
       topCategoryAmount: topCategory ? topCategory[1] : 0,
     }
-  }, [filteredExpenses])
+  }, [filteredExpenses, countsTowardInvestmentTotals])
 
   return (
     <div className="page">
@@ -568,7 +589,7 @@ function App() {
           element={
             <Suspense fallback={<main className="container"><p className="state-message">Carregando gráficos…</p></main>}>
               <ChartsPage
-                expenses={expenses}
+                expenses={investmentSafeExpenses}
                 trendExpenses={trendExpenses}
                 filteredExpenses={filteredExpenses}
                 isLoading={isLoading}
