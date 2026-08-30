@@ -324,9 +324,8 @@ function App() {
               title="Envelopes"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M1.5 5.5 8 2l6.5 3.5-6.5 3.5-6.5-3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                <path d="M1.5 5.5V11L8 14.5V9" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                <path d="M14.5 5.5V11L8 14.5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                <rect x="1.5" y="3.5" width="13" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.3" />
+                <path d="m2 4.5 6 4.5 6-4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
             <button
