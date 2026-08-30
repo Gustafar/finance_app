@@ -354,8 +354,10 @@ const (
 )
 
 // UpdateWithScope updates the expense at id as usual, then — if it belongs to an installment
-// purchase and scope reaches beyond it — propagates the shared fields (everything but amount, date
-// and amount_formula, which are inherently per-installment) to the rest of the purchase's installments.
+// purchase and scope reaches beyond it — propagates the shared fields (everything but amount and
+// amount_formula, which are inherently per-installment) to the rest of the purchase's installments.
+// The edited installment's new date also becomes the anchor: the other installments in scope are
+// rescheduled monthly around it (same day of month, clamped).
 func (s *ExpenseService) UpdateWithScope(id int, expense models.Expense, scope InstallmentScope) (models.Expense, error) {
 	current, err := s.Repo.GetByID(id)
 	if err != nil {
@@ -381,6 +383,20 @@ func (s *ExpenseService) UpdateWithScope(id int, expense models.Expense, scope I
 				return models.Expense{}, refErr
 			}
 			return models.Expense{}, err
+		}
+
+		anchorNumber := *current.InstallmentNumber
+		dates := make(map[int]time.Time)
+		for n := 1; n <= *current.InstallmentCount; n++ {
+			if n == anchorNumber || (scope == InstallmentScopeFuture && n < anchorNumber) {
+				continue
+			}
+			dates[n] = addMonthsClamped(updated.Date, n-anchorNumber)
+		}
+		if len(dates) > 0 {
+			if err := s.Repo.RescheduleInstallmentDates(*current.InstallmentPurchaseID, dates); err != nil {
+				return models.Expense{}, err
+			}
 		}
 	}
 
