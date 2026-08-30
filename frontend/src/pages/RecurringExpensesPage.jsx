@@ -13,6 +13,7 @@ import { formatCurrency } from '../utils/format'
 import { currentYearMonth, shiftMonth } from '../utils/date'
 import { paletteColor } from '../utils/categoryColor'
 import { useBulkSelection } from '../hooks/useBulkSelection'
+import { useVisibility } from '../hooks/useVisibility'
 import ConfirmDialog from '../components/ConfirmDialog'
 import LoadingBar from '../components/LoadingBar'
 import Modal from '../components/Modal'
@@ -113,6 +114,7 @@ function RecurringExpensesPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const { hidden } = useVisibility()
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
 
@@ -322,12 +324,12 @@ function RecurringExpensesPage() {
       {!isLoading && !loadError && (
         <>
           <section className="summary-grid">
-            <SummaryCard label="Estimativa de gasto" value={formatCurrency(totals.expense)} tone="expense" />
-            <SummaryCard label="Estimativa de recebimento" value={formatCurrency(totals.income)} tone="income" />
-            <SummaryCard label="Estimativa de investimento" value={formatCurrency(totals.investment)} tone="investment" />
+            <SummaryCard label="Estimativa de gasto" value={formatCurrency(totals.expense, hidden)} tone="expense" />
+            <SummaryCard label="Estimativa de recebimento" value={formatCurrency(totals.income, hidden)} tone="income" />
+            <SummaryCard label="Estimativa de investimento" value={formatCurrency(totals.investment, hidden)} tone="investment" />
             <SummaryCard
               label="Só planejamento"
-              value={formatCurrency(totals.plannedOnly)}
+              value={formatCurrency(totals.plannedOnly, hidden)}
               sub="Ainda não vira despesa real"
             />
           </section>
@@ -489,7 +491,7 @@ function RecurringExpensesPage() {
 
         {!isLoading && !loadError && recurrences.length > 0 && (
           <p className="recurring-fixed-total" style={{ margin: '0 24px 12px' }}>
-            {listTab === 'fixed' ? 'Total gasto fixo (saídas)' : 'Total planejado (saídas)'}: {formatCurrency(activeTabExpenseTotal)}
+            {listTab === 'fixed' ? 'Total gasto fixo (saídas)' : 'Total planejado (saídas)'}: {formatCurrency(activeTabExpenseTotal, hidden)}
           </p>
         )}
 
@@ -576,7 +578,7 @@ function RecurringExpensesPage() {
 
                   <span className={`expense-amount ${amountConfig.className}`}>
                     {amountConfig.prefix}
-                    {formatCurrency(recurring.amount)}
+                    {formatCurrency(recurring.amount, hidden)}
                   </span>
 
                   <div className="expense-actions">

@@ -4,12 +4,15 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import LoginGate from './components/LoginGate.jsx'
+import { VisibilityProvider } from './context/VisibilityContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <LoginGate>
-        <App />
+        <VisibilityProvider>
+          <App />
+        </VisibilityProvider>
       </LoginGate>
     </BrowserRouter>
   </StrictMode>,

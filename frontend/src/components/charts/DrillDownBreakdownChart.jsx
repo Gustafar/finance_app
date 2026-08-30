@@ -2,8 +2,10 @@ import { useState } from 'react'
 import BreakdownBarChart from './BreakdownBarChart'
 import BreakdownPieChart from './BreakdownPieChart'
 import { formatCurrency, formatDate } from '../../utils/format'
+import { useVisibility } from '../../hooks/useVisibility'
 
 function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
+  const { hidden } = useVisibility()
   const sorted = [...expenses].sort((a, b) =>
     sortBy === 'amount' ? b.amount - a.amount : new Date(b.date) - new Date(a.date)
   )
@@ -23,7 +25,7 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
             )}
             <span className="chart-detail-date">{formatDate(expense.date)} · {expense.person_name}</span>
           </div>
-          <span className="chart-detail-amount">{formatCurrency(expense.amount)}</span>
+          <span className="chart-detail-amount">{formatCurrency(expense.amount, hidden)}</span>
           {onEditExpense && (
             <button
               type="button"

@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { formatCurrency, formatDate } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
 import { TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
+import { useVisibility } from '../hooks/useVisibility'
 import ConfirmDialog from './ConfirmDialog'
 import InstallmentScopeDialog from './InstallmentScopeDialog'
 import SelectionToolbar from './SelectionToolbar'
 
 function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, toggleId, toggleSelecting }) {
   const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
+  const { hidden } = useVisibility()
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
@@ -100,7 +102,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
                       <path d="M1.5 6.5h13" stroke="currentColor" strokeWidth="1.3" />
                     </svg>
                     Parcela {expense.installment_number}/{expense.installment_count} · Compra de{' '}
-                    {formatCurrency(expense.purchase_total_amount)} em {formatDate(expense.purchase_date)}
+                    {formatCurrency(expense.purchase_total_amount, hidden)} em {formatDate(expense.purchase_date)}
                   </span>
                 )}
                 {expense.recurring_expense_id && <span className="installment-note">Fixo</span>}
@@ -109,7 +111,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
               <div className="expense-amount-group">
                 <span className={`expense-amount ${amountConfig.className}`}>
                   {amountConfig.prefix}
-                  {formatCurrency(expense.amount)}
+                  {formatCurrency(expense.amount, hidden)}
                   {expense.amount_formula && (
                     <span
                       className="expense-amount-formula-badge"
@@ -126,7 +128,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
                 </span>
                 {expense.installment_count && (
                   <span className="expense-amount-total">
-                    Total {formatCurrency(expense.purchase_total_amount)}
+                    Total {formatCurrency(expense.purchase_total_amount, hidden)}
                   </span>
                 )}
               </div>

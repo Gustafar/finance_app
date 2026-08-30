@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchLatestPlanningMonth, fetchRecurringExpenses, replaceMonthPlanning } from '../api/recurringExpenses'
 import { formatMonthLabel } from '../utils/date'
 import { formatCurrency } from '../utils/format'
+import { useVisibility } from '../hooks/useVisibility'
 import RecurringFields from './RecurringFields'
 import { emptyRecurringForm, isRecurringFormComplete, recurringFormFromRow, recurringFormToPayload } from '../utils/recurringForm'
 import Modal from './Modal'
@@ -51,6 +52,7 @@ function CopyPreviousPlanDialog({
   banks,
   onSaved,
 }) {
+  const { hidden } = useVisibility()
   const [loadState, setLoadState] = useState('loading')
   const [loadError, setLoadError] = useState(null)
   const [sourceMonth, setSourceMonth] = useState(null)
@@ -220,7 +222,7 @@ function CopyPreviousPlanDialog({
                       {!row.include_in_expenses && ' · Somente planejamento'}
                     </span>
                   </div>
-                  <span className="expense-amount">{formatCurrency(row.amount)}</span>
+                  <span className="expense-amount">{formatCurrency(row.amount, hidden)}</span>
                   <div className="expense-actions">
                     <button
                       type="button"

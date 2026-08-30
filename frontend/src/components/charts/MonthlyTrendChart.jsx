@@ -3,6 +3,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import Modal from '../Modal'
 import { formatCompactCurrency, formatCurrency } from '../../utils/format'
 import { formatShortMonthLabel, lastMonths, monthsInRange, sameYearMonth } from '../../utils/date'
+import { useVisibility } from '../../hooks/useVisibility'
 
 const SERIES = [
   { key: 'expense', label: 'Despesas', color: 'var(--danger)' },
@@ -34,7 +35,7 @@ function stdDev(values) {
   return Math.sqrt(variance)
 }
 
-function LineTooltip({ active, payload, label, series }) {
+function LineTooltip({ active, payload, label, series, hidden }) {
   if (!active || !payload?.length) return null
 
   return (
@@ -47,7 +48,7 @@ function LineTooltip({ active, payload, label, series }) {
           <div key={item.key} className="chart-tooltip-row">
             <span className="chart-tooltip-key" style={{ background: item.color }} />
             <span className="chart-tooltip-row-label">{item.label}</span>
-            <span className="chart-tooltip-row-value">{formatCurrency(entry.value)}</span>
+            <span className="chart-tooltip-row-value">{formatCurrency(entry.value, hidden)}</span>
           </div>
         )
       })}
@@ -56,6 +57,7 @@ function LineTooltip({ active, payload, label, series }) {
 }
 
 function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
+  const { hidden } = useVisibility()
   const [tableColumns, setTableColumns] = useState(DEFAULT_TABLE_COLUMNS)
   const [tableStatRows, setTableStatRows] = useState([])
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -157,7 +159,7 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                 <ResponsiveContainer width={56} height={260}>
                   <LineChart data={data} margin={{ top: 8, right: 0, bottom: 4, left: 4 }}>
                     <YAxis
-                      tickFormatter={formatCompactCurrency}
+                      tickFormatter={(value) => formatCompactCurrency(value, hidden)}
                       tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
                       axisLine={false}
                       tickLine={false}
@@ -191,7 +193,7 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                     />
                     <YAxis hide width={0} />
                     <Tooltip
-                      content={<LineTooltip series={activeSeries} />}
+                      content={<LineTooltip series={activeSeries} hidden={hidden} />}
                       cursor={{ stroke: 'var(--border)', strokeWidth: 1 }}
                     />
                     {activeSeries.map((series) => (
@@ -268,7 +270,7 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                     <tr key={month.label}>
                       <td>{month.label}</td>
                       {TABLE_COLUMNS.filter((column) => tableColumns.includes(column.key)).map((column) => (
-                        <td key={column.key}>{formatCurrency(month[column.key])}</td>
+                        <td key={column.key}>{formatCurrency(month[column.key], hidden)}</td>
                       ))}
                     </tr>
                   ))}
@@ -281,7 +283,7 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                         {TABLE_COLUMNS.filter((column) => tableColumns.includes(column.key)).map((column) => {
                           const values = data.map((month) => month[column.key])
                           const value = row.key === 'mean' ? mean(values) : stdDev(values)
-                          return <td key={column.key}>{formatCurrency(value)}</td>
+                          return <td key={column.key}>{formatCurrency(value, hidden)}</td>
                         })}
                       </tr>
                     ))}

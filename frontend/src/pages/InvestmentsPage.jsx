@@ -7,8 +7,9 @@ import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { paletteColor } from '../utils/categoryColor'
 import { formatCurrency, formatDate } from '../utils/format'
 import { MONTH_NAMES_PT, monthsUntilGoal } from '../utils/date'
+import { useVisibility } from '../hooks/useVisibility'
 
-function BoxGoal({ box, saved, color }) {
+function BoxGoal({ box, saved, color, hidden }) {
   const remaining = Math.max(box.goal_amount - saved, 0)
   const percent = (saved / box.goal_amount) * 100
   const monthsLeft = monthsUntilGoal(box.goal_month, box.goal_year)
@@ -18,17 +19,17 @@ function BoxGoal({ box, saved, color }) {
   if (remaining <= 0) {
     simulationText = 'Meta atingida! 🎉'
   } else if (monthsLeft < 0) {
-    simulationText = `Meta vencida — faltam ${formatCurrency(remaining)}`
+    simulationText = `Meta vencida — faltam ${formatCurrency(remaining, hidden)}`
   } else {
     const monthly = remaining / (monthsLeft + 1)
-    simulationText = `Guarde ${formatCurrency(monthly)}/mês até ${targetLabel} para atingir a meta`
+    simulationText = `Guarde ${formatCurrency(monthly, hidden)}/mês até ${targetLabel} para atingir a meta`
   }
 
   return (
     <div className="investment-box-goal">
       <GoalProgressChart percent={percent} color={color.text} />
       <div className="investment-box-goal-text">
-        <span>Meta: {formatCurrency(box.goal_amount)} até {targetLabel}</span>
+        <span>Meta: {formatCurrency(box.goal_amount, hidden)} até {targetLabel}</span>
         <span className="investment-box-goal-simulation">{simulationText}</span>
       </div>
     </div>
@@ -59,6 +60,7 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
   } = useInvestmentBoxes()
 
   const [expandedBoxIds, setExpandedBoxIds] = useState(() => new Set())
+  const { hidden } = useVisibility()
 
   const toggleExpanded = (id) => {
     setExpandedBoxIds((current) => {
@@ -103,7 +105,7 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
       {!isLoading && !loadError && (
         <>
           <section className="summary-grid">
-            <SummaryCard label="Total investido" value={formatCurrency(totalInvested)} tone="investment" />
+            <SummaryCard label="Total investido" value={formatCurrency(totalInvested, hidden)} tone="investment" />
           </section>
 
           <section className="panel">
@@ -131,8 +133,8 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
                       <span className="badge" style={{ background: color.bg, color: color.text }}>
                         {box.name}
                       </span>
-                      <span className="investment-box-total">{formatCurrency(total)}</span>
-                      {box.goal_amount && <BoxGoal box={box} saved={total} color={color} />}
+                      <span className="investment-box-total">{formatCurrency(total, hidden)}</span>
+                      {box.goal_amount && <BoxGoal box={box} saved={total} color={color} hidden={hidden} />}
 
                       <button
                         type="button"
@@ -157,7 +159,7 @@ function InvestmentsPage({ expenses, isLoading, loadError, onExpensesChanged }) 
                                 className={`expense-amount ${movement.signedAmount >= 0 ? 'expense-amount--income' : 'expense-amount--expense'}`}
                               >
                                 {movement.signedAmount >= 0 ? '+ ' : '- '}
-                                {formatCurrency(Math.abs(movement.signedAmount))}
+                                {formatCurrency(Math.abs(movement.signedAmount), hidden)}
                               </span>
                             </li>
                           ))}

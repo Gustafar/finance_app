@@ -10,6 +10,7 @@ import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChar
 import { formatCurrency } from '../utils/format'
 import { paletteColor } from '../utils/categoryColor'
 import { currentYearMonth, shiftMonth } from '../utils/date'
+import { useVisibility } from '../hooks/useVisibility'
 
 const NO_SUBCATEGORY_ID = 'none'
 const NO_SUBCATEGORY_NAME = 'Sem subcategoria'
@@ -35,6 +36,7 @@ function MonthlyEstimatePage() {
   const { categories, isLoading: isLoadingCategories } = useCategories()
   const { subcategories, isLoading: isLoadingSubcategories } = useSubcategories()
   const { people, isLoading: isLoadingPeople } = usePeople()
+  const { hidden } = useVisibility()
 
   const isLoading = isLoadingRecurrences || isLoadingCategories || isLoadingSubcategories || isLoadingPeople
 
@@ -122,12 +124,12 @@ function MonthlyEstimatePage() {
       {!isLoading && !loadError && (
         <>
           <section className="summary-grid">
-            <SummaryCard label="Estimativa de gasto" value={formatCurrency(totals.expense)} tone="expense" />
-            <SummaryCard label="Estimativa de recebimento" value={formatCurrency(totals.income)} tone="income" />
-            <SummaryCard label="Estimativa de investimento" value={formatCurrency(totals.investment)} tone="investment" />
+            <SummaryCard label="Estimativa de gasto" value={formatCurrency(totals.expense, hidden)} tone="expense" />
+            <SummaryCard label="Estimativa de recebimento" value={formatCurrency(totals.income, hidden)} tone="income" />
+            <SummaryCard label="Estimativa de investimento" value={formatCurrency(totals.investment, hidden)} tone="investment" />
             <SummaryCard
               label="Só planejamento"
-              value={formatCurrency(totals.plannedOnly)}
+              value={formatCurrency(totals.plannedOnly, hidden)}
               sub="Ainda não vira despesa real"
             />
           </section>
@@ -190,7 +192,7 @@ function MonthlyEstimatePage() {
                         <span className="expense-date">Todo dia {recurring.day_of_month}</span>
                       </div>
                       <div className="expense-amount-group">
-                        <span className="expense-amount">{formatCurrency(recurring.amount)}</span>
+                        <span className="expense-amount">{formatCurrency(recurring.amount, hidden)}</span>
                       </div>
                     </li>
                   )

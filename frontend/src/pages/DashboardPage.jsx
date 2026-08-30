@@ -6,6 +6,7 @@ import RefreshButton from '../components/RefreshButton'
 import SearchInput from '../components/SearchInput'
 import { formatCurrency } from '../utils/format'
 import { useBulkSelection } from '../hooks/useBulkSelection'
+import { useVisibility } from '../hooks/useVisibility'
 
 function DashboardPage({
   selectedMonth,
@@ -28,6 +29,7 @@ function DashboardPage({
   onSearchChange,
 }) {
   const { isSelecting, selectedIds, toggleSelecting, toggleId } = useBulkSelection()
+  const { hidden } = useVisibility()
 
   return (
     <main className="container">
@@ -71,13 +73,13 @@ function DashboardPage({
       </div>
 
       <section className="summary-grid">
-        <SummaryCard label="Total gasto" value={formatCurrency(summary.totalExpense)} tone="expense" />
-        <SummaryCard label="Total recebido" value={formatCurrency(summary.totalIncome)} tone="income" />
-        <SummaryCard label="Total investido" value={formatCurrency(summary.totalInvestment)} tone="investment" />
+        <SummaryCard label="Total gasto" value={formatCurrency(summary.totalExpense, hidden)} tone="expense" />
+        <SummaryCard label="Total recebido" value={formatCurrency(summary.totalIncome, hidden)} tone="income" />
+        <SummaryCard label="Total investido" value={formatCurrency(summary.totalInvestment, hidden)} tone="investment" />
         <SummaryCard
           label="Maior categoria"
           value={summary.topCategory}
-          sub={summary.count > 0 ? formatCurrency(summary.topCategoryAmount) : null}
+          sub={summary.count > 0 ? formatCurrency(summary.topCategoryAmount, hidden) : null}
         />
       </section>
 

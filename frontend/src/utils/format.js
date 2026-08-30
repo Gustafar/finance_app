@@ -16,11 +16,15 @@ const compactCurrencyFormatter = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 1,
 })
 
-export function formatCurrency(value) {
+const HIDDEN_VALUE_MASK = '••••••'
+
+export function formatCurrency(value, hidden) {
+  if (hidden) return HIDDEN_VALUE_MASK
   return currencyFormatter.format(value ?? 0)
 }
 
-export function formatCompactCurrency(value) {
+export function formatCompactCurrency(value, hidden) {
+  if (hidden) return HIDDEN_VALUE_MASK
   return compactCurrencyFormatter.format(value ?? 0)
 }
 

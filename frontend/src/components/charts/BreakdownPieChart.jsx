@@ -1,8 +1,9 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { formatCurrency } from '../../utils/format'
 import { paletteColor } from '../../utils/categoryColor'
+import { useVisibility } from '../../hooks/useVisibility'
 
-function PieTooltip({ active, payload }) {
+function PieTooltip({ active, payload, hidden }) {
   if (!active || !payload?.length) return null
 
   const { name, amount, share, color } = payload[0].payload
@@ -10,7 +11,7 @@ function PieTooltip({ active, payload }) {
   return (
     <div className="chart-tooltip">
       <span className="chart-tooltip-value" style={{ color }}>
-        {formatCurrency(amount)} · {share.toFixed(1)}%
+        {formatCurrency(amount, hidden)} · {share.toFixed(1)}%
       </span>
       <span className="chart-tooltip-label">{name}</span>
     </div>
@@ -39,6 +40,7 @@ function renderPercentLabel({ cx, cy, midAngle, outerRadius, payload }) {
 }
 
 function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, tableLabel, onSliceClick }) {
+  const { hidden } = useVisibility()
   const data = expenses
     .filter((expense) => expense.type === 'expense')
     .reduce((acc, expense) => {
@@ -92,7 +94,7 @@ function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
               />
             ))}
           </Pie>
-          <Tooltip content={<PieTooltip />} />
+          <Tooltip content={<PieTooltip hidden={hidden} />} />
         </PieChart>
       </ResponsiveContainer>
 
@@ -127,7 +129,7 @@ function BreakdownPieChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
                 className={onSliceClick ? 'chart-table-row--clickable' : undefined}
               >
                 <td>{item.name}</td>
-                <td>{formatCurrency(item.amount)}</td>
+                <td>{formatCurrency(item.amount, hidden)}</td>
                 <td>{item.share.toFixed(1)}%</td>
               </tr>
             ))}

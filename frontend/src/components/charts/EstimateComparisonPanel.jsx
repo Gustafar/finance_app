@@ -4,6 +4,7 @@ import { useRecurringExpenses } from '../../hooks/useRecurringExpenses'
 import MonthPicker from '../MonthPicker'
 import { formatCurrency } from '../../utils/format'
 import { sameYearMonth, shiftMonth } from '../../utils/date'
+import { useVisibility } from '../../hooks/useVisibility'
 
 const ROWS = [
   { type: 'expense', label: 'Gasto', tone: 'expense', higherIsBetter: false },
@@ -16,6 +17,7 @@ function sumByType(items, type) {
 }
 
 function EstimateComparisonPanel({ expenses, selectedMonth }) {
+  const { hidden } = useVisibility()
   const [viewedMonth, setViewedMonth] = useState(selectedMonth)
   const { recurrences, isLoading } = useRecurringExpenses(viewedMonth.year, viewedMonth.month)
 
@@ -89,7 +91,7 @@ function EstimateComparisonPanel({ expenses, selectedMonth }) {
                     className={`estimate-compare-diff ${row.isGood ? 'estimate-compare-diff--good' : 'estimate-compare-diff--bad'}`}
                   >
                     {row.diff > 0 ? '+' : ''}
-                    {formatCurrency(row.diff)}
+                    {formatCurrency(row.diff, hidden)}
                   </span>
                 </div>
 
@@ -102,7 +104,7 @@ function EstimateComparisonPanel({ expenses, selectedMonth }) {
                         style={{ width: `${(row.estimated / row.maxValue) * 100}%` }}
                       />
                     </div>
-                    <span className="estimate-compare-bar-value">{formatCurrency(row.estimated)}</span>
+                    <span className="estimate-compare-bar-value">{formatCurrency(row.estimated, hidden)}</span>
                   </div>
                   <div className="estimate-compare-bar-row">
                     <span className="estimate-compare-bar-tag">Real</span>
@@ -112,7 +114,7 @@ function EstimateComparisonPanel({ expenses, selectedMonth }) {
                         style={{ width: `${(row.actual / row.maxValue) * 100}%` }}
                       />
                     </div>
-                    <span className="estimate-compare-bar-value">{formatCurrency(row.actual)}</span>
+                    <span className="estimate-compare-bar-value">{formatCurrency(row.actual, hidden)}</span>
                   </div>
                 </div>
               </div>

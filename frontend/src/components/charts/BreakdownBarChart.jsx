@@ -1,8 +1,9 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatCompactCurrency, formatCurrency } from '../../utils/format'
 import { paletteColor } from '../../utils/categoryColor'
+import { useVisibility } from '../../hooks/useVisibility'
 
-function BarTooltip({ active, payload }) {
+function BarTooltip({ active, payload, hidden }) {
   if (!active || !payload?.length) return null
 
   const { name, amount, color } = payload[0].payload
@@ -10,7 +11,7 @@ function BarTooltip({ active, payload }) {
   return (
     <div className="chart-tooltip">
       <span className="chart-tooltip-value" style={{ color }}>
-        {formatCurrency(amount)}
+        {formatCurrency(amount, hidden)}
       </span>
       <span className="chart-tooltip-label">{name}</span>
     </div>
@@ -18,6 +19,7 @@ function BarTooltip({ active, payload }) {
 }
 
 function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, tableLabel, onBarClick }) {
+  const { hidden } = useVisibility()
   const data = expenses
     .filter((expense) => expense.type === 'expense')
     .reduce((acc, expense) => {
@@ -50,7 +52,7 @@ function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
         <BarChart data={data} layout="vertical" margin={{ top: 4, right: 32, bottom: 4, left: 4 }} barCategoryGap={8}>
           <XAxis
             type="number"
-            tickFormatter={formatCompactCurrency}
+            tickFormatter={(value) => formatCompactCurrency(value, hidden)}
             tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
             axisLine={{ stroke: 'var(--border)' }}
             tickLine={false}
@@ -63,7 +65,7 @@ function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<BarTooltip />} cursor={{ fill: 'var(--primary-bg)' }} />
+          <Tooltip content={<BarTooltip hidden={hidden} />} cursor={{ fill: 'var(--primary-bg)' }} />
           <Bar dataKey="amount" maxBarSize={22} radius={[0, 4, 4, 0]}>
             {data.map((entry) => (
               <Cell
@@ -94,7 +96,7 @@ function BreakdownBarChart({ expenses, idKey, nameKey, colorKey, emptyMessage, t
                 className={onBarClick ? 'chart-table-row--clickable' : undefined}
               >
                 <td>{item.name}</td>
-                <td>{formatCurrency(item.amount)}</td>
+                <td>{formatCurrency(item.amount, hidden)}</td>
               </tr>
             ))}
           </tbody>
