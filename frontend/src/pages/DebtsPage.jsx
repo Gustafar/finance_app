@@ -161,8 +161,12 @@ function DebtsPage() {
               <div className="investment-box-grid">
                 {groups.map((group) => (
                   <div className="investment-box-card" key={group.name}>
-                    <span className="badge">{group.name}</span>
-                    <span className="investment-box-total">{formatCurrency(group.outstanding, hidden)}</span>
+                    <div className="debt-group-header">
+                      <span className="badge">{group.name}</span>
+                      {group.items.length > 1 && (
+                        <span className="investment-box-total">{formatCurrency(group.outstanding, hidden)}</span>
+                      )}
+                    </div>
 
                     <ul className="investment-box-history">
                       {group.items.map((debt) => {
