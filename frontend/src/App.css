@@ -2709,23 +2709,11 @@
   padding: 0;
 }
 
-.debt-item .expense-description {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  white-space: normal;
-}
-
 .debt-item-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-}
-
-.debt-settled-badge {
-  font-size: 10px;
 }
 
 .debt-payments {

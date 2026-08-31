@@ -174,9 +174,9 @@ function DebtsPage() {
                               <div className="investment-box-history-main">
                                 <span className="expense-description" title={debt.description}>
                                   {debt.description}
-                                  {settled && <span className="badge badge--planning-only debt-settled-badge">Quitada</span>}
                                 </span>
                                 <span className="expense-date">
+                                  {settled && 'Quitada · '}
                                   {formatDate(debt.incurred_on)}
                                   {debt.due_date && ` · vence ${formatDate(debt.due_date)}`}
                                   {debt.comment && ` · ${debt.comment}`}
