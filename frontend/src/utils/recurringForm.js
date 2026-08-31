@@ -15,6 +15,24 @@ export const emptyRecurringForm = {
   comment: '',
 }
 
+// Builds a fresh form pre-selecting each entity's default option (falling back to the first one),
+// so "new item" forms don't come up with every dropdown blank. Mirrors createDefaults in
+// RecurringExpensesPage.
+export function recurringFormWithDefaults({ categories = [], people = [], paymentMethods = [], buckets = [], banks = [] } = {}) {
+  const pick = (list) => {
+    const chosen = list.find((item) => item.is_default) ?? list[0]
+    return chosen ? String(chosen.id) : ''
+  }
+  return {
+    ...emptyRecurringForm,
+    category_id: pick(categories),
+    person_id: pick(people),
+    payment_method_id: pick(paymentMethods),
+    bucket_id: pick(buckets),
+    bank_id: pick(banks),
+  }
+}
+
 export function recurringFormToPayload(form) {
   return {
     description: form.description.trim(),

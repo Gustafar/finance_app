@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchLatestPlanningMonth, fetchRecurringExpenses, replaceMonthPlanning } from '../api/recurringExpenses'
 import { formatMonthLabel } from '../utils/date'
 import { formatCurrency } from '../utils/format'
 import { useVisibility } from '../hooks/useVisibility'
 import RecurringFields from './RecurringFields'
-import { emptyRecurringForm, isRecurringFormComplete, recurringFormFromRow, recurringFormToPayload } from '../utils/recurringForm'
+import {
+  emptyRecurringForm,
+  isRecurringFormComplete,
+  recurringFormFromRow,
+  recurringFormToPayload,
+  recurringFormWithDefaults,
+} from '../utils/recurringForm'
 import Modal from './Modal'
 
 // The backend validates every draft row before saving and rejects the whole batch on the first
@@ -53,6 +59,11 @@ function CopyPreviousPlanDialog({
   onSaved,
 }) {
   const { hidden } = useVisibility()
+
+  const addDefaults = useMemo(
+    () => recurringFormWithDefaults({ categories, people, paymentMethods, buckets, banks }),
+    [categories, people, paymentMethods, buckets, banks]
+  )
   const [loadState, setLoadState] = useState('loading')
   const [loadError, setLoadError] = useState(null)
   const [sourceMonth, setSourceMonth] = useState(null)
@@ -61,6 +72,17 @@ function CopyPreviousPlanDialog({
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [addForm, setAddForm] = useState(emptyRecurringForm)
   const [addAttemptedSubmit, setAddAttemptedSubmit] = useState(false)
+
+  // addForm starts blank (entities may not be loaded yet at mount); fall back to the default
+  // option for any dropdown the user hasn't touched, like the main "new recurring expense" form.
+  const effectiveAddForm = {
+    ...addForm,
+    category_id: addForm.category_id || addDefaults.category_id,
+    person_id: addForm.person_id || addDefaults.person_id,
+    payment_method_id: addForm.payment_method_id || addDefaults.payment_method_id,
+    bucket_id: addForm.bucket_id || addDefaults.bucket_id,
+    bank_id: addForm.bank_id || addDefaults.bank_id,
+  }
 
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState(emptyRecurringForm)
@@ -102,9 +124,9 @@ function CopyPreviousPlanDialog({
   const handleAdd = (e) => {
     e.preventDefault()
     setAddAttemptedSubmit(true)
-    if (!isRecurringFormComplete(addForm)) return
+    if (!isRecurringFormComplete(effectiveAddForm)) return
 
-    setDraftRows((prev) => [...prev, toDraftRow(recurringFormToPayload(addForm))])
+    setDraftRows((prev) => [...prev, toDraftRow(recurringFormToPayload(effectiveAddForm))])
     setAddForm(emptyRecurringForm)
     setAddAttemptedSubmit(false)
     setIsAddOpen(false)
@@ -269,7 +291,7 @@ function CopyPreviousPlanDialog({
             <form className="expense-form" onSubmit={handleAdd} style={{ width: 'auto', marginTop: 16 }}>
               <RecurringFields
                 idPrefix="copy-add"
-                form={addForm}
+                form={effectiveAddForm}
                 onChange={setAddForm}
                 categories={categories}
                 subcategories={subcategories}
@@ -279,7 +301,7 @@ function CopyPreviousPlanDialog({
                 banks={banks}
                 attemptedSubmit={addAttemptedSubmit}
               />
-              {addAttemptedSubmit && !isRecurringFormComplete(addForm) && (
+              {addAttemptedSubmit && !isRecurringFormComplete(effectiveAddForm) && (
                 <p className="form-error">Preencha os campos destacados antes de continuar.</p>
               )}
               <div className="entity-actions">
