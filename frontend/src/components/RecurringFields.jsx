@@ -2,6 +2,9 @@ import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { clampDayOfMonth } from '../utils/date'
 import { normalizeAmountSeparators, maskAmountInput } from '../utils/amountFormula'
 import SubcategorySelect from './SubcategorySelect'
+import SearchableSelect from './SearchableSelect'
+
+const toOptions = (list) => list.map((item) => ({ value: String(item.id), label: item.name }))
 
 function RecurringFields({ idPrefix, form, onChange, categories, subcategories, people, paymentMethods, buckets, banks, attemptedSubmit }) {
   const errCls = (invalid) => `field${attemptedSubmit && invalid ? ' field--error' : ''}`
@@ -87,61 +90,49 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
         </div>
         <div className={errCls(!form.person_id)}>
           <label htmlFor={`${idPrefix}-person`}>Responsável</label>
-          <select
+          <SearchableSelect
             id={`${idPrefix}-person`}
             value={form.person_id}
-            onChange={(e) => onChange({ ...form, person_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {people.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onChange={(person_id) => onChange({ ...form, person_id })}
+            options={toOptions(people)}
+            ariaLabel="Responsável"
+          />
         </div>
       </div>
 
       <div className="field-row">
         <div className={errCls(!form.payment_method_id)}>
           <label htmlFor={`${idPrefix}-payment-method`}>Método de pagamento</label>
-          <select
+          <SearchableSelect
             id={`${idPrefix}-payment-method`}
             value={form.payment_method_id}
-            onChange={(e) => onChange({ ...form, payment_method_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {paymentMethods.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
+            onChange={(payment_method_id) => onChange({ ...form, payment_method_id })}
+            options={toOptions(paymentMethods)}
+            ariaLabel="Método de pagamento"
+          />
         </div>
         <div className={errCls(!form.bucket_id)}>
           <label htmlFor={`${idPrefix}-bucket`}>Envelope</label>
-          <select
+          <SearchableSelect
             id={`${idPrefix}-bucket`}
             value={form.bucket_id}
-            onChange={(e) => onChange({ ...form, bucket_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {buckets.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+            onChange={(bucket_id) => onChange({ ...form, bucket_id })}
+            options={toOptions(buckets)}
+            ariaLabel="Envelope"
+          />
         </div>
       </div>
 
       <div className="field-row field-row--end">
         <div className={errCls(!form.bank_id)}>
           <label htmlFor={`${idPrefix}-bank`}>Banco</label>
-          <select
+          <SearchableSelect
             id={`${idPrefix}-bank`}
             value={form.bank_id}
-            onChange={(e) => onChange({ ...form, bank_id: e.target.value })}
-          >
-            <option value="" disabled>Selecione…</option>
-            {banks.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
+            onChange={(bank_id) => onChange({ ...form, bank_id })}
+            options={toOptions(banks)}
+            ariaLabel="Banco"
+          />
         </div>
 
         <label className="checkbox-field checkbox-field--compact" htmlFor={`${idPrefix}-include-in-expenses`}>

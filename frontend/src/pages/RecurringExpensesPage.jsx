@@ -24,6 +24,7 @@ import RecurringExpenseBulkForm from '../components/RecurringExpenseBulkForm'
 import CopyPreviousPlanDialog from '../components/CopyPreviousPlanDialog'
 import SelectionToolbar from '../components/SelectionToolbar'
 import RecurringFields from '../components/RecurringFields'
+import SearchableSelect from '../components/SearchableSelect'
 import SummaryCard from '../components/SummaryCard'
 import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
 import { emptyRecurringForm as emptyForm, isRecurringFormComplete as isFormComplete, recurringFormFromRow, recurringFormToPayload } from '../utils/recurringForm'
@@ -652,20 +653,20 @@ function RecurringExpensesPage() {
           </div>
           <div className="field">
             <label htmlFor="filter-subcategory">Subcategoria</label>
-            <select id="filter-subcategory" value={subcategoryFilter} onChange={(e) => setSubcategoryFilter(e.target.value)}>
-              <option value="all">Todas</option>
-              {categories.map((category) => {
-                const options = subcategories.filter((s) => s.category_id === category.id)
-                if (options.length === 0) return null
-                return (
-                  <optgroup key={category.id} label={category.name}>
-                    {options.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </optgroup>
-                )
-              })}
-            </select>
+            <SearchableSelect
+              id="filter-subcategory"
+              value={subcategoryFilter}
+              onChange={setSubcategoryFilter}
+              options={[
+                { value: 'all', label: 'Todas' },
+                ...categories.flatMap((category) =>
+                  subcategories
+                    .filter((s) => s.category_id === category.id)
+                    .map((s) => ({ value: String(s.id), label: s.name, group: category.name })),
+                ),
+              ]}
+              ariaLabel="Subcategoria"
+            />
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { updateExpense, anticipateInstallments } from '../api/expenses'
 import SubcategorySelect from './SubcategorySelect'
+import SearchableSelect from './SearchableSelect'
 import DatePicker from './DatePicker'
 import AnticipateInstallmentsDialog from './AnticipateInstallmentsDialog'
 import { useCategories } from '../hooks/useCategories'
@@ -256,66 +257,50 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         <div className={`field${attemptedSubmit && !personId ? ' field--error' : ''}`}>
           <label htmlFor="edit-person">Responsável</label>
-          <select
+          <SearchableSelect
             id="edit-person"
             value={personId}
-            onChange={(e) => setPersonId(e.target.value)}
-            required
+            onChange={setPersonId}
+            options={people.map((p) => ({ value: String(p.id), label: p.name }))}
             disabled={isLoadingPeople}
-          >
-            <option value="" disabled>Selecione…</option>
-            {people.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            ariaLabel="Responsável"
+          />
         </div>
 
         <div className={`field${attemptedSubmit && !paymentMethodId ? ' field--error' : ''}`}>
           <label htmlFor="edit-payment-method">Método de pagamento</label>
-          <select
+          <SearchableSelect
             id="edit-payment-method"
             value={paymentMethodId}
-            onChange={(e) => setPaymentMethodId(e.target.value)}
-            required
+            onChange={setPaymentMethodId}
+            options={paymentMethods.map((m) => ({ value: String(m.id), label: m.name }))}
             disabled={isLoadingPaymentMethods}
-          >
-            <option value="" disabled>Selecione…</option>
-            {paymentMethods.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
+            ariaLabel="Método de pagamento"
+          />
         </div>
 
         <div className={`field${attemptedSubmit && !bucketId ? ' field--error' : ''}`}>
           <label htmlFor="edit-bucket">Envelope</label>
-          <select
+          <SearchableSelect
             id="edit-bucket"
             value={bucketId}
-            onChange={(e) => setBucketId(e.target.value)}
-            required
+            onChange={setBucketId}
+            options={buckets.map((c) => ({ value: String(c.id), label: c.name }))}
             disabled={isLoadingBuckets}
-          >
-            <option value="" disabled>Selecione…</option>
-            {buckets.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+            ariaLabel="Envelope"
+          />
         </div>
 
         <div className={`field${attemptedSubmit && !bankId ? ' field--error' : ''}`}>
           <label htmlFor="edit-bank">Banco</label>
-          <select
+          <SearchableSelect
             id="edit-bank"
             value={bankId}
-            onChange={(e) => setBankId(e.target.value)}
-            required
+            onChange={setBankId}
+            options={banks.map((b) => ({ value: String(b.id), label: b.name }))}
             disabled={isLoadingBanks}
-          >
-            <option value="" disabled>Selecione…</option>
-            {banks.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
+            ariaLabel="Banco"
+          />
         </div>
 
         {needsInvestmentBox && (
@@ -332,18 +317,14 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
                 readOnly
               />
             ) : (
-              <select
+              <SearchableSelect
                 id="edit-investment-box"
                 value={effectiveInvestmentBoxId}
-                onChange={(e) => setInvestmentBoxId(e.target.value)}
-                required={requiresInvestmentBox}
+                onChange={setInvestmentBoxId}
+                options={investmentBoxes.map((b) => ({ value: String(b.id), label: b.name }))}
                 disabled={isLoadingInvestmentBoxes}
-              >
-                <option value="">Selecione…</option>
-                {investmentBoxes.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
+                ariaLabel="Caixinha de investimento"
+              />
             )}
           </div>
         )}
