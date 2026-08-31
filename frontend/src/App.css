@@ -2690,3 +2690,62 @@
 .investment-manager-panel .entity-manager {
   width: auto;
 }
+
+/* Cobrança de dívidas */
+
+.debt-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.debt-item:last-child {
+  border-bottom: none;
+}
+
+.debt-item .investment-box-history-row {
+  padding: 0;
+}
+
+.debt-item .expense-description {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.debt-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.debt-settled-badge {
+  font-size: 10px;
+}
+
+.debt-payments {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.debt-payment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.debt-payment-row .expense-date {
+  min-width: 0;
+  flex: 1;
+}

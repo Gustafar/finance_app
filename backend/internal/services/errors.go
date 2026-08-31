@@ -62,6 +62,16 @@ var (
 	ErrCannotDeleteDefaultInvestmentBox = errors.New("the default investment box cannot be deleted")
 	ErrInvalidInvestmentBoxGoal         = errors.New("meta inválida: informe valor, mês e ano, ou deixe os três em branco")
 
+	ErrInvalidDebtDirection      = errors.New("debt direction must be receivable or payable")
+	ErrEmptyDebtCounterparty     = errors.New("debt counterparty name cannot be empty")
+	ErrEmptyDebtDescription      = errors.New("debt description cannot be empty")
+	ErrInvalidDebtAmount         = errors.New("debt amount cannot be negative")
+	ErrInvalidDebtDate           = errors.New("debt date is required")
+	ErrDebtNotFound              = errors.New("debt not found")
+	ErrInvalidDebtPaymentAmount  = errors.New("debt payment amount must be greater than zero")
+	ErrInvalidDebtPaymentDate    = errors.New("debt payment date is required")
+	ErrDebtPaymentNotFound       = errors.New("debt payment not found")
+
 	ErrEmptyRecurringExpenseName  = errors.New("recurring expense description cannot be empty")
 	ErrInvalidRecurringExpenseDay = errors.New("day of month must be between 1 and 31")
 	ErrRecurringExpenseNotFound   = errors.New("recurring expense not found")

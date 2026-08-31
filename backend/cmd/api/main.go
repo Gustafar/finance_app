@@ -61,6 +61,10 @@ func main() {
 	investmentBoxService := services.NewInvestmentBoxService(investmentBoxRepo)
 	investmentBoxHandler := handlers.NewInvestmentBoxHandler(investmentBoxService)
 
+	debtRepo := repositories.NewDebtRepository(db)
+	debtService := services.NewDebtService(debtRepo)
+	debtHandler := handlers.NewDebtHandler(debtService)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /auth/status", handlers.AuthStatus)
 	mux.HandleFunc("POST /login", handlers.Login)
@@ -124,6 +128,13 @@ func main() {
 	mux.HandleFunc("PUT /banks/{id}", bankHandler.Update)
 	mux.HandleFunc("PUT /banks/{id}/default", bankHandler.SetDefault)
 	mux.HandleFunc("DELETE /banks/{id}", bankHandler.Delete)
+
+	mux.HandleFunc("GET /debts", debtHandler.GetAll)
+	mux.HandleFunc("POST /debts", debtHandler.Create)
+	mux.HandleFunc("PUT /debts/{id}", debtHandler.Update)
+	mux.HandleFunc("DELETE /debts/{id}", debtHandler.Delete)
+	mux.HandleFunc("POST /debts/{id}/payments", debtHandler.AddPayment)
+	mux.HandleFunc("DELETE /debts/{id}/payments/{paymentId}", debtHandler.DeletePayment)
 
 	mux.HandleFunc("GET /investment-boxes", investmentBoxHandler.GetAll)
 	mux.HandleFunc("GET /investment-boxes/{id}", investmentBoxHandler.GetByID)

@@ -17,6 +17,7 @@ import BankManager from './components/BankManager'
 import DashboardPage from './pages/DashboardPage'
 import RecurringExpensesPage from './pages/RecurringExpensesPage'
 import InvestmentsPage from './pages/InvestmentsPage'
+import DebtsPage from './pages/DebtsPage'
 import { fetchExpenses, deleteExpense } from './api/expenses'
 import { fetchSubcategories } from './api/subcategories'
 import { fetchPeople } from './api/people'
@@ -382,6 +383,16 @@ function App() {
                 <path d="M15 10C15 9.45 15.45 9 16 9C16.55 9 17 9.45 17 10S16.55 11 16 11 15 10.55 15 10M22 7.5V14.47L19.18 15.41L17.5 21H12V19H10V21H4.5C4.5 21 2 12.54 2 9.5S4.46 4 7.5 4H12.5C13.41 2.79 14.86 2 16.5 2C17.33 2 18 2.67 18 3.5C18 3.71 17.96 3.9 17.88 4.08C17.74 4.42 17.62 4.81 17.56 5.23L19.83 7.5H22M20 9.5H19L15.5 6C15.5 5.35 15.59 4.71 15.76 4.09C14.79 4.34 14 5.06 13.67 6H7.5C5.57 6 4 7.57 4 9.5C4 11.38 5.22 16.15 6 19H8V17H14V19H16L17.56 13.85L20 13.03V9.5Z" />
               </svg>
             </Link>
+            <Link
+              to="/cobrancas"
+              className={`icon-btn icon-btn--header${location.pathname === '/cobrancas' ? ' icon-btn--active' : ''}`}
+              aria-label="Cobranças"
+              title="Cobranças"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1H6.32c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+              </svg>
+            </Link>
             <VisibilityToggle hidden={valuesHidden} onToggle={toggleValuesHidden} />
             <ThemeToggle theme={theme} onToggle={cycleTheme} />
           </div>
@@ -557,6 +568,13 @@ function App() {
           Investimentos
         </Link>
 
+        <Link to="/cobrancas" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1H6.32c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+          </svg>
+          Cobranças
+        </Link>
+
         <VisibilityToggle hidden={valuesHidden} onToggle={toggleValuesHidden} variant="drawer" />
         <ThemeToggle theme={theme} onToggle={cycleTheme} variant="drawer" />
       </Drawer>
@@ -623,6 +641,7 @@ function App() {
             />
           }
         />
+        <Route path="/cobrancas" element={<DebtsPage />} />
       </Routes>
 
       <AddExpenseModal
