@@ -1378,6 +1378,38 @@
   border-color: var(--primary);
 }
 
+.amount-input {
+  position: relative;
+}
+
+.amount-input input {
+  padding-right: 40px;
+}
+
+.amount-input-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
+  min-width: 30px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-2, rgba(120, 120, 128, 0.12));
+  border: 1px solid var(--border, transparent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.amount-input-toggle:hover {
+  color: var(--text-h);
+}
+
 .field--error input,
 .field--error select,
 .field--error .date-picker-input {

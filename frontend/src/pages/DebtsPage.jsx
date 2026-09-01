@@ -3,12 +3,16 @@ import { Link } from 'react-router-dom'
 import SummaryCard from '../components/SummaryCard'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import InstallmentScopeDialog from '../components/InstallmentScopeDialog'
 import DebtForm from '../components/DebtForm'
 import DebtPaymentForm from '../components/DebtPaymentForm'
+import MonthPicker from '../components/MonthPicker'
+import RefreshButton from '../components/RefreshButton'
 import { useDebts } from '../hooks/useDebts'
 import { useVisibility } from '../hooks/useVisibility'
 import { deleteDebt, deleteDebtPayment } from '../api/debts'
 import { formatCurrency, formatDate } from '../utils/format'
+import { currentYearMonth, sameYearMonth, shiftMonth } from '../utils/date'
 
 const DIRECTION_TABS = [
   { value: 'receivable', label: 'A receber' },
@@ -18,10 +22,11 @@ const DIRECTION_TABS = [
 const isSettled = (debt) => debt.outstanding <= 0.005
 
 function DebtsPage() {
-  const { debts, setDebts, isLoading, error } = useDebts()
+  const { debts, setDebts, isLoading, error, reload } = useDebts()
   const { hidden } = useVisibility()
 
   const [direction, setDirection] = useState('receivable')
+  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
   const [showSettled, setShowSettled] = useState(false)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
 
@@ -29,22 +34,33 @@ function DebtsPage() {
   const [payingDebt, setPayingDebt] = useState(null)
   const [pendingDeleteDebt, setPendingDeleteDebt] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    reload().finally(() => setIsRefreshing(false))
+  }
 
   const knownNames = useMemo(
     () => [...new Set(debts.map((d) => d.counterparty_name))].sort((a, b) => a.localeCompare(b, 'pt-BR')),
     [debts]
   )
 
+  const monthDebts = useMemo(
+    () => debts.filter((d) => sameYearMonth(d.incurred_on, selectedMonth)),
+    [debts, selectedMonth]
+  )
+
   const totals = useMemo(() => {
     const acc = { receivable: 0, payable: 0 }
-    debts.forEach((d) => {
+    monthDebts.forEach((d) => {
       if (d.outstanding > 0) acc[d.direction] += d.outstanding
     })
     return acc
-  }, [debts])
+  }, [monthDebts])
 
   const groups = useMemo(() => {
-    const visible = debts
+    const visible = monthDebts
       .filter((d) => d.direction === direction)
       .filter((d) => showSettled || !isSettled(d))
 
@@ -61,7 +77,7 @@ function DebtsPage() {
         outstanding: items.reduce((sum, d) => sum + Math.max(d.outstanding, 0), 0),
       }))
       .sort((a, b) => b.outstanding - a.outstanding || a.name.localeCompare(b.name, 'pt-BR'))
-  }, [debts, direction, showSettled])
+  }, [monthDebts, direction, showSettled])
 
   const toggleExpanded = (id) => {
     setExpandedIds((current) => {
@@ -73,16 +89,25 @@ function DebtsPage() {
   }
 
   const upsertDebt = (saved) => {
+    const list = Array.isArray(saved) ? saved : [saved]
     setDebts((prev) => {
-      const exists = prev.some((d) => d.id === saved.id)
-      return exists ? prev.map((d) => (d.id === saved.id ? saved : d)) : [saved, ...prev]
+      const byId = new Map(list.map((d) => [d.id, d]))
+      const merged = prev.map((d) => byId.get(d.id) ?? d)
+      const added = list.filter((d) => !prev.some((p) => p.id === d.id))
+      return [...added, ...merged]
     })
   }
 
-  const handleDeleteDebt = () => {
+  const handleDeleteDebt = (scope) => {
     setIsProcessing(true)
-    deleteDebt(pendingDeleteDebt.id)
-      .then(() => setDebts((prev) => prev.filter((d) => d.id !== pendingDeleteDebt.id)))
+    deleteDebt(pendingDeleteDebt.id, scope)
+      .then(() => {
+        if (scope === 'future' || scope === 'all') {
+          reload()
+        } else {
+          setDebts((prev) => prev.filter((d) => d.id !== pendingDeleteDebt.id))
+        }
+      })
       .catch((err) => console.error('Erro ao excluir cobrança:', err))
       .finally(() => {
         setIsProcessing(false)
@@ -114,6 +139,38 @@ function DebtsPage() {
 
       {!isLoading && !error && (
         <>
+          <div className="dashboard-toolbar">
+            <div className="month-nav">
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
+                aria-label="Mês anterior"
+                title="Mês anterior"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
+                aria-label="Próximo mês"
+                title="Próximo mês"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="dashboard-toolbar-actions">
+              <RefreshButton onClick={handleRefresh} isRefreshing={isRefreshing} />
+            </div>
+          </div>
+
           <section className="summary-grid">
             <SummaryCard label="Total a receber" value={formatCurrency(totals.receivable, hidden)} tone="income" />
             <SummaryCard label="Total a pagar" value={formatCurrency(totals.payable, hidden)} tone="expense" />
@@ -154,7 +211,7 @@ function DebtsPage() {
             </div>
 
             {groups.length === 0 && (
-              <p className="state-message">Nenhuma dívida {noun} no momento.</p>
+              <p className="state-message">Nenhuma dívida {noun} neste período.</p>
             )}
 
             {groups.length > 0 && (
@@ -177,6 +234,7 @@ function DebtsPage() {
                                 <span className="expense-date">
                                   {settled && 'Quitada · '}
                                   {formatDate(debt.incurred_on)}
+                                  {debt.installment_count && ` · parcela ${debt.installment_number}/${debt.installment_count}`}
                                   {debt.due_date && ` · vence ${formatDate(debt.due_date)}`}
                                   {debt.comment && ` · ${debt.comment}`}
                                 </span>
@@ -285,8 +343,12 @@ function DebtsPage() {
             debt={formState.debt}
             defaultDirection={direction}
             knownNames={knownNames}
-            onSaved={(saved) => {
-              upsertDebt(saved)
+            onSaved={(saved, scope) => {
+              if (scope === 'future' || scope === 'all') {
+                reload()
+              } else {
+                upsertDebt(saved)
+              }
               setFormState(null)
             }}
             onCancel={() => setFormState(null)}
@@ -307,16 +369,29 @@ function DebtsPage() {
         )}
       </Modal>
 
-      <ConfirmDialog
-        isOpen={pendingDeleteDebt !== null}
-        title="Excluir cobrança"
-        message="Tem certeza que deseja excluir esta cobrança e todo o seu histórico de pagamentos? Essa ação não pode ser desfeita."
-        confirmLabel="Excluir"
-        danger
-        isConfirming={isProcessing}
-        onConfirm={handleDeleteDebt}
-        onCancel={() => setPendingDeleteDebt(null)}
-      />
+      {pendingDeleteDebt?.installment_count ? (
+        <InstallmentScopeDialog
+          isOpen={pendingDeleteDebt !== null}
+          title="Excluir dívida"
+          message="Esta dívida faz parte de um parcelamento. O que deseja excluir?"
+          confirmLabel="Excluir"
+          danger
+          isConfirming={isProcessing}
+          onConfirm={handleDeleteDebt}
+          onCancel={() => setPendingDeleteDebt(null)}
+        />
+      ) : (
+        <ConfirmDialog
+          isOpen={pendingDeleteDebt !== null}
+          title="Excluir cobrança"
+          message="Tem certeza que deseja excluir esta cobrança e todo o seu histórico de pagamentos? Essa ação não pode ser desfeita."
+          confirmLabel="Excluir"
+          danger
+          isConfirming={isProcessing}
+          onConfirm={() => handleDeleteDebt()}
+          onCancel={() => setPendingDeleteDebt(null)}
+        />
+      )}
     </main>
   )
 }

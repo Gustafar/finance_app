@@ -4,7 +4,7 @@ import Modal from './Modal'
 const SCOPE_OPTIONS = [
   { value: 'this', label: 'Somente esta parcela', description: 'Aplica a alteração apenas na parcela selecionada.' },
   { value: 'future', label: 'Esta e as parcelas futuras', description: 'Aplica a alteração nesta parcela e em todas as que vêm depois dela.' },
-  { value: 'all', label: 'Todas as parcelas', description: 'Aplica a alteração em todas as parcelas desta compra.' },
+  { value: 'all', label: 'Todas as parcelas', description: 'Aplica a alteração em todas as parcelas deste parcelamento.' },
 ]
 
 function InstallmentScopeDialog({

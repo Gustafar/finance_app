@@ -8,12 +8,16 @@ export function createDebt(debt) {
   return fetchJson('/debts', { method: 'POST', body: JSON.stringify(debt) })
 }
 
-export function updateDebt(id, debt) {
-  return fetchJson(`/debts/${id}`, { method: 'PUT', body: JSON.stringify(debt) })
+export function updateDebt(id, debt, scope) {
+  return fetchJson(`/debts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(scope ? { ...debt, scope } : debt),
+  })
 }
 
-export function deleteDebt(id) {
-  return fetchJson(`/debts/${id}`, { method: 'DELETE' })
+export function deleteDebt(id, scope) {
+  const query = scope ? `?scope=${scope}` : ''
+  return fetchJson(`/debts/${id}${query}`, { method: 'DELETE' })
 }
 
 export function addDebtPayment(id, payment) {

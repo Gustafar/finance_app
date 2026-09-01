@@ -13,7 +13,8 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
-import { isAmountFormula, isAmountInvalid, maskAmountInput, resolveAmountInput } from '../utils/amountFormula'
+import AmountInput from './AmountInput'
+import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
 
 function ExpenseForm({ onExpenseCreated }) {
   const { categories, isLoading: isLoadingCategories } = useCategories()
@@ -234,14 +235,11 @@ function ExpenseForm({ onExpenseCreated }) {
           <div className="field-row">
             <div className={`field${attemptedSubmit && isAmountMissing ? ' field--error' : ''}`}>
               <label htmlFor="total-amount">Valor total</label>
-              <input
+              <AmountInput
                 id="total-amount"
-                type="text"
-                inputMode="decimal"
-                placeholder="0,00 (ou =10+5,50)"
                 value={totalAmount}
-                onChange={(e) => setTotalAmount(maskAmountInput(e.target.value))}
-                onBlur={(e) => setTotalAmount(resolveAmountInput(e.target.value))}
+                onChange={setTotalAmount}
+                onBlur={(text) => setTotalAmount(resolveAmountInput(text))}
                 required
               />
             </div>
@@ -296,18 +294,15 @@ function ExpenseForm({ onExpenseCreated }) {
         <>
           <div className={`field${attemptedSubmit && isAmountMissing ? ' field--error' : ''}`}>
             <label htmlFor="amount">Valor</label>
-            <input
+            <AmountInput
               id="amount"
-              type="text"
-              inputMode="decimal"
-              placeholder="0,00 (ou =10+5,50)"
               value={amount}
-              onChange={(e) => setAmount(maskAmountInput(e.target.value))}
+              formula={amountFormula}
+              onChange={setAmount}
               onFocus={() => {
                 if (amountFormula) setAmount(amountFormula)
               }}
-              onBlur={(e) => {
-                const text = e.target.value
+              onBlur={(text) => {
                 if (isAmountFormula(text)) {
                   setAmountFormula(text)
                   setAmount(resolveAmountInput(text))

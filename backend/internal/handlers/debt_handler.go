@@ -25,7 +25,8 @@ func debtValidationError(err error) bool {
 		errors.Is(err, services.ErrInvalidDebtAmount) ||
 		errors.Is(err, services.ErrInvalidDebtDate) ||
 		errors.Is(err, services.ErrInvalidDebtPaymentAmount) ||
-		errors.Is(err, services.ErrInvalidDebtPaymentDate)
+		errors.Is(err, services.ErrInvalidDebtPaymentDate) ||
+		errors.Is(err, services.ErrInvalidInstallmentCount)
 }
 
 func (h *DebtHandler) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +45,20 @@ func (h *DebtHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if debt.InstallmentCount != nil && *debt.InstallmentCount >= 2 {
+		created, err := h.Service.CreateInstallments(debt, *debt.InstallmentCount)
+		if err != nil {
+			if debtValidationError(err) {
+				respondError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			respondError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+		respondJSON(w, http.StatusCreated, created)
+		return
+	}
+
 	created, err := h.Service.Create(debt)
 	if err != nil {
 		if debtValidationError(err) {
@@ -57,6 +72,13 @@ func (h *DebtHandler) Create(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, created)
 }
 
+// updateDebtRequest is a models.Debt plus the installment scope for the edit ("this" if omitted,
+// "future", or "all" — see services.InstallmentScope).
+type updateDebtRequest struct {
+	models.Debt
+	Scope services.InstallmentScope `json:"scope,omitempty"`
+}
+
 func (h *DebtHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
@@ -64,13 +86,13 @@ func (h *DebtHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var debt models.Debt
-	if err := json.NewDecoder(r.Body).Decode(&debt); err != nil {
+	var req updateDebtRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	updated, err := h.Service.Update(id, debt)
+	updated, err := h.Service.UpdateWithScope(id, req.Debt, req.Scope)
 	if err != nil {
 		if errors.Is(err, services.ErrDebtNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
@@ -94,7 +116,9 @@ func (h *DebtHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Service.Delete(id); err != nil {
+	scope := services.InstallmentScope(r.URL.Query().Get("scope"))
+
+	if err := h.Service.DeleteWithScope(id, scope); err != nil {
 		if errors.Is(err, services.ErrDebtNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return

@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import DatePicker from './DatePicker'
+import AmountInput from './AmountInput'
 import { addDebtPayment } from '../api/debts'
 import { formatCurrency } from '../utils/format'
 import { useVisibility } from '../hooks/useVisibility'
 import { todayDateInputValue, dateInputValueToISOString } from '../utils/date'
 import {
-  isAmountFormula,
   isAmountInvalid,
-  maskAmountInput,
   resolveAmountInput,
   normalizeAmountSeparators,
   formatAmountForDisplay,
@@ -62,14 +61,11 @@ function DebtPaymentForm({ debt, onSaved, onCancel }) {
       <div className="field-row">
         <div className={`field${attemptedSubmit && amountMissing ? ' field--error' : ''}`}>
           <label htmlFor="payment-amount">Valor recebido</label>
-          <input
+          <AmountInput
             id="payment-amount"
-            type="text"
-            inputMode="decimal"
-            placeholder="0,00"
             value={amount}
-            onChange={(e) => setAmount(maskAmountInput(e.target.value))}
-            onBlur={(e) => setAmount(isAmountFormula(e.target.value) ? e.target.value : resolveAmountInput(e.target.value))}
+            onChange={setAmount}
+            onBlur={(text) => setAmount(resolveAmountInput(text))}
           />
         </div>
         <div className={`field${attemptedSubmit && !paidOn ? ' field--error' : ''}`}>

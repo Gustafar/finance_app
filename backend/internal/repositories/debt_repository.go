@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"time"
 
 	"finance_app/internal/models"
 )
@@ -15,18 +16,75 @@ func NewDebtRepository(db *sql.DB) *DebtRepository {
 }
 
 const selectDebtQuery = `
-	SELECT id, direction, counterparty_name, description, amount, incurred_on, due_date, comment, created_at
+	SELECT id, direction, counterparty_name, description, amount, amount_formula, incurred_on, due_date, comment, created_at,
+	       installment_group_id, installment_number, installment_count
 	FROM debts
 `
 
 func scanDebt(row interface{ Scan(...any) error }) (models.Debt, error) {
 	var debt models.Debt
 	err := row.Scan(
-		&debt.ID, &debt.Direction, &debt.CounterpartyName, &debt.Description, &debt.Amount,
+		&debt.ID, &debt.Direction, &debt.CounterpartyName, &debt.Description, &debt.Amount, &debt.AmountFormula,
 		&debt.IncurredOn, &debt.DueDate, &debt.Comment, &debt.CreatedAt,
+		&debt.InstallmentGroupID, &debt.InstallmentNumber, &debt.InstallmentCount,
 	)
 	debt.Payments = []models.DebtPayment{}
 	return debt, err
+}
+
+// DebtInstallmentSlice is one month's slice of a parcelamento.
+type DebtInstallmentSlice struct {
+	Number     int
+	Amount     float64
+	IncurredOn time.Time
+	DueDate    *time.Time
+}
+
+// CreateInstallments inserts every slice as its own debt row, linked by a shared
+// installment_group_id, and returns the created debts ordered by installment number.
+func (r *DebtRepository) CreateInstallments(base models.Debt, slices []DebtInstallmentSlice) ([]models.Debt, error) {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var groupID int
+	if err := tx.QueryRow("SELECT nextval('debt_installment_group_seq')").Scan(&groupID); err != nil {
+		return nil, err
+	}
+
+	count := len(slices)
+	ids := make([]int, 0, count)
+	insert := `INSERT INTO debts
+		(direction, counterparty_name, description, amount, incurred_on, due_date, comment,
+		 installment_group_id, installment_number, installment_count)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
+
+	for _, slice := range slices {
+		var id int
+		if err := tx.QueryRow(
+			insert, base.Direction, base.CounterpartyName, base.Description, slice.Amount,
+			slice.IncurredOn, slice.DueDate, base.Comment, groupID, slice.Number, count,
+		).Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	debts := make([]models.Debt, 0, len(ids))
+	for _, id := range ids {
+		debt, err := r.GetByID(id)
+		if err != nil {
+			return nil, err
+		}
+		debts = append(debts, debt)
+	}
+	return debts, nil
 }
 
 func scanDebtPayment(row interface{ Scan(...any) error }) (models.DebtPayment, error) {
@@ -129,12 +187,12 @@ func (r *DebtRepository) GetByID(id int) (models.Debt, error) {
 }
 
 func (r *DebtRepository) Create(debt models.Debt) (models.Debt, error) {
-	query := `INSERT INTO debts (direction, counterparty_name, description, amount, incurred_on, due_date, comment)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	query := `INSERT INTO debts (direction, counterparty_name, description, amount, amount_formula, incurred_on, due_date, comment)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
 	var id int
 	err := r.DB.QueryRow(
-		query, debt.Direction, debt.CounterpartyName, debt.Description, debt.Amount,
+		query, debt.Direction, debt.CounterpartyName, debt.Description, debt.Amount, debt.AmountFormula,
 		debt.IncurredOn, debt.DueDate, debt.Comment,
 	).Scan(&id)
 	if err != nil {
@@ -146,11 +204,11 @@ func (r *DebtRepository) Create(debt models.Debt) (models.Debt, error) {
 
 func (r *DebtRepository) Update(id int, debt models.Debt) (models.Debt, error) {
 	query := `UPDATE debts
-		SET direction = $1, counterparty_name = $2, description = $3, amount = $4, incurred_on = $5, due_date = $6, comment = $7
-		WHERE id = $8`
+		SET direction = $1, counterparty_name = $2, description = $3, amount = $4, amount_formula = $5, incurred_on = $6, due_date = $7, comment = $8
+		WHERE id = $9`
 
 	result, err := r.DB.Exec(
-		query, debt.Direction, debt.CounterpartyName, debt.Description, debt.Amount,
+		query, debt.Direction, debt.CounterpartyName, debt.Description, debt.Amount, debt.AmountFormula,
 		debt.IncurredOn, debt.DueDate, debt.Comment, id,
 	)
 	if err != nil {
@@ -183,6 +241,51 @@ func (r *DebtRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+// UpdateInstallmentGroup applies the shared fields (everything except amount, amount_formula,
+// incurred_on and due_date, which stay per-installment) to every debt of groupID from fromNumber
+// onward, excluding excludeID (already updated separately by the caller).
+func (r *DebtRepository) UpdateInstallmentGroup(groupID, excludeID, fromNumber int, debt models.Debt) error {
+	query := `UPDATE debts SET direction = $1, counterparty_name = $2, description = $3, comment = $4
+		WHERE installment_group_id = $5 AND installment_number >= $6 AND id != $7`
+
+	_, err := r.DB.Exec(
+		query, debt.Direction, debt.CounterpartyName, debt.Description, debt.Comment,
+		groupID, fromNumber, excludeID,
+	)
+	return err
+}
+
+// DeleteInstallmentGroup deletes every debt of groupID with installment_number >= fromNumber
+// (their debt_payments cascade).
+func (r *DebtRepository) DeleteInstallmentGroup(groupID, fromNumber int) error {
+	_, err := r.DB.Exec(
+		"DELETE FROM debts WHERE installment_group_id = $1 AND installment_number >= $2",
+		groupID, fromNumber,
+	)
+	return err
+}
+
+// RescheduleInstallmentDates sets incurred_on of each installment_number of groupID listed in dates,
+// one UPDATE per entry inside a single transaction.
+func (r *DebtRepository) RescheduleInstallmentDates(groupID int, dates map[int]time.Time) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for number, date := range dates {
+		if _, err := tx.Exec(
+			"UPDATE debts SET incurred_on = $1 WHERE installment_group_id = $2 AND installment_number = $3",
+			date, groupID, number,
+		); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 // AddPayment records a repayment against an existing debt and returns the updated debt.

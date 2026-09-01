@@ -69,6 +69,21 @@ export function resolveAmountInput(text) {
   return String(Math.round(result * 100) / 100)
 }
 
+// Converts a field value to masked pt-BR currency text ("1.234,56") for switching a field into
+// mask mode. Formula text ("=10+5") is left untouched so the calculator flow still works.
+export function toMaskedDisplay(value) {
+  if (isAmountFormula(value)) return value
+  const num = parseFloat(normalizeAmountSeparators(String(value ?? '')))
+  return Number.isFinite(num) ? formatAmountForDisplay(num) : ''
+}
+
+// Converts a field value to plain editable text (dot decimal, no thousands separator) for
+// switching a field into free-text mode. Formula text is left untouched.
+export function toPlainText(value) {
+  if (isAmountFormula(value)) return value
+  return normalizeAmountSeparators(String(value ?? ''))
+}
+
 // True when a resolved amount value can't be submitted as-is: empty, still an unresolved
 // formula, non-numeric free text, or out of range. Run text through resolveAmountInput first.
 export function isAmountInvalid(text, { allowZero = true } = {}) {

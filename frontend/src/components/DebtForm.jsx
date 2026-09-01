@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import DatePicker from './DatePicker'
+import AmountInput from './AmountInput'
+import InstallmentScopeDialog from './InstallmentScopeDialog'
 import { createDebt, updateDebt } from '../api/debts'
 import { todayDateInputValue, dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
 import {
   isAmountFormula,
   isAmountInvalid,
-  maskAmountInput,
   resolveAmountInput,
   normalizeAmountSeparators,
   formatAmountForDisplay,
@@ -23,41 +24,65 @@ function DebtForm({ debt, defaultDirection = 'receivable', knownNames = [], onSa
   const [name, setName] = useState(debt?.counterparty_name ?? '')
   const [description, setDescription] = useState(debt?.description ?? '')
   const [amount, setAmount] = useState(debt ? formatAmountForDisplay(debt.amount) : '')
+  const [amountFormula, setAmountFormula] = useState(debt?.amount_formula ?? null)
   const [incurredOn, setIncurredOn] = useState(
     debt ? isoStringToDateInputValue(debt.incurred_on) : todayDateInputValue()
   )
   const [dueDate, setDueDate] = useState(debt?.due_date ? isoStringToDateInputValue(debt.due_date) : '')
   const [comment, setComment] = useState(debt?.comment ?? '')
+  const [isInstallment, setIsInstallment] = useState(false)
+  const [installmentCount, setInstallmentCount] = useState('3')
 
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [showScope, setShowScope] = useState(false)
+
+  const isGroupedInstallment = isEditing && Boolean(debt?.installment_count)
 
   const resolvedAmount = resolveAmountInput(amount)
   const amountMissing = isAmountInvalid(resolvedAmount, { allowZero: false })
-  const isInvalid = !name.trim() || !description.trim() || !incurredOn || amountMissing
+  const installmentActive = !isEditing && isInstallment
+  const parsedInstallmentCount = Number(installmentCount)
+  const installmentCountInvalid =
+    installmentActive && (!Number.isInteger(parsedInstallmentCount) || parsedInstallmentCount < 2 || parsedInstallmentCount > 60)
+  const isInvalid =
+    !name.trim() || !description.trim() || !incurredOn || amountMissing || installmentCountInvalid
 
   const handleSubmit = (e) => {
     e.preventDefault()
     setAttemptedSubmit(true)
     if (isInvalid) return
 
+    if (isGroupedInstallment) {
+      setShowScope(true)
+      return
+    }
+    performSave()
+  }
+
+  const performSave = (scope) => {
+    setShowScope(false)
     setError(null)
     setIsSaving(true)
+
+    const effectiveFormula = isAmountFormula(amount) ? amount : amountFormula
 
     const payload = {
       direction,
       counterparty_name: name.trim(),
       description: description.trim(),
       amount: parseFloat(normalizeAmountSeparators(resolvedAmount)),
+      amount_formula: installmentActive ? null : effectiveFormula,
       incurred_on: dateInputValueToISOString(incurredOn),
       due_date: dueDate ? dateInputValueToISOString(dueDate) : null,
       ...(comment.trim() ? { comment: comment.trim() } : {}),
+      ...(installmentActive ? { installment_count: parsedInstallmentCount } : {}),
     }
 
-    const request = isEditing ? updateDebt(debt.id, payload) : createDebt(payload)
+    const request = isEditing ? updateDebt(debt.id, payload, scope) : createDebt(payload)
     request
-      .then((saved) => onSaved(saved))
+      .then((saved) => onSaved(saved, scope))
       .catch((err) => {
         console.error('Erro ao salvar cobrança:', err)
         setError('Não foi possível salvar. Tente novamente.')
@@ -68,6 +93,7 @@ function DebtForm({ debt, defaultDirection = 'receivable', knownNames = [], onSa
   const errCls = (invalid) => `field${attemptedSubmit && invalid ? ' field--error' : ''}`
 
   return (
+    <>
     <form className="expense-form" onSubmit={handleSubmit}>
       <h2 className="modal-title">{isEditing ? 'Editar cobrança' : 'Nova cobrança'}</h2>
 
@@ -119,22 +145,51 @@ function DebtForm({ debt, defaultDirection = 'receivable', knownNames = [], onSa
 
       <div className="field-row">
         <div className={errCls(amountMissing)}>
-          <label htmlFor="debt-amount">Valor</label>
-          <input
+          <label htmlFor="debt-amount">{installmentActive ? 'Valor total' : 'Valor'}</label>
+          <AmountInput
             id="debt-amount"
-            type="text"
-            inputMode="decimal"
-            placeholder="0,00 (ou =10+5,50)"
             value={amount}
-            onChange={(e) => setAmount(maskAmountInput(e.target.value))}
-            onBlur={(e) => setAmount(isAmountFormula(e.target.value) ? e.target.value : resolveAmountInput(e.target.value))}
+            formula={amountFormula}
+            onChange={setAmount}
+            onFocus={() => {
+              if (amountFormula) setAmount(amountFormula)
+            }}
+            onBlur={(text) => {
+              setAmountFormula(isAmountFormula(text) ? text : null)
+              setAmount(resolveAmountInput(text))
+            }}
           />
         </div>
         <div className={errCls(!incurredOn)}>
-          <label htmlFor="debt-incurred">Data</label>
+          <label htmlFor="debt-incurred">{installmentActive ? 'Data da 1ª parcela' : 'Data'}</label>
           <DatePicker id="debt-incurred" value={incurredOn} onChange={(e) => setIncurredOn(e.target.value)} />
         </div>
       </div>
+
+      {!isEditing && (
+        <label className="checkbox-field">
+          <input
+            type="checkbox"
+            checked={isInstallment}
+            onChange={(e) => setIsInstallment(e.target.checked)}
+          />
+          Parcelar esta dívida?
+        </label>
+      )}
+
+      {installmentActive && (
+        <div className={errCls(installmentCountInvalid)}>
+          <label htmlFor="debt-installments">Nº de parcelas (mensais)</label>
+          <input
+            id="debt-installments"
+            type="number"
+            min="2"
+            max="60"
+            value={installmentCount}
+            onChange={(e) => setInstallmentCount(e.target.value)}
+          />
+        </div>
+      )}
 
       <div className="field-row">
         <div className="field">
@@ -167,6 +222,17 @@ function DebtForm({ debt, defaultDirection = 'receivable', knownNames = [], onSa
         </button>
       </div>
     </form>
+
+    <InstallmentScopeDialog
+      isOpen={showScope}
+      title="Salvar alterações"
+      message="Esta dívida faz parte de um parcelamento. O que deseja alterar?"
+      confirmLabel="Salvar"
+      isConfirming={isSaving}
+      onConfirm={performSave}
+      onCancel={() => setShowScope(false)}
+    />
+    </>
   )
 }
 

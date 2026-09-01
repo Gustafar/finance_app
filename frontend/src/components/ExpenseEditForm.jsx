@@ -13,7 +13,8 @@ import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
-import { isAmountFormula, isAmountInvalid, maskAmountInput, resolveAmountInput, formatAmountForDisplay } from '../utils/amountFormula'
+import AmountInput from './AmountInput'
+import { isAmountFormula, isAmountInvalid, resolveAmountInput, formatAmountForDisplay } from '../utils/amountFormula'
 import ConfirmDialog from './ConfirmDialog'
 import InstallmentScopeDialog from './InstallmentScopeDialog'
 import LoadingBar from './LoadingBar'
@@ -188,18 +189,15 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         <div className={`field${attemptedSubmit && isAmountMissing ? ' field--error' : ''}`}>
           <label htmlFor="edit-amount">Valor</label>
-          <input
+          <AmountInput
             id="edit-amount"
-            type="text"
-            inputMode="decimal"
-            placeholder="0,00 (ou =10+5,50)"
             value={amount}
-            onChange={(e) => setAmount(maskAmountInput(e.target.value))}
+            formula={amountFormula}
+            onChange={setAmount}
             onFocus={() => {
               if (amountFormula) setAmount(amountFormula)
             }}
-            onBlur={(e) => {
-              const text = e.target.value
+            onBlur={(text) => {
               if (isAmountFormula(text)) {
                 setAmountFormula(text)
                 setAmount(resolveAmountInput(text))
