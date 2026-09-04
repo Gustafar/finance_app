@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { createExpense, createInstallmentPurchase } from '../api/expenses'
 import DatePicker from './DatePicker'
+import EmojiTextInput from './EmojiTextInput'
 import LoadingBar from './LoadingBar'
 import SubcategorySelect from './SubcategorySelect'
 import SearchableSelect from './SearchableSelect'
@@ -209,12 +210,12 @@ function ExpenseForm({ onExpenseCreated }) {
 
       <div className={`field${attemptedSubmit && !description.trim() ? ' field--error' : ''}`}>
         <label htmlFor="description">Descrição</label>
-        <input
+        <EmojiTextInput
           id="description"
           type="text"
           placeholder="Ex: Supermercado"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={setDescription}
           required
         />
       </div>
@@ -259,12 +260,12 @@ function ExpenseForm({ onExpenseCreated }) {
 
           <div className="field">
             <label htmlFor="comment">Comentário (opcional)</label>
-            <input
+            <EmojiTextInput
               id="comment"
               type="text"
               placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={setComment}
             />
           </div>
 
@@ -317,12 +318,12 @@ function ExpenseForm({ onExpenseCreated }) {
 
           <div className="field">
             <label htmlFor="comment">Comentário (opcional)</label>
-            <input
+            <EmojiTextInput
               id="comment"
               type="text"
               placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={setComment}
             />
           </div>
 

@@ -3,6 +3,7 @@ import { updateExpense, anticipateInstallments } from '../api/expenses'
 import SubcategorySelect from './SubcategorySelect'
 import SearchableSelect from './SearchableSelect'
 import DatePicker from './DatePicker'
+import EmojiTextInput from './EmojiTextInput'
 import AnticipateInstallmentsDialog from './AnticipateInstallmentsDialog'
 import { useCategories } from '../hooks/useCategories'
 import { useSubcategories } from '../hooks/useSubcategories'
@@ -178,11 +179,11 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         <div className={`field${attemptedSubmit && !description.trim() ? ' field--error' : ''}`}>
           <label htmlFor="edit-description">Descrição</label>
-          <input
+          <EmojiTextInput
             id="edit-description"
             type="text"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={setDescription}
             required
           />
         </div>
@@ -212,12 +213,12 @@ function ExpenseEditForm({ expense, onExpenseUpdated }) {
 
         <div className="field">
           <label htmlFor="edit-comment">Comentário (opcional)</label>
-          <input
+          <EmojiTextInput
             id="edit-comment"
             type="text"
             placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={setComment}
           />
         </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import DatePicker from './DatePicker'
 import AmountInput from './AmountInput'
+import EmojiTextInput from './EmojiTextInput'
 import { addDebtPayment } from '../api/debts'
 import { formatCurrency } from '../utils/format'
 import { useVisibility } from '../hooks/useVisibility'
@@ -76,11 +77,11 @@ function DebtPaymentForm({ debt, onSaved, onCancel }) {
 
       <div className="field">
         <label htmlFor="payment-comment">Comentário (opcional)</label>
-        <input
+        <EmojiTextInput
           id="payment-comment"
           type="text"
           value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          onChange={setComment}
         />
       </div>
 

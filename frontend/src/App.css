@@ -1731,6 +1731,44 @@
   padding: 12px;
 }
 
+/* Emoji picker */
+
+.text-input-with-emoji {
+  position: relative;
+  display: flex;
+}
+
+.text-input-with-emoji input {
+  padding-right: 34px;
+}
+
+.emoji-picker-trigger {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+}
+
+.emoji-picker-popover {
+  width: auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.emoji-picker-loading {
+  width: 300px;
+  height: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
 .date-picker-header {
   display: flex;
   align-items: center;

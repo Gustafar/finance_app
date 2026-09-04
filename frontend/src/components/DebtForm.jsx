@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import DatePicker from './DatePicker'
 import AmountInput from './AmountInput'
+import EmojiTextInput from './EmojiTextInput'
 import InstallmentScopeDialog from './InstallmentScopeDialog'
 import { createDebt, updateDebt } from '../api/debts'
 import { todayDateInputValue, dateInputValueToISOString, isoStringToDateInputValue } from '../utils/date'
@@ -134,12 +135,12 @@ function DebtForm({ debt, defaultDirection = 'receivable', knownNames = [], onSa
 
       <div className={errCls(!description.trim())}>
         <label htmlFor="debt-description">Descrição</label>
-        <input
+        <EmojiTextInput
           id="debt-description"
           type="text"
           placeholder="Ex: Almoço, empréstimo"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={setDescription}
         />
       </div>
 
@@ -198,12 +199,12 @@ function DebtForm({ debt, defaultDirection = 'receivable', knownNames = [], onSa
         </div>
         <div className="field">
           <label htmlFor="debt-comment">Comentário (opcional)</label>
-          <input
+          <EmojiTextInput
             id="debt-comment"
             type="text"
             placeholder="Ex: combinado de pagar em 2x"
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={setComment}
           />
         </div>
       </div>

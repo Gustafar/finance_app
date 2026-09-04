@@ -2,6 +2,7 @@ import { TRANSACTION_TYPES } from '../utils/transactionTypes'
 import { clampDayOfMonth } from '../utils/date'
 import { resolveAmountInput } from '../utils/amountFormula'
 import AmountInput from './AmountInput'
+import EmojiTextInput from './EmojiTextInput'
 import SubcategorySelect from './SubcategorySelect'
 import SearchableSelect from './SearchableSelect'
 
@@ -32,12 +33,12 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
 
       <div className={errCls(!form.description.trim())}>
         <label htmlFor={`${idPrefix}-description`}>Descrição</label>
-        <input
+        <EmojiTextInput
           id={`${idPrefix}-description`}
           type="text"
           placeholder="Ex: Aluguel"
           value={form.description}
-          onChange={(e) => onChange({ ...form, description: e.target.value })}
+          onChange={(value) => onChange({ ...form, description: value })}
         />
       </div>
 
@@ -66,12 +67,12 @@ function RecurringFields({ idPrefix, form, onChange, categories, subcategories, 
 
       <div className="field">
         <label htmlFor={`${idPrefix}-comment`}>Comentário (opcional)</label>
-        <input
+        <EmojiTextInput
           id={`${idPrefix}-comment`}
           type="text"
           placeholder="Ex: Cancelado, reembolsado pelo Guilherme"
           value={form.comment}
-          onChange={(e) => onChange({ ...form, comment: e.target.value })}
+          onChange={(value) => onChange({ ...form, comment: value })}
         />
       </div>
 
