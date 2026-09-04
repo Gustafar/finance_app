@@ -1060,7 +1060,7 @@
 
 .expense-row {
   display: grid;
-  grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(80px, auto) minmax(130px, 1fr) auto auto;
+  grid-template-columns: auto minmax(130px, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   padding: 14px var(--space-lg);
@@ -1069,6 +1069,13 @@
 
 .expense-badges {
   display: contents;
+}
+
+.expense-badges--grouped {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  align-items: center;
+  gap: 6px 10px;
 }
 
 .expense-row:last-child {
@@ -2217,19 +2224,13 @@
   .expense-badges {
     grid-area: tags;
     display: none;
-    grid-template-columns: repeat(2, 1fr);
+    flex-wrap: wrap;
     gap: 6px;
     margin-top: 6px;
   }
 
-  .expense-badges .badge {
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .expense-row--expanded .expense-badges {
-    display: grid;
+    display: flex;
   }
 
   .expense-actions {
