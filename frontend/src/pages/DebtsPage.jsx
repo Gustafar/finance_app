@@ -12,7 +12,14 @@ import { useDebts } from '../hooks/useDebts'
 import { useVisibility } from '../hooks/useVisibility'
 import { deleteDebt, deleteDebtPayment } from '../api/debts'
 import { formatCurrency, formatDate } from '../utils/format'
-import { currentYearMonth, sameYearMonth, shiftMonth } from '../utils/date'
+import {
+  currentYearMonth,
+  dateYearMonth,
+  formatMonthLabel,
+  sameYearMonth,
+  shiftMonth,
+  yearMonthToIndex,
+} from '../utils/date'
 
 const DIRECTION_TABS = [
   { value: 'receivable', label: 'A receber' },
@@ -28,6 +35,7 @@ function DebtsPage() {
   const [direction, setDirection] = useState('receivable')
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
   const [showSettled, setShowSettled] = useState(false)
+  const [isOverdueOpen, setIsOverdueOpen] = useState(false)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
 
   const [formState, setFormState] = useState(null) // { debt } | { debt: null }
@@ -58,6 +66,32 @@ function DebtsPage() {
     })
     return acc
   }, [monthDebts])
+
+  const overdue = useMemo(() => {
+    const selectedIndex = yearMonthToIndex(selectedMonth)
+    const pending = debts.filter(
+      (d) =>
+        d.direction === direction &&
+        !isSettled(d) &&
+        yearMonthToIndex(dateYearMonth(d.incurred_on)) < selectedIndex
+    )
+
+    if (pending.length === 0) return null
+
+    const byMonth = new Map()
+    pending.forEach((d) => {
+      const month = dateYearMonth(d.incurred_on)
+      const key = yearMonthToIndex(month)
+      if (!byMonth.has(key)) byMonth.set(key, { month, total: 0 })
+      byMonth.get(key).total += Math.max(d.outstanding, 0)
+    })
+
+    return {
+      count: pending.length,
+      total: pending.reduce((sum, d) => sum + Math.max(d.outstanding, 0), 0),
+      months: [...byMonth.values()].sort((a, b) => yearMonthToIndex(a.month) - yearMonthToIndex(b.month)),
+    }
+  }, [debts, direction, selectedMonth])
 
   const groups = useMemo(() => {
     const visible = monthDebts
@@ -209,6 +243,55 @@ function DebtsPage() {
                 </button>
               </div>
             </div>
+
+            {overdue && (
+              <div className="debt-overdue-banner-wrap">
+                <button
+                  type="button"
+                  className="debt-overdue-banner"
+                  onClick={() => setIsOverdueOpen((open) => !open)}
+                  aria-expanded={isOverdueOpen}
+                >
+                  <span>
+                    {overdue.count === 1
+                      ? '1 cobrança'
+                      : `${overdue.count} cobranças`}{' '}
+                    {noun} de meses anteriores ainda não {overdue.count === 1 ? 'foi acertada' : 'foram acertadas'}{' '}
+                    ({formatCurrency(overdue.total, hidden)})
+                  </span>
+                  <svg
+                    className={`panel-header-chevron${isOverdueOpen ? ' panel-header-chevron--open' : ''}`}
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                  >
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+
+                <div className={`collapsible${isOverdueOpen ? ' collapsible--open' : ''}`}>
+                  <div className="collapsible-inner">
+                    <table className="debt-overdue-table">
+                      <thead>
+                        <tr>
+                          <th>Mês</th>
+                          <th>Valor</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {overdue.months.map(({ month, total }) => (
+                          <tr key={yearMonthToIndex(month)}>
+                            <td>{formatMonthLabel(month)}</td>
+                            <td>{formatCurrency(total, hidden)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {groups.length === 0 && (
               <p className="state-message">Nenhuma dívida {noun} neste período.</p>

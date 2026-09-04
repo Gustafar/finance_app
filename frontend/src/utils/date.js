@@ -17,6 +17,15 @@ export function sameYearMonth(dateString, { year, month }) {
   return date.getFullYear() === year && date.getMonth() === month
 }
 
+export function yearMonthToIndex({ year, month }) {
+  return year * 12 + month
+}
+
+export function dateYearMonth(dateString) {
+  const date = new Date(dateString)
+  return { year: date.getFullYear(), month: date.getMonth() }
+}
+
 export function formatMonthLabel({ year, month }) {
   const label = monthLabelFormatter.format(new Date(year, month, 1))
   return label.charAt(0).toUpperCase() + label.slice(1)

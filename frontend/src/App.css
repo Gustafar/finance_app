@@ -749,6 +749,19 @@
   gap: 8px;
 }
 
+@media (max-width: 480px) {
+  .panel-header--actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .panel-header-actions-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
 .recurring-fixed-total {
   font-size: 13px;
   font-weight: 600;
@@ -883,6 +896,66 @@
   background: var(--danger-bg);
   color: var(--danger);
   border-color: var(--danger);
+}
+
+.debt-overdue-banner-wrap {
+  margin: var(--space-md) var(--space-lg) 0;
+}
+
+.debt-overdue-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  cursor: pointer;
+}
+
+.debt-overdue-banner .panel-header-chevron {
+  flex-shrink: 0;
+  color: var(--danger);
+}
+
+.debt-overdue-table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.debt-overdue-table th,
+.debt-overdue-table td {
+  padding: 8px var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.debt-overdue-table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.debt-overdue-table td:last-child,
+.debt-overdue-table th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.debt-overdue-table tr:last-child td {
+  border-bottom: none;
 }
 
 .confirm-dialog-actions {
@@ -2144,13 +2217,19 @@
   .expense-badges {
     grid-area: tags;
     display: none;
-    flex-wrap: wrap;
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
     margin-top: 6px;
   }
 
+  .expense-badges .badge {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .expense-row--expanded .expense-badges {
-    display: flex;
+    display: grid;
   }
 
   .expense-actions {
