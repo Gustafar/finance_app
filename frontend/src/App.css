@@ -1060,22 +1060,28 @@
 
 .expense-row {
   display: grid;
-  grid-template-columns: auto minmax(130px, 1fr) auto auto;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas:
+    'main amount actions'
+    'tags tags tags';
   align-items: center;
   gap: 12px;
+  row-gap: 4px;
   padding: 14px var(--space-lg);
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
 }
 
 .expense-badges {
-  display: contents;
+  grid-area: tags;
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
 }
 
-.expense-badges--grouped {
-  display: grid;
-  grid-template-columns: repeat(2, max-content);
-  align-items: center;
-  gap: 6px 10px;
+.expense-row--expanded .expense-badges {
+  display: flex;
 }
 
 .expense-row:last-child {
@@ -1098,6 +1104,7 @@
 }
 
 .expense-main {
+  grid-area: main;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1145,6 +1152,8 @@
 }
 
 .expense-amount-group {
+  grid-area: amount;
+  justify-self: end;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1194,6 +1203,8 @@
 }
 
 .expense-actions {
+  grid-area: actions;
+  justify-self: end;
   display: flex;
   gap: 4px;
 }
@@ -2211,47 +2222,13 @@
 
 @media (max-width: 860px) {
   .expense-row {
-    grid-template-columns: 1fr auto auto;
-    grid-template-areas:
-      'main amount actions'
-      'tags tags tags';
-    row-gap: 4px;
-    align-items: center;
     padding: 12px 24px;
-    cursor: pointer;
-  }
-
-  .expense-badges {
-    grid-area: tags;
-    display: none;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-  }
-
-  .expense-row--expanded .expense-badges {
-    display: flex;
-  }
-
-  .expense-actions {
-    grid-area: actions;
-    justify-self: end;
-  }
-
-  .expense-main {
-    grid-area: main;
-    min-width: 0;
   }
 
   .expense-description {
     white-space: normal;
     overflow: visible;
     text-overflow: unset;
-  }
-
-  .expense-amount-group {
-    grid-area: amount;
-    justify-self: end;
   }
 
   .field-row {

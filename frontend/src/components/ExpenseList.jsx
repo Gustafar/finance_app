@@ -52,7 +52,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
               key={expense.id}
               onClick={() => (isSelecting ? toggleId(expense.id) : toggleExpanded(expense.id))}
             >
-              <div className="expense-badges expense-badges--grouped">
+              <div className="expense-badges">
                 <span
                   className="badge badge--category"
                   style={{ background: categoryColor.bg, color: categoryColor.text }}
