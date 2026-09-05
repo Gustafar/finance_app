@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import MonthlyTrendChart from '../components/charts/MonthlyTrendChart'
 import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
 import EstimateComparisonPanel from '../components/charts/EstimateComparisonPanel'
+import DatePicker from '../components/DatePicker'
 import FilterButton from '../components/FilterButton'
 import SearchInput from '../components/SearchInput'
 import { formatMonthLabel } from '../utils/date'
@@ -34,6 +35,8 @@ function ChartsPage({
   hasActiveFilters,
   searchValue,
   onSearchChange,
+  onDateFromChange,
+  onDateToChange,
   onEditExpense,
 }) {
   const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
@@ -56,6 +59,12 @@ function ChartsPage({
         </Link>
         <h1>Gráficos</h1>
         <div className="page-header-actions">
+          <div className="header-date-range">
+            <label htmlFor="charts-date-from">De</label>
+            <DatePicker id="charts-date-from" value={trendDateFrom} onChange={(e) => onDateFromChange(e.target.value)} />
+            <label htmlFor="charts-date-to">até</label>
+            <DatePicker id="charts-date-to" value={trendDateTo} onChange={(e) => onDateToChange(e.target.value)} />
+          </div>
           <SearchInput value={searchValue} onChange={onSearchChange} />
           <FilterButton onClick={onOpenFilters} active={hasActiveFilters} />
         </div>

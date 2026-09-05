@@ -625,6 +625,8 @@ function App() {
                 hasActiveFilters={filtersAreActive}
                 searchValue={filters.description}
                 onSearchChange={(value) => setFilters((prev) => ({ ...prev, description: value }))}
+                onDateFromChange={(value) => setFilters((prev) => ({ ...prev, dateFrom: value }))}
+                onDateToChange={(value) => setFilters((prev) => ({ ...prev, dateTo: value }))}
                 onEditExpense={setEditingExpense}
               />
             </Suspense>
@@ -663,6 +665,7 @@ function App() {
         buckets={buckets}
         banks={banks}
         isLoading={isLoadingFilterOptions}
+        hideDateRange={location.pathname === '/graficos'}
       />
 
       <Modal isOpen={editingExpense !== null} onClose={() => setEditingExpense(null)}>

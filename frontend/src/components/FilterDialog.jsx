@@ -3,7 +3,20 @@ import FilterBar from './FilterBar'
 import LoadingBar from './LoadingBar'
 import { EMPTY_FILTERS, hasActiveFilters } from '../utils/filters'
 
-function FilterDialog({ isOpen, onClose, filters, onChange, categories, subcategories, people, paymentMethods, buckets, banks, isLoading }) {
+function FilterDialog({
+  isOpen,
+  onClose,
+  filters,
+  onChange,
+  categories,
+  subcategories,
+  people,
+  paymentMethods,
+  buckets,
+  banks,
+  isLoading,
+  hideDateRange,
+}) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} contentClassName="modal-content--align-top">
       {isLoading && <LoadingBar variant="dialog" />}
@@ -18,6 +31,7 @@ function FilterDialog({ isOpen, onClose, filters, onChange, categories, subcateg
         paymentMethods={paymentMethods}
         buckets={buckets}
         banks={banks}
+        hideDateRange={hideDateRange}
       />
 
       {hasActiveFilters(filters) && (
