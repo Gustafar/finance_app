@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRecurringExpenses } from '../../hooks/useRecurringExpenses'
 import MonthPicker from '../MonthPicker'
@@ -20,6 +20,10 @@ function EstimateComparisonPanel({ expenses, selectedMonth }) {
   const { hidden } = useVisibility()
   const [viewedMonth, setViewedMonth] = useState(selectedMonth)
   const { recurrences, isLoading } = useRecurringExpenses(viewedMonth.year, viewedMonth.month)
+
+  useEffect(() => {
+    setViewedMonth(selectedMonth)
+  }, [selectedMonth])
 
   const monthExpenses = useMemo(
     () => expenses.filter((expense) => sameYearMonth(expense.date, viewedMonth)),
