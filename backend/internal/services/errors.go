@@ -77,4 +77,6 @@ var (
 	ErrRecurringExpenseNotFound   = errors.New("recurring expense not found")
 	ErrInvalidPlanYear            = errors.New("plan year is required")
 	ErrInvalidPlanMonth           = errors.New("plan month must be between 1 and 12")
+
+	ErrInvalidExportDateRange = errors.New("date_from and date_to are required and date_from cannot be after date_to")
 )

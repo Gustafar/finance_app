@@ -133,6 +133,35 @@ func (r *ExpenseRepository) GetAll() ([]models.Expense, error) {
 	return expenses, nil
 }
 
+// GetByDateRange returns every expense with date between from and to (inclusive), ordered by date,
+// for the statement export feature.
+func (r *ExpenseRepository) GetByDateRange(from, to time.Time) ([]models.Expense, error) {
+	query := selectExpenseQuery + " WHERE e.date >= $1 AND e.date <= $2 ORDER BY e.date, e.id"
+
+	rows, err := r.DB.Query(query, from, to)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	expenses := []models.Expense{}
+
+	for rows.Next() {
+		expense, err := scanExpense(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		expenses = append(expenses, expense)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return expenses, nil
+}
+
 func (r *ExpenseRepository) getByInstallmentPurchaseID(purchaseID int) ([]models.Expense, error) {
 	query := selectExpenseQuery + " WHERE e.installment_purchase_id = $1 ORDER BY e.installment_number"
 

@@ -3,12 +3,15 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"finance_app/internal/models"
 	"finance_app/internal/services"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type ExpenseHandler struct {
@@ -326,6 +329,128 @@ type anticipateInstallmentsRequest struct {
 
 // AnticipateInstallments moves the expense at id, and the following req.Count-1 installments of the
 // same installment purchase, to the given date — paying them off ahead of their original schedule.
+var expenseTypeLabels = map[string]string{
+	"income":     "Receita",
+	"expense":    "Despesa",
+	"investment": "Investimento",
+}
+
+// Export generates an XLSX statement of every expense dated between the date_from and date_to query
+// params (inclusive, format YYYY-MM-DD) and streams it back as a file download.
+func (h *ExpenseHandler) Export(w http.ResponseWriter, r *http.Request) {
+	dateFrom, err := time.Parse("2006-01-02", r.URL.Query().Get("date_from"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid date_from")
+		return
+	}
+
+	dateTo, err := time.Parse("2006-01-02", r.URL.Query().Get("date_to"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid date_to")
+		return
+	}
+
+	expenses, err := h.Service.GetByDateRange(dateFrom, dateTo)
+	if err != nil {
+		if errors.Is(err, services.ErrInvalidExportDateRange) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	file, err := buildExpenseStatement(expenses)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	filename := fmt.Sprintf("extrato_%s_a_%s.xlsx", dateFrom.Format("2006-01-02"), dateTo.Format("2006-01-02"))
+
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+
+	if err := file.Write(w); err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+}
+
+func buildExpenseStatement(expenses []models.Expense) (*excelize.File, error) {
+	file := excelize.NewFile()
+	sheet := "Extrato"
+	if err := file.SetSheetName(file.GetSheetName(0), sheet); err != nil {
+		return nil, err
+	}
+
+	headers := []string{
+		"Data", "Descrição", "Tipo", "Valor", "Categoria", "Subcategoria",
+		"Pessoa", "Forma de Pagamento", "Banco", "Bucket", "Parcela", "Comentário",
+	}
+	for col, header := range headers {
+		cell, err := excelize.CoordinatesToCellName(col+1, 1)
+		if err != nil {
+			return nil, err
+		}
+		if err := file.SetCellValue(sheet, cell, header); err != nil {
+			return nil, err
+		}
+	}
+
+	for i, expense := range expenses {
+		row := i + 2
+
+		typeLabel := expenseTypeLabels[expense.Type]
+		if typeLabel == "" {
+			typeLabel = expense.Type
+		}
+
+		subcategory := ""
+		if expense.SubcategoryName != nil {
+			subcategory = *expense.SubcategoryName
+		}
+
+		installment := ""
+		if expense.InstallmentNumber != nil && expense.InstallmentCount != nil {
+			installment = fmt.Sprintf("%d/%d", *expense.InstallmentNumber, *expense.InstallmentCount)
+		}
+
+		comment := ""
+		if expense.Comment != nil {
+			comment = *expense.Comment
+		}
+
+		values := []any{
+			expense.Date.Format("02/01/2006"),
+			expense.Description,
+			typeLabel,
+			expense.Amount,
+			expense.CategoryName,
+			subcategory,
+			expense.PersonName,
+			expense.PaymentMethodName,
+			expense.BankName,
+			expense.BucketName,
+			installment,
+			comment,
+		}
+
+		for col, value := range values {
+			cell, err := excelize.CoordinatesToCellName(col+1, row)
+			if err != nil {
+				return nil, err
+			}
+			if err := file.SetCellValue(sheet, cell, value); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return file, nil
+}
+
 func (h *ExpenseHandler) AnticipateInstallments(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 

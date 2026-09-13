@@ -301,7 +301,12 @@ function DebtsPage() {
               <div className="investment-box-grid">
                 {groups.map((group) => (
                   <div className="investment-box-card" key={group.name}>
-                    <span className="badge">{group.name}</span>
+                    <div className="investment-box-card-header">
+                      <span className="badge">{group.name}</span>
+                      <span className={`expense-amount ${direction === 'receivable' ? 'expense-amount--income' : 'expense-amount--expense'}`}>
+                        {formatCurrency(group.outstanding, hidden)}
+                      </span>
+                    </div>
 
                     <ul className="investment-box-history">
                       {group.items.map((debt) => {

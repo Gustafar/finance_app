@@ -70,6 +70,7 @@ func main() {
 	mux.HandleFunc("POST /login", handlers.Login)
 
 	mux.HandleFunc("GET /expenses", expenseHandler.GetAll)
+	mux.HandleFunc("GET /expenses/export", expenseHandler.Export)
 	mux.HandleFunc("GET /expenses/{id}", expenseHandler.GetByID)
 	mux.HandleFunc("POST /expenses", expenseHandler.Create)
 	mux.HandleFunc("POST /expenses/installments", expenseHandler.CreateInstallments)

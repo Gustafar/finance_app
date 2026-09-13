@@ -14,6 +14,7 @@ import PersonManager from './components/PersonManager'
 import PaymentMethodManager from './components/PaymentMethodManager'
 import BucketManager from './components/BucketManager'
 import BankManager from './components/BankManager'
+import ExportExpensesModal from './components/ExportExpensesModal'
 import DashboardPage from './pages/DashboardPage'
 import RecurringExpensesPage from './pages/RecurringExpensesPage'
 import InvestmentsPage from './pages/InvestmentsPage'
@@ -49,6 +50,7 @@ function App() {
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false)
   const [isBucketsOpen, setIsBucketsOpen] = useState(false)
   const [isBanksOpen, setIsBanksOpen] = useState(false)
+  const [isExportOpen, setIsExportOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
@@ -575,6 +577,27 @@ function App() {
           Cobranças
         </Link>
 
+        <button
+          type="button"
+          className="drawer-item"
+          onClick={() => {
+            setIsMenuOpen(false)
+            setIsExportOpen(true)
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 1.5v8.3M4.8 6.8 8 9.9l3.2-3.1"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path d="M1.5 11.5V13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          Exportar extrato
+        </button>
+
         <VisibilityToggle hidden={valuesHidden} onToggle={toggleValuesHidden} variant="drawer" />
         <ThemeToggle theme={theme} onToggle={cycleTheme} variant="drawer" />
       </Drawer>
@@ -696,6 +719,10 @@ function App() {
 
       <Modal isOpen={isBanksOpen} onClose={() => setIsBanksOpen(false)}>
         <BankManager />
+      </Modal>
+
+      <Modal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} contentClassName="export-modal-content">
+        <ExportExpensesModal onClose={() => setIsExportOpen(false)} />
       </Modal>
     </div>
   )

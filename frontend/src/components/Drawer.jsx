@@ -14,7 +14,7 @@ function Drawer({ isOpen, onClose, children }) {
             </svg>
           </button>
         </div>
-        {children}
+        <div className="drawer-body">{children}</div>
       </div>
     </div>
   )

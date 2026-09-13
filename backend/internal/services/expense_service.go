@@ -299,6 +299,16 @@ func (s *ExpenseService) GetAll() ([]models.Expense, error) {
 	return s.Repo.GetAll()
 }
 
+// GetByDateRange returns every expense dated between from and to (inclusive), for the statement
+// export feature.
+func (s *ExpenseService) GetByDateRange(from, to time.Time) ([]models.Expense, error) {
+	if from.IsZero() || to.IsZero() || from.After(to) {
+		return nil, ErrInvalidExportDateRange
+	}
+
+	return s.Repo.GetByDateRange(from, to)
+}
+
 func (s *ExpenseService) GetByID(id int) (models.Expense, error) {
 	expense, err := s.Repo.GetByID(id)
 	if err != nil {

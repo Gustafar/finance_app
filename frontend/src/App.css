@@ -367,6 +367,50 @@
   }
 }
 
+.export-hint {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.export-date-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.export-date-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.export-date-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.export-date-field .date-picker {
+  width: 100%;
+}
+
+.export-actions {
+  justify-content: flex-end;
+}
+
+.export-modal-content {
+  width: 440px;
+  max-width: 100%;
+}
+
+.export-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
 /* Filter bar */
 
 .filter-bar {
@@ -2252,8 +2296,7 @@
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px;
+  padding: 16px 0 16px 16px;
   transform: translateX(-100%);
   transition: transform 0.2s ease;
 }
@@ -2266,7 +2309,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+  padding-right: 16px;
   margin-bottom: 8px;
+}
+
+.drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 16px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.drawer-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.drawer-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
 }
 
 .drawer-title {
@@ -2782,6 +2845,13 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
+}
+
+.investment-box-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .investment-box-total {
