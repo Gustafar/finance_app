@@ -5,6 +5,25 @@ and a small dashboard. Go API + React (Vite) frontend + Postgres.
 
 ## Local development
 
+### Option A: Docker (easiest)
+
+Only prerequisite: Docker (with Compose).
+
+```bash
+docker compose up --build
+```
+
+This starts Postgres, runs pending migrations, and starts both the API
+(http://localhost:9080) and the frontend (http://localhost:5173) — nothing
+else to install or configure. Frontend code is mounted into the container,
+so edits on your machine hot-reload as usual.
+
+If you change something under `migrations/`, re-run with `--build` so the
+backend image picks up the new files (they're baked in at build time, not
+mounted).
+
+### Option B: Go + Node directly
+
 Prerequisites: Go, Node.js, and a Postgres database (a free
 [Supabase](https://supabase.com) project works, or run one locally —
 `docker run -e POSTGRES_PASSWORD=devpassword -e POSTGRES_DB=finance_app -p 5432:5432 postgres:16-alpine`).
