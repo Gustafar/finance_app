@@ -1,7 +1,22 @@
 # My Finance
 
 Personal finance tracker — expenses, income, investments, recurring bills,
-and a small dashboard. Go API + React (Vite) frontend + Postgres.
+and a small dashboard.
+
+![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-B73BFE?style=flat&logo=vite&logoColor=FFD62E)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+
+## Stack
+
+| Layer      | Tech                                    |
+| ---------- | ---------------------------------------- |
+| Frontend   | React + Vite, no state management library |
+| Backend    | Go, layered (repository → service → handler) |
+| Database   | Postgres, plain SQL migrations           |
+| Deploy     | Render (API) + Cloudflare Pages (frontend) + Supabase (DB) |
 
 ## Local development
 
@@ -21,6 +36,8 @@ so edits on your machine hot-reload as usual.
 If you change something under `migrations/`, re-run with `--build` so the
 backend image picks up the new files (they're baked in at build time, not
 mounted).
+
+---
 
 ### Option B: Go + Node directly
 
@@ -46,6 +63,8 @@ Leave `APP_PASSWORD` blank in `backend/.env` for zero-friction local dev —
 every request is allowed through unchecked and the frontend skips the
 login screen entirely. See `backend/.env.example` for what each variable
 does.
+
+---
 
 ## Deploy your own copy
 
