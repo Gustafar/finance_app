@@ -1765,6 +1765,15 @@
   background: color-mix(in srgb, var(--danger) 25%, transparent);
 }
 
+.bulk-grid .amount-input input {
+  min-width: 112px;
+  padding-right: 36px;
+}
+
+.bulk-grid .date-picker-input {
+  min-width: 124px;
+}
+
 .bulk-grid-actions {
   display: flex;
   flex-wrap: wrap;

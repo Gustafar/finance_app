@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
 import { createRecurringExpensesBulk } from '../api/recurringExpenses'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
-import { parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
-import { normalizeAmountSeparators, maskAmountInput, formatAmountForDisplay } from '../utils/amountFormula'
+import { isPlainExpenseCellPaste, parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
+import { normalizeAmountSeparators, formatAmountForDisplay, resolveAmountInput } from '../utils/amountFormula'
 import { clampDayOfMonth } from '../utils/date'
+import AmountInput from './AmountInput'
+import EmojiTextInput from './EmojiTextInput'
 import SubcategorySelect from './SubcategorySelect'
 
 // Fixed left-to-right order pasted spreadsheet columns are mapped to, starting from whichever
 // cell was focused when the paste happened. Matches the column order used across all bulk
-// expense grids (see ExpenseBulkForm's PASTE_COLUMNS).
+// expense grids (see EXPENSE_PASTE_COLUMNS in utils/bulkPaste).
 const PASTE_COLUMNS = [
   'dayOfMonth',
   'amount',
@@ -208,13 +210,9 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
     })
   }
 
-  // Free-text inputs where a paste should behave like a normal paste (insert at the cursor,
-  // keep surrounding text) when it's just plain single-cell text rather than spreadsheet data.
-  const FREE_TEXT_COLUMNS = new Set(['description'])
-
   const pasteHandler = (rowIndex, columnKey) => (e) => {
     const text = e.clipboardData.getData('text')
-    if (FREE_TEXT_COLUMNS.has(columnKey) && !/[\t\n]/.test(text)) return
+    if (isPlainExpenseCellPaste(columnKey, text)) return
     e.preventDefault()
     applyPaste(rowIndex, columnKey, text)
   }
@@ -228,7 +226,9 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
     const candidateIndices = []
     const payloadRows = []
 
-    const nextRows = rows.map((row, index) => {
+    const nextRows = rows
+      .map((row) => ({ ...row, amount: resolveAmountInput(row.amount) }))
+      .map((row, index) => {
       if (isRowBlank(row)) return row
       if (!isRowComplete(row, defaults)) {
         return { ...row, status: 'error', error: 'Preencha os campos obrigatórios desta linha.' }
@@ -324,13 +324,11 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                     />
                   </td>
                   <td>
-                    <input
-                      type="text"
-                      inputMode="decimal"
+                    <AmountInput
                       value={row.amount}
-                      placeholder="0,00"
-                      onChange={(e) => updateRow(index, { amount: maskAmountInput(e.target.value) })}
-                      onBlur={(e) => updateRow(index, { amount: normalizeAmountSeparators(e.target.value) })}
+                      ariaLabel="Valor"
+                      onChange={(text) => updateRow(index, { amount: text })}
+                      onBlur={(text) => updateRow(index, { amount: resolveAmountInput(text) })}
                       onPaste={pasteHandler(index, 'amount')}
                     />
                   </td>
@@ -347,11 +345,12 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                     </select>
                   </td>
                   <td>
-                    <input
+                    <EmojiTextInput
                       type="text"
+                      className="bulk-grid-description-input"
                       value={row.description}
                       placeholder="Descrição"
-                      onChange={(e) => updateRow(index, { description: e.target.value })}
+                      onChange={(text) => updateRow(index, { description: text })}
                       onPaste={pasteHandler(index, 'description')}
                     />
                   </td>
@@ -411,11 +410,11 @@ function RecurringExpenseBulkForm({ categories, subcategories, people, paymentMe
                     </select>
                   </td>
                   <td>
-                    <input
+                    <EmojiTextInput
                       type="text"
                       value={row.comment}
                       placeholder="Opcional"
-                      onChange={(e) => updateRow(index, { comment: e.target.value })}
+                      onChange={(text) => updateRow(index, { comment: text })}
                       onPaste={pasteHandler(index, 'comment')}
                     />
                   </td>

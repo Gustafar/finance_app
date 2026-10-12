@@ -8,27 +8,14 @@ import { useBuckets } from '../hooks/useBuckets'
 import { useBanks } from '../hooks/useBanks'
 import { useInvestmentBoxes } from '../hooks/useInvestmentBoxes'
 import { TRANSACTION_TYPES } from '../utils/transactionTypes'
-import { dateInputValueToISOString, parseFlexibleDateInput } from '../utils/date'
-import { parsePastedAmount, parseTsv, resolveIdByName, resolveType } from '../utils/bulkPaste'
-import { isAmountFormula, isAmountInvalid, maskAmountInput, resolveAmountInput, formatAmountForDisplay } from '../utils/amountFormula'
+import { dateInputValueToISOString } from '../utils/date'
+import { EXPENSE_PASTE_COLUMNS, isPlainExpenseCellPaste, parseExpenseCell, parseTsv } from '../utils/bulkPaste'
+import { isAmountFormula, isAmountInvalid, resolveAmountInput } from '../utils/amountFormula'
+import AmountInput from './AmountInput'
 import DatePicker from './DatePicker'
+import EmojiTextInput from './EmojiTextInput'
 import LoadingBar from './LoadingBar'
 import SubcategorySelect from './SubcategorySelect'
-
-// Fixed left-to-right order pasted spreadsheet columns are mapped to, starting from whichever
-// cell was focused when the paste happened.
-const PASTE_COLUMNS = [
-  'date',
-  'amount',
-  'paymentMethodId',
-  'description',
-  'subcategoryId',
-  'type',
-  'personId',
-  'bucketId',
-  'bankId',
-  'comment',
-]
 
 const INITIAL_ROW_COUNT = 6
 
@@ -54,33 +41,6 @@ function makeEmptyRow() {
     selected: false,
     status: 'idle',
     error: null,
-  }
-}
-
-function parseCellForColumn(columnKey, text, lookups) {
-  switch (columnKey) {
-    case 'date':
-      return { date: parseFlexibleDateInput(text) }
-    case 'description':
-      return { description: text.trim() }
-    case 'amount':
-      return { amount: formatAmountForDisplay(parsePastedAmount(text)) }
-    case 'type':
-      return { type: resolveType(text) || 'expense' }
-    case 'subcategoryId':
-      return { subcategoryId: resolveIdByName(lookups.subcategories, text) }
-    case 'personId':
-      return { personId: resolveIdByName(lookups.people, text) }
-    case 'paymentMethodId':
-      return { paymentMethodId: resolveIdByName(lookups.paymentMethods, text) }
-    case 'bucketId':
-      return { bucketId: resolveIdByName(lookups.buckets, text) }
-    case 'bankId':
-      return { bankId: resolveIdByName(lookups.banks, text) }
-    case 'comment':
-      return { comment: text.trim() }
-    default:
-      return {}
   }
 }
 
@@ -245,7 +205,7 @@ function ExpenseBulkForm({ onExpensesCreated }) {
   }
 
   const applyPaste = (anchorRowIndex, anchorColumnKey, text) => {
-    const anchorColIndex = PASTE_COLUMNS.indexOf(anchorColumnKey)
+    const anchorColIndex = EXPENSE_PASTE_COLUMNS.indexOf(anchorColumnKey)
     if (anchorColIndex === -1) return
 
     const lines = parseTsv(text)
@@ -260,9 +220,9 @@ function ExpenseBulkForm({ onExpensesCreated }) {
 
         let patch = {}
         cells.forEach((cellText, cellIndex) => {
-          const columnKey = PASTE_COLUMNS[anchorColIndex + cellIndex]
+          const columnKey = EXPENSE_PASTE_COLUMNS[anchorColIndex + cellIndex]
           if (!columnKey) return
-          patch = { ...patch, ...parseCellForColumn(columnKey, cellText, lookups) }
+          patch = { ...patch, ...parseExpenseCell(columnKey, cellText, lookups) }
         })
 
         next[targetRowIndex] = { ...next[targetRowIndex], ...patch, status: 'idle', error: null }
@@ -272,13 +232,9 @@ function ExpenseBulkForm({ onExpensesCreated }) {
     })
   }
 
-  // Free-text inputs where a paste should behave like a normal paste (insert at the cursor,
-  // keep surrounding text) when it's just plain single-cell text rather than spreadsheet data.
-  const FREE_TEXT_COLUMNS = new Set(['description'])
-
   const pasteHandler = (rowIndex, columnKey) => (e) => {
     const text = e.clipboardData.getData('text')
-    if (FREE_TEXT_COLUMNS.has(columnKey) && !/[\t\n]/.test(text)) return
+    if (isPlainExpenseCellPaste(columnKey, text)) return
     e.preventDefault()
     applyPaste(rowIndex, columnKey, text)
   }
@@ -405,17 +361,15 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                     />
                   </td>
                   <td>
-                    <input
-                      type="text"
-                      inputMode="decimal"
+                    <AmountInput
                       value={row.amount}
-                      placeholder="0,00 (ou =10+5,50)"
-                      onChange={(e) => updateRow(index, { amount: maskAmountInput(e.target.value) })}
+                      formula={row.amountFormula}
+                      ariaLabel="Valor"
+                      onChange={(text) => updateRow(index, { amount: text })}
                       onFocus={() => {
                         if (row.amountFormula) updateRow(index, { amount: row.amountFormula })
                       }}
-                      onBlur={(e) => {
-                        const text = e.target.value
+                      onBlur={(text) => {
                         if (isAmountFormula(text)) {
                           updateRow(index, { amountFormula: text, amount: resolveAmountInput(text) })
                         } else {
@@ -439,12 +393,12 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                     </select>
                   </td>
                   <td>
-                    <input
+                    <EmojiTextInput
                       type="text"
                       className="bulk-grid-description-input"
                       value={row.description}
                       placeholder="Descrição"
-                      onChange={(e) => updateRow(index, { description: e.target.value })}
+                      onChange={(text) => updateRow(index, { description: text })}
                       onPaste={pasteHandler(index, 'description')}
                     />
                   </td>
@@ -542,11 +496,11 @@ function ExpenseBulkForm({ onExpensesCreated }) {
                     </select>
                   </td>
                   <td>
-                    <input
+                    <EmojiTextInput
                       type="text"
                       value={row.comment}
                       placeholder="Opcional"
-                      onChange={(e) => updateRow(index, { comment: e.target.value })}
+                      onChange={(text) => updateRow(index, { comment: text })}
                       onPaste={pasteHandler(index, 'comment')}
                     />
                   </td>
