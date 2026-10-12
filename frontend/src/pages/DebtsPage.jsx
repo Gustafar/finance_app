@@ -28,6 +28,10 @@ const DIRECTION_TABS = [
 
 const isSettled = (debt) => debt.outstanding <= 0.005
 
+// The amount a debt row shows: the remaining balance while open, the original amount once settled.
+// Each person's card totals these, so it always adds up to what is listed.
+const displayedAmount = (debt) => (isSettled(debt) ? debt.amount : Math.max(debt.outstanding, 0))
+
 function DebtsPage() {
   const { debts, setDebts, isLoading, error, reload } = useDebts()
   const { hidden } = useVisibility()
@@ -108,9 +112,9 @@ function DebtsPage() {
       .map(([name, items]) => ({
         name,
         items,
-        outstanding: items.reduce((sum, d) => sum + Math.max(d.outstanding, 0), 0),
+        total: items.reduce((sum, d) => sum + displayedAmount(d), 0),
       }))
-      .sort((a, b) => b.outstanding - a.outstanding || a.name.localeCompare(b.name, 'pt-BR'))
+      .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'pt-BR'))
   }, [monthDebts, direction, showSettled])
 
   const toggleExpanded = (id) => {
@@ -304,7 +308,7 @@ function DebtsPage() {
                     <div className="investment-box-card-header">
                       <span className="badge">{group.name}</span>
                       <span className={`expense-amount ${direction === 'receivable' ? 'expense-amount--income' : 'expense-amount--expense'}`}>
-                        {formatCurrency(group.outstanding, hidden)}
+                        {formatCurrency(group.total, hidden)}
                       </span>
                     </div>
 
@@ -328,7 +332,7 @@ function DebtsPage() {
                                 </span>
                               </div>
                               <span className={`expense-amount ${settled ? '' : 'expense-amount--expense'}`}>
-                                {formatCurrency(settled ? debt.amount : debt.outstanding, hidden)}
+                                {formatCurrency(displayedAmount(debt), hidden)}
                               </span>
                             </div>
 
