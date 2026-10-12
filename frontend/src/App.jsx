@@ -170,6 +170,11 @@ function App() {
     setEditingExpense(null)
   }
 
+  const handleExpensesUpdated = (updatedExpenses) => {
+    const updatedById = new Map(updatedExpenses.map((expense) => [expense.id, expense]))
+    setExpenses((prevExpenses) => prevExpenses.map((expense) => updatedById.get(expense.id) ?? expense))
+  }
+
   const hasPeriodFilter = Boolean(filters.dateFrom || filters.dateTo)
   const filtersAreActive = hasActiveFilters(filters)
 
@@ -622,6 +627,7 @@ function App() {
               hasActiveFilters={filtersAreActive}
               onAddClick={() => setIsAddOpen(true)}
               onEditExpense={setEditingExpense}
+              onExpensesUpdated={handleExpensesUpdated}
               onDeleteExpense={handleDelete}
               onRefresh={handleRefresh}
               isRefreshing={isRefreshing}

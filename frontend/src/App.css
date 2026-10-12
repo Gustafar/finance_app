@@ -1094,6 +1094,7 @@
 
 .selection-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
@@ -1765,6 +1766,10 @@
   background: color-mix(in srgb, var(--danger) 25%, transparent);
 }
 
+.bulk-grid-row--dirty td:first-child {
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
 .bulk-grid .amount-input input {
   min-width: 112px;
   padding-right: 36px;
@@ -1772,6 +1777,14 @@
 
 .bulk-grid .date-picker-input {
   min-width: 124px;
+}
+
+.bulk-grid td.bulk-grid-installment {
+  padding: 4px 8px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .bulk-grid-actions {

@@ -278,6 +278,27 @@ func (s *ExpenseService) CreateBulk(rows []BulkExpenseRow) []BulkRowResult {
 	return results
 }
 
+// BulkUpdateResult is the outcome of one row of a grid edit.
+type BulkUpdateResult struct {
+	Row     int
+	Updated models.Expense
+	Err     error
+}
+
+// UpdateBulk updates each row (looked up by its ID) independently, continuing past failures so
+// valid rows still get saved. An installment row only changes that one installment — the grid
+// edits rows individually, so there is no scope to propagate to the rest of the purchase.
+func (s *ExpenseService) UpdateBulk(rows []models.Expense) []BulkUpdateResult {
+	results := make([]BulkUpdateResult, len(rows))
+
+	for i, row := range rows {
+		updated, err := s.Update(row.ID, row)
+		results[i] = BulkUpdateResult{Row: i, Updated: updated, Err: err}
+	}
+
+	return results
+}
+
 func (s *ExpenseService) Create(expense models.Expense) (models.Expense, error) {
 	expense = s.normalizeExpense(expense)
 	if err := s.validate(expense); err != nil {

@@ -75,6 +75,7 @@ func main() {
 	mux.HandleFunc("POST /expenses", expenseHandler.Create)
 	mux.HandleFunc("POST /expenses/installments", expenseHandler.CreateInstallments)
 	mux.HandleFunc("POST /expenses/bulk", expenseHandler.CreateBulk)
+	mux.HandleFunc("PUT /expenses/bulk", expenseHandler.UpdateBulk)
 	mux.HandleFunc("PUT /expenses/{id}", expenseHandler.Update)
 	mux.HandleFunc("DELETE /expenses/{id}", expenseHandler.Delete)
 	mux.HandleFunc("POST /expenses/{id}/anticipate", expenseHandler.AnticipateInstallments)

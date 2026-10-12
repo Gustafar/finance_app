@@ -1,4 +1,4 @@
-function SelectionToolbar({ isSelecting, count, total, onToggle, onDeleteClick, panel = false, hideIdle = false, hideCancel = false }) {
+function SelectionToolbar({ isSelecting, count, total, onToggle, onEditClick, onDeleteClick, panel = false, hideIdle = false, hideCancel = false }) {
   const className = `selection-toolbar${panel ? ' selection-toolbar--panel' : ''}${isSelecting ? ' selection-toolbar--active' : ''}`
 
   if (!isSelecting) {
@@ -22,6 +22,11 @@ function SelectionToolbar({ isSelecting, count, total, onToggle, onDeleteClick, 
         {!hideCancel && (
           <button type="button" className="btn btn-secondary btn-sm" onClick={onToggle}>
             Cancelar
+          </button>
+        )}
+        {onEditClick && (
+          <button type="button" className="btn btn-secondary btn-sm" onClick={onEditClick} disabled={count === 0}>
+            Editar selecionados
           </button>
         )}
         <button type="button" className="btn btn-danger btn-sm" onClick={onDeleteClick} disabled={count === 0}>

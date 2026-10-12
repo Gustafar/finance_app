@@ -23,6 +23,10 @@ export function updateExpense(id, expense, scope) {
   })
 }
 
+export function updateExpensesBulk(rows) {
+  return fetchJson('/expenses/bulk', { method: 'PUT', body: JSON.stringify({ rows }) })
+}
+
 export function deleteExpense(id, scope) {
   const query = scope ? `?scope=${scope}` : ''
   return fetchJson(`/expenses/${id}${query}`, { method: 'DELETE' })

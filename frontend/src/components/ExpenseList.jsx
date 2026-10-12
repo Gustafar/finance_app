@@ -4,15 +4,18 @@ import { paletteColor } from '../utils/categoryColor'
 import { TRANSACTION_TYPE_AMOUNT_STYLE } from '../utils/transactionTypes'
 import { useVisibility } from '../hooks/useVisibility'
 import ConfirmDialog from './ConfirmDialog'
+import ExpenseGridEditForm from './ExpenseGridEditForm'
 import InstallmentScopeDialog from './InstallmentScopeDialog'
+import Modal from './Modal'
 import SelectionToolbar from './SelectionToolbar'
 
-function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, toggleId, toggleSelecting }) {
+function ExpenseList({ expenses, onDelete, onEdit, onExpensesUpdated, isSelecting, selectedIds, toggleId, toggleSelecting }) {
   const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
   const { hidden } = useVisibility()
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
+  const [isGridEditOpen, setIsGridEditOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const selectedTotal = expenses
@@ -35,6 +38,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
         count={selectedIds.size}
         total={formatCurrency(selectedTotal, hidden)}
         onToggle={toggleSelecting}
+        onEditClick={() => setIsGridEditOpen(true)}
         onDeleteClick={() => setIsBulkDeleteOpen(true)}
         panel
         hideIdle
@@ -251,6 +255,22 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
         }}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />
+
+      <Modal
+        isOpen={isGridEditOpen}
+        onClose={() => setIsGridEditOpen(false)}
+        contentClassName="modal-content--scrollable-body"
+      >
+        <h2 className="modal-title">Editar transações</h2>
+        <ExpenseGridEditForm
+          expenses={sorted.filter((expense) => selectedIds.has(expense.id))}
+          onExpensesUpdated={onExpensesUpdated}
+          onDone={() => {
+            setIsGridEditOpen(false)
+            toggleSelecting()
+          }}
+        />
+      </Modal>
     </>
   )
 }

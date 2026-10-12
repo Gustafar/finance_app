@@ -297,6 +297,39 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updated)
 }
 
+// bulkUpdateRequest is a grid edit: each row is a full expense, identified by its id.
+type bulkUpdateRequest struct {
+	Rows []models.Expense `json:"rows"`
+}
+
+type bulkUpdateResponse struct {
+	Results []bulkRowResponse `json:"results"`
+	Updated []models.Expense  `json:"updated"`
+}
+
+func (h *ExpenseHandler) UpdateBulk(w http.ResponseWriter, r *http.Request) {
+	var req bulkUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	outcomes := h.Service.UpdateBulk(req.Rows)
+
+	results := make([]bulkRowResponse, len(outcomes))
+	updated := []models.Expense{}
+	for i, outcome := range outcomes {
+		if outcome.Err != nil {
+			results[i] = bulkRowResponse{Row: outcome.Row, OK: false, Error: outcome.Err.Error()}
+			continue
+		}
+		results[i] = bulkRowResponse{Row: outcome.Row, OK: true}
+		updated = append(updated, outcome.Updated)
+	}
+
+	respondJSON(w, http.StatusOK, bulkUpdateResponse{Results: results, Updated: updated})
+}
+
 func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 

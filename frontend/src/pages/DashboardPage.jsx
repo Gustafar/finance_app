@@ -22,6 +22,7 @@ function DashboardPage({
   hasActiveFilters,
   onAddClick,
   onEditExpense,
+  onExpensesUpdated,
   onDeleteExpense,
   onRefresh,
   isRefreshing,
@@ -118,6 +119,7 @@ function DashboardPage({
             expenses={filteredExpenses}
             onDelete={onDeleteExpense}
             onEdit={onEditExpense}
+            onExpensesUpdated={onExpensesUpdated}
             isSelecting={isSelecting}
             selectedIds={selectedIds}
             toggleId={toggleId}
