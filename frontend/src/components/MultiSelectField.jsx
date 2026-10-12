@@ -66,6 +66,20 @@ function MultiSelectField({ id, allLabel, options, selected, onChange }) {
     ? options.filter((option) => option.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))
     : options
 
+  // "Selecionar todos" acts on whatever the search is currently showing, so typing a term and
+  // ticking it selects just the matches, without touching selections hidden by the search.
+  const filteredValues = filteredOptions.map((option) => String(option.id))
+  const allFilteredSelected = filteredValues.length > 0 && filteredValues.every((value) => selected.includes(value))
+  const someFilteredSelected = filteredValues.some((value) => selected.includes(value))
+
+  const toggleAll = () => {
+    if (allFilteredSelected) {
+      onChange(selected.filter((value) => !filteredValues.includes(value)))
+    } else {
+      onChange([...selected, ...filteredValues.filter((value) => !selected.includes(value))])
+    }
+  }
+
   const toggleValue = (value) => {
     if (selected.includes(value)) {
       onChange(selected.filter((v) => v !== value))
@@ -109,6 +123,19 @@ function MultiSelectField({ id, allLabel, options, selected, onChange }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 autoFocus
               />
+            )}
+            {filteredOptions.length > 1 && (
+              <label className="multi-select-option multi-select-option--all">
+                <input
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected
+                  }}
+                  onChange={toggleAll}
+                />
+                Selecionar todos
+              </label>
             )}
             <div className="multi-select-list">
               {filteredOptions.map((option) => {
