@@ -1,4 +1,4 @@
-function SelectionToolbar({ isSelecting, count, onToggle, onDeleteClick, panel = false, hideIdle = false, hideCancel = false }) {
+function SelectionToolbar({ isSelecting, count, total, onToggle, onDeleteClick, panel = false, hideIdle = false, hideCancel = false }) {
   const className = `selection-toolbar${panel ? ' selection-toolbar--panel' : ''}${isSelecting ? ' selection-toolbar--active' : ''}`
 
   if (!isSelecting) {
@@ -16,6 +16,7 @@ function SelectionToolbar({ isSelecting, count, onToggle, onDeleteClick, panel =
     <div className={className}>
       <span className="selection-toolbar-count">
         {count} selecionado{count === 1 ? '' : 's'}
+        {total != null && <span className="selection-toolbar-total"> · Total {total}</span>}
       </span>
       <div className="selection-toolbar-actions">
         {!hideCancel && (

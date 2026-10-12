@@ -15,6 +15,10 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const selectedTotal = expenses
+    .filter((expense) => selectedIds.has(expense.id))
+    .reduce((sum, expense) => sum + expense.amount, 0)
+
   const toggleExpanded = (id) => {
     setExpandedIds((current) => {
       const next = new Set(current)
@@ -29,6 +33,7 @@ function ExpenseList({ expenses, onDelete, onEdit, isSelecting, selectedIds, tog
       <SelectionToolbar
         isSelecting={isSelecting}
         count={selectedIds.size}
+        total={formatCurrency(selectedTotal, hidden)}
         onToggle={toggleSelecting}
         onDeleteClick={() => setIsBulkDeleteOpen(true)}
         panel

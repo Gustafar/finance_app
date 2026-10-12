@@ -1110,6 +1110,11 @@
   color: var(--primary);
 }
 
+.selection-toolbar-total {
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
 .selection-toolbar-actions {
   display: flex;
   gap: 8px;
