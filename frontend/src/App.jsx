@@ -399,18 +399,20 @@ function App() {
             <ThemeToggle theme={theme} onToggle={cycleTheme} />
           </div>
 
-          <button
-            type="button"
-            className="btn btn-primary new-expense-btn"
-            onClick={() => setIsAddOpen(true)}
-            aria-label="Nova despesa"
-            title="Nova despesa"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M8 2.5v11M2.5 8h11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-            <span className="btn-label">Nova despesa</span>
-          </button>
+          {location.pathname === '/' && (
+            <button
+              type="button"
+              className="btn btn-primary new-expense-btn"
+              onClick={() => setIsAddOpen(true)}
+              aria-label="Nova despesa"
+              title="Nova despesa"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 2.5v11M2.5 8h11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+              <span className="btn-label">Nova despesa</span>
+            </button>
+          )}
         </div>
       </header>
 
