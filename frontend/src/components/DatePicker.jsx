@@ -1,38 +1,17 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { formatMonthLabel, shiftMonth, parseFlexibleDateInput, formatDateInputValue } from '../utils/date'
+import {
+  formatMonthLabel,
+  shiftMonth,
+  parseFlexibleDateInput,
+  formatDateInputValue,
+  todayParts,
+  toISODate,
+  buildMonthGrid,
+} from '../utils/date'
 
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-
-function todayParts() {
-  const now = new Date()
-  return { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() }
-}
-
-function toISODate(year, month, day) {
-  return `${String(year).padStart(4, '0')}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-}
-
-function buildMonthGrid(year, month) {
-  const firstWeekday = new Date(year, month, 1).getDay()
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const daysInPrevMonth = new Date(year, month, 0).getDate()
-
-  const cells = []
-  for (let i = firstWeekday - 1; i >= 0; i -= 1) {
-    cells.push({ day: daysInPrevMonth - i, monthOffset: -1 })
-  }
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    cells.push({ day, monthOffset: 0 })
-  }
-  let trailing = 1
-  while (cells.length % 7 !== 0 || cells.length < 42) {
-    cells.push({ day: trailing, monthOffset: 1 })
-    trailing += 1
-  }
-  return cells
-}
 
 function DatePicker({ id, value, onChange, onPaste, required, disabled }) {
   const [text, setText] = useState(() => formatDateInputValue(value))

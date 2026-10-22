@@ -89,7 +89,9 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
     )
   }
 
-  const months = dateFrom || dateTo ? monthsInRange(dateFrom, dateTo) : lastMonths(6)
+  // A period inside a single month has nothing to trend over, so it shows the 6 months up to it instead.
+  const periodMonths = monthsInRange(dateFrom, dateTo)
+  const months = periodMonths.length > 1 ? periodMonths : lastMonths(6, periodMonths[0])
   const showYear = months.length > 12
 
   const data = months.map((month) => {

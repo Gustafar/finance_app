@@ -6,8 +6,6 @@ export const EMPTY_FILTERS = {
   paymentMethodId: [],
   bucketId: [],
   bankId: [],
-  dateFrom: '',
-  dateTo: '',
 }
 
 export function hasActiveFilters(filters) {
@@ -18,9 +16,7 @@ export function hasActiveFilters(filters) {
       filters.personId.length ||
       filters.paymentMethodId.length ||
       filters.bucketId.length ||
-      filters.bankId.length ||
-      filters.dateFrom ||
-      filters.dateTo,
+      filters.bankId.length,
   )
 }
 

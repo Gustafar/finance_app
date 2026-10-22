@@ -56,6 +56,101 @@ export function isoStringToDateInputValue(isoString) {
   return `${year}-${month}-${day}`
 }
 
+export function todayParts() {
+  const now = new Date()
+  return { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() }
+}
+
+export function toISODate(year, month, day) {
+  return `${String(year).padStart(4, '0')}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+export function buildMonthGrid(year, month) {
+  const firstWeekday = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const daysInPrevMonth = new Date(year, month, 0).getDate()
+
+  const cells = []
+  for (let i = firstWeekday - 1; i >= 0; i -= 1) {
+    cells.push({ day: daysInPrevMonth - i, monthOffset: -1 })
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    cells.push({ day, monthOffset: 0 })
+  }
+  let trailing = 1
+  while (cells.length % 7 !== 0 || cells.length < 42) {
+    cells.push({ day: trailing, monthOffset: 1 })
+    trailing += 1
+  }
+  return cells
+}
+
+// A period is a { from, to } pair of 'YYYY-MM-DD' strings, both ends inclusive.
+
+export function monthPeriod({ year, month }) {
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  return { from: toISODate(year, month, 1), to: toISODate(year, month, lastDay) }
+}
+
+export function currentMonthPeriod() {
+  return monthPeriod(currentYearMonth())
+}
+
+function addDays(dateString, delta) {
+  const [year, month, day] = dateString.split('-').map(Number)
+  const date = new Date(year, month - 1, day + delta)
+  return toISODate(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+export function lastDaysPeriod(count) {
+  const to = todayDateInputValue()
+  return { from: addDays(to, -(count - 1)), to }
+}
+
+export function yearPeriod(year) {
+  return { from: `${year}-01-01`, to: `${year}-12-31` }
+}
+
+export function isInPeriod(isoString, { from, to }) {
+  const date = isoStringToDateInputValue(isoString)
+  return date >= from && date <= to
+}
+
+// Whole calendar months (e.g. 01/03–31/05) shift month by month; any other span shifts by its own
+// length in days, so the arrows always land on an adjacent period of the same size.
+function wholeMonthSpan({ from, to }) {
+  const start = dateStringToYearMonth(from)
+  const end = dateStringToYearMonth(to)
+  if (from !== monthPeriod(start).from || to !== monthPeriod(end).to) return null
+  return yearMonthToIndex(end) - yearMonthToIndex(start) + 1
+}
+
+export function shiftPeriod(period, delta) {
+  const monthSpan = wholeMonthSpan(period)
+  if (monthSpan) {
+    const offset = delta * monthSpan
+    return {
+      from: monthPeriod(shiftMonth(dateStringToYearMonth(period.from), offset)).from,
+      to: monthPeriod(shiftMonth(dateStringToYearMonth(period.to), offset)).to,
+    }
+  }
+
+  const [fromYear, fromMonth, fromDay] = period.from.split('-').map(Number)
+  const [toYear, toMonth, toDay] = period.to.split('-').map(Number)
+  const lengthInDays = Math.round((Date.UTC(toYear, toMonth - 1, toDay) - Date.UTC(fromYear, fromMonth - 1, fromDay)) / 86400000) + 1
+  return { from: addDays(period.from, delta * lengthInDays), to: addDays(period.to, delta * lengthInDays) }
+}
+
+export function formatPeriodLabel(period) {
+  if (wholeMonthSpan(period) === 1) return formatMonthLabel(dateStringToYearMonth(period.from))
+  if (period.from === period.to) return formatDateInputValue(period.from)
+
+  const fromLabel = formatDateInputValue(period.from)
+  const toLabel = formatDateInputValue(period.to)
+  if (period.from.slice(0, 4) === period.to.slice(0, 4)) return `${fromLabel.slice(0, 5)} – ${toLabel}`
+  return `${fromLabel} – ${toLabel}`
+}
+
 export function formatShortMonthLabel({ year, month }, includeYear = false) {
   const label = shortMonthLabelFormatter.format(new Date(year, month, 1)).replace('.', '')
   if (!includeYear) return label

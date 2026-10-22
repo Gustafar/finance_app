@@ -1,7 +1,7 @@
 import ExpenseList from '../components/ExpenseList'
 import SummaryCard from '../components/SummaryCard'
 import FilterButton from '../components/FilterButton'
-import MonthPicker from '../components/MonthPicker'
+import DateRangePicker from '../components/DateRangePicker'
 import RefreshButton from '../components/RefreshButton'
 import SearchInput from '../components/SearchInput'
 import { formatCurrency } from '../utils/format'
@@ -9,10 +9,9 @@ import { useBulkSelection } from '../hooks/useBulkSelection'
 import { useVisibility } from '../hooks/useVisibility'
 
 function DashboardPage({
-  selectedMonth,
-  onShiftMonth,
-  onSelectMonth,
-  periodFilterActive,
+  period,
+  onShiftPeriod,
+  onPeriodChange,
   summary,
   isLoading,
   loadError,
@@ -39,27 +38,21 @@ function DashboardPage({
           <button
             type="button"
             className="icon-btn"
-            onClick={() => onShiftMonth(-1)}
-            disabled={periodFilterActive}
-            aria-label="Mês anterior"
-            title="Mês anterior"
+            onClick={() => onShiftPeriod(-1)}
+            aria-label="Período anterior"
+            title="Período anterior"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          {periodFilterActive ? (
-            <span className="month-nav-label">Período personalizado</span>
-          ) : (
-            <MonthPicker value={selectedMonth} onChange={onSelectMonth} />
-          )}
+          <DateRangePicker value={period} onChange={onPeriodChange} variant="inline" />
           <button
             type="button"
             className="icon-btn"
-            onClick={() => onShiftMonth(1)}
-            disabled={periodFilterActive}
-            aria-label="Próximo mês"
-            title="Próximo mês"
+            onClick={() => onShiftPeriod(1)}
+            aria-label="Próximo período"
+            title="Próximo período"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

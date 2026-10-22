@@ -1,11 +1,6 @@
-import DatePicker from './DatePicker'
 import MultiSelectField from './MultiSelectField'
 
-function FilterBar({ filters, onChange, categories, subcategories, people, paymentMethods, buckets, banks, hideDateRange }) {
-  const handleField = (field) => (event) => {
-    onChange({ ...filters, [field]: event.target.value })
-  }
-
+function FilterBar({ filters, onChange, categories, subcategories, people, paymentMethods, buckets, banks }) {
   const handleMultiField = (field) => (value) => {
     onChange({ ...filters, [field]: value })
   }
@@ -93,20 +88,6 @@ function FilterBar({ filters, onChange, categories, subcategories, people, payme
           onChange={handleMultiField('bankId')}
         />
       </div>
-
-      {!hideDateRange && (
-        <>
-          <div className="filter-field">
-            <label htmlFor="filter-date-from">Período de</label>
-            <DatePicker id="filter-date-from" value={filters.dateFrom} onChange={handleField('dateFrom')} />
-          </div>
-
-          <div className="filter-field">
-            <label htmlFor="filter-date-to">até</label>
-            <DatePicker id="filter-date-to" value={filters.dateTo} onChange={handleField('dateTo')} />
-          </div>
-        </>
-      )}
     </div>
   )
 }

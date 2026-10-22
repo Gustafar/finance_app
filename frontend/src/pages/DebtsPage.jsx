@@ -6,18 +6,19 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import InstallmentScopeDialog from '../components/InstallmentScopeDialog'
 import DebtForm from '../components/DebtForm'
 import DebtPaymentForm from '../components/DebtPaymentForm'
-import MonthPicker from '../components/MonthPicker'
+import DateRangePicker from '../components/DateRangePicker'
 import RefreshButton from '../components/RefreshButton'
 import { useDebts } from '../hooks/useDebts'
 import { useVisibility } from '../hooks/useVisibility'
 import { deleteDebt, deleteDebtPayment } from '../api/debts'
 import { formatCurrency, formatDate } from '../utils/format'
 import {
-  currentYearMonth,
+  currentMonthPeriod,
   dateYearMonth,
   formatMonthLabel,
-  sameYearMonth,
-  shiftMonth,
+  isInPeriod,
+  isoStringToDateInputValue,
+  shiftPeriod,
   yearMonthToIndex,
 } from '../utils/date'
 
@@ -37,7 +38,7 @@ function DebtsPage() {
   const { hidden } = useVisibility()
 
   const [direction, setDirection] = useState('receivable')
-  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
+  const [period, setPeriod] = useState(currentMonthPeriod)
   const [showSettled, setShowSettled] = useState(false)
   const [isOverdueOpen, setIsOverdueOpen] = useState(false)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
@@ -58,26 +59,25 @@ function DebtsPage() {
     [debts]
   )
 
-  const monthDebts = useMemo(
-    () => debts.filter((d) => sameYearMonth(d.incurred_on, selectedMonth)),
-    [debts, selectedMonth]
+  const periodDebts = useMemo(
+    () => debts.filter((d) => isInPeriod(d.incurred_on, period)),
+    [debts, period]
   )
 
   const totals = useMemo(() => {
     const acc = { receivable: 0, payable: 0 }
-    monthDebts.forEach((d) => {
+    periodDebts.forEach((d) => {
       if (d.outstanding > 0) acc[d.direction] += d.outstanding
     })
     return acc
-  }, [monthDebts])
+  }, [periodDebts])
 
   const overdue = useMemo(() => {
-    const selectedIndex = yearMonthToIndex(selectedMonth)
     const pending = debts.filter(
       (d) =>
         d.direction === direction &&
         !isSettled(d) &&
-        yearMonthToIndex(dateYearMonth(d.incurred_on)) < selectedIndex
+        isoStringToDateInputValue(d.incurred_on) < period.from
     )
 
     if (pending.length === 0) return null
@@ -95,10 +95,10 @@ function DebtsPage() {
       total: pending.reduce((sum, d) => sum + Math.max(d.outstanding, 0), 0),
       months: [...byMonth.values()].sort((a, b) => yearMonthToIndex(a.month) - yearMonthToIndex(b.month)),
     }
-  }, [debts, direction, selectedMonth])
+  }, [debts, direction, period.from])
 
   const groups = useMemo(() => {
-    const visible = monthDebts
+    const visible = periodDebts
       .filter((d) => d.direction === direction)
       .filter((d) => showSettled || !isSettled(d))
 
@@ -115,7 +115,7 @@ function DebtsPage() {
         total: items.reduce((sum, d) => sum + displayedAmount(d), 0),
       }))
       .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'pt-BR'))
-  }, [monthDebts, direction, showSettled])
+  }, [periodDebts, direction, showSettled])
 
   const toggleExpanded = (id) => {
     setExpandedIds((current) => {
@@ -182,21 +182,21 @@ function DebtsPage() {
               <button
                 type="button"
                 className="icon-btn"
-                onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
-                aria-label="Mês anterior"
-                title="Mês anterior"
+                onClick={() => setPeriod((current) => shiftPeriod(current, -1))}
+                aria-label="Período anterior"
+                title="Período anterior"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
-              <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+              <DateRangePicker value={period} onChange={setPeriod} variant="inline" />
               <button
                 type="button"
                 className="icon-btn"
-                onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
-                aria-label="Próximo mês"
-                title="Próximo mês"
+                onClick={() => setPeriod((current) => shiftPeriod(current, 1))}
+                aria-label="Próximo período"
+                title="Próximo período"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -260,7 +260,8 @@ function DebtsPage() {
                     {overdue.count === 1
                       ? '1 cobrança'
                       : `${overdue.count} cobranças`}{' '}
-                    {noun} de meses anteriores ainda não {overdue.count === 1 ? 'foi acertada' : 'foram acertadas'}{' '}
+                    {noun} {overdue.count === 1 ? 'anterior' : 'anteriores'} ao período ainda não{' '}
+                    {overdue.count === 1 ? 'foi acertada' : 'foram acertadas'}{' '}
                     ({formatCurrency(overdue.total, hidden)})
                   </span>
                   <svg

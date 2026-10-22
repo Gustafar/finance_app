@@ -15,7 +15,6 @@ function FilterDialog({
   buckets,
   banks,
   isLoading,
-  hideDateRange,
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} contentClassName="modal-content--align-top">
@@ -31,7 +30,6 @@ function FilterDialog({
         paymentMethods={paymentMethods}
         buckets={buckets}
         banks={banks}
-        hideDateRange={hideDateRange}
       />
 
       {hasActiveFilters(filters) && (

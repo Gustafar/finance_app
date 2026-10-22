@@ -1,11 +1,12 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import MonthlyTrendChart from '../components/charts/MonthlyTrendChart'
 import DrillDownBreakdownChart from '../components/charts/DrillDownBreakdownChart'
 import EstimateComparisonPanel from '../components/charts/EstimateComparisonPanel'
-import DatePicker from '../components/DatePicker'
+import DateRangePicker from '../components/DateRangePicker'
 import FilterButton from '../components/FilterButton'
 import SearchInput from '../components/SearchInput'
-import { formatMonthLabel } from '../utils/date'
+import { dateStringToYearMonth, formatMonthLabel, formatPeriodLabel, todayDateInputValue } from '../utils/date'
 
 const NO_SUBCATEGORY_ID = 'none'
 const NO_SUBCATEGORY_NAME = 'Sem subcategoria'
@@ -26,28 +27,32 @@ function ChartsPage({
   filteredExpenses,
   isLoading,
   loadError,
-  periodFilterActive,
-  selectedMonth,
+  period,
+  onPeriodChange,
   filters,
-  trendDateFrom,
-  trendDateTo,
   onOpenFilters,
   hasActiveFilters,
   searchValue,
   onSearchChange,
-  onDateFromChange,
-  onDateToChange,
   onEditExpense,
 }) {
-  const scopeLabel = periodFilterActive ? 'período personalizado' : formatMonthLabel(selectedMonth)
-  const caption = `Filtros ativos · ${scopeLabel}`
-  // Identifies the current scope (month + all active filters) so the drill-down charts only
+  const caption = `Filtros ativos · ${formatPeriodLabel(period)}`
+  // Identifies the current scope (period + all active filters) so the drill-down charts only
   // reset their position when the scope actually changes — not on every reload triggered by
   // saving an edit inside a drilled-in card.
-  const resetKey = `${selectedMonth}|${JSON.stringify(filters)}`
-  const trendCaption = periodFilterActive
-    ? 'Despesas, receitas e investimentos no período selecionado.'
-    : 'Despesas, receitas e investimentos nos últimos 6 meses.'
+  const resetKey = `${period.from}|${period.to}|${JSON.stringify(filters)}`
+  const endMonth = dateStringToYearMonth(period.to)
+  const trendCaption =
+    period.from.slice(0, 7) !== period.to.slice(0, 7)
+      ? 'Despesas, receitas e investimentos no período selecionado.'
+      : `Despesas, receitas e investimentos nos 6 meses até ${formatMonthLabel(endMonth).toLowerCase()}.`
+
+  // The estimate panel is per month: show the current month while it's inside the period,
+  // otherwise the period's last month.
+  const comparisonMonth = useMemo(() => {
+    const today = todayDateInputValue()
+    return dateStringToYearMonth(today >= period.from && today <= period.to ? today : period.to)
+  }, [period.from, period.to])
 
   return (
     <main className="container">
@@ -60,10 +65,8 @@ function ChartsPage({
         <h1>Gráficos</h1>
         <div className="page-header-actions">
           <div className="header-date-range">
-            <label htmlFor="charts-date-from">De</label>
-            <DatePicker id="charts-date-from" value={trendDateFrom} onChange={(e) => onDateFromChange(e.target.value)} />
-            <label htmlFor="charts-date-to">até</label>
-            <DatePicker id="charts-date-to" value={trendDateTo} onChange={(e) => onDateToChange(e.target.value)} />
+            <label htmlFor="charts-period">Período</label>
+            <DateRangePicker id="charts-period" value={period} onChange={onPeriodChange} />
           </div>
           <SearchInput value={searchValue} onChange={onSearchChange} />
           <FilterButton onClick={onOpenFilters} active={hasActiveFilters} />
@@ -80,12 +83,12 @@ function ChartsPage({
               title="Evolução mensal"
               caption={trendCaption}
               expenses={trendExpenses}
-              dateFrom={trendDateFrom}
-              dateTo={trendDateTo}
+              dateFrom={period.from}
+              dateTo={period.to}
             />
           </section>
 
-          <EstimateComparisonPanel expenses={expenses} selectedMonth={selectedMonth} />
+          <EstimateComparisonPanel expenses={expenses} selectedMonth={comparisonMonth} />
 
           <div className="charts-grid">
             <section className="panel chart-panel">

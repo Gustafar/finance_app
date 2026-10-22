@@ -25,7 +25,7 @@ import { fetchPeople } from './api/people'
 import { fetchPaymentMethods } from './api/paymentMethods'
 import { fetchBuckets } from './api/buckets'
 import { fetchBanks } from './api/banks'
-import { currentYearMonth, sameYearMonth, shiftMonth } from './utils/date'
+import { currentMonthPeriod, isInPeriod, shiftPeriod } from './utils/date'
 import { EMPTY_FILTERS, hasActiveFilters, matchesFilters } from './utils/filters'
 import { useTheme } from './hooks/useTheme'
 import { useVisibility } from './hooks/useVisibility'
@@ -52,7 +52,7 @@ function App() {
   const [isBanksOpen, setIsBanksOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth)
+  const [period, setPeriod] = useState(currentMonthPeriod)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [subcategories, setSubcategories] = useState([])
   const [people, setPeople] = useState([])
@@ -175,24 +175,16 @@ function App() {
     setExpenses((prevExpenses) => prevExpenses.map((expense) => updatedById.get(expense.id) ?? expense))
   }
 
-  const hasPeriodFilter = Boolean(filters.dateFrom || filters.dateTo)
   const filtersAreActive = hasActiveFilters(filters)
 
-  const monthExpenses = useMemo(() => {
-    if (hasPeriodFilter) {
-      return expenses.filter((expense) => {
-        const date = expense.date.slice(0, 10)
-        if (filters.dateFrom && date < filters.dateFrom) return false
-        if (filters.dateTo && date > filters.dateTo) return false
-        return true
-      })
-    }
-    return expenses.filter((expense) => sameYearMonth(expense.date, selectedMonth))
-  }, [expenses, selectedMonth, hasPeriodFilter, filters.dateFrom, filters.dateTo])
+  const periodExpenses = useMemo(
+    () => expenses.filter((expense) => isInPeriod(expense.date, period)),
+    [expenses, period]
+  )
 
   const filteredExpenses = useMemo(
-    () => monthExpenses.filter((expense) => matchesFilters(expense, filters)),
-    [monthExpenses, filters]
+    () => periodExpenses.filter((expense) => matchesFilters(expense, filters)),
+    [periodExpenses, filters]
   )
 
   const trendExpenses = useMemo(
@@ -614,10 +606,9 @@ function App() {
           path="/"
           element={
             <DashboardPage
-              selectedMonth={selectedMonth}
-              onShiftMonth={(delta) => setSelectedMonth((month) => shiftMonth(month, delta))}
-              onSelectMonth={setSelectedMonth}
-              periodFilterActive={hasPeriodFilter}
+              period={period}
+              onShiftPeriod={(delta) => setPeriod((current) => shiftPeriod(current, delta))}
+              onPeriodChange={setPeriod}
               summary={summary}
               isLoading={isLoading}
               loadError={loadError}
@@ -647,17 +638,13 @@ function App() {
                 filteredExpenses={filteredExpenses}
                 isLoading={isLoading}
                 loadError={loadError}
-                periodFilterActive={hasPeriodFilter}
-                selectedMonth={selectedMonth}
+                period={period}
+                onPeriodChange={setPeriod}
                 filters={filters}
-                trendDateFrom={filters.dateFrom}
-                trendDateTo={filters.dateTo}
                 onOpenFilters={() => setIsFiltersOpen(true)}
                 hasActiveFilters={filtersAreActive}
                 searchValue={filters.description}
                 onSearchChange={(value) => setFilters((prev) => ({ ...prev, description: value }))}
-                onDateFromChange={(value) => setFilters((prev) => ({ ...prev, dateFrom: value }))}
-                onDateToChange={(value) => setFilters((prev) => ({ ...prev, dateTo: value }))}
                 onEditExpense={setEditingExpense}
               />
             </Suspense>
@@ -696,7 +683,6 @@ function App() {
         buckets={buckets}
         banks={banks}
         isLoading={isLoadingFilterOptions}
-        hideDateRange={location.pathname === '/graficos'}
       />
 
       <Modal isOpen={editingExpense !== null} onClose={() => setEditingExpense(null)}>
