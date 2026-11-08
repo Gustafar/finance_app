@@ -4,8 +4,9 @@ import BreakdownPieChart from './BreakdownPieChart'
 import { formatCurrency, formatDate } from '../../utils/format'
 import { useVisibility } from '../../hooks/useVisibility'
 
-function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
+function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy, showTotal }) {
   const { hidden } = useVisibility()
+  const total = expenses.reduce((sum, expense) => sum + expense.amount, 0)
   const sorted = [...expenses].sort((a, b) =>
     sortBy === 'amount' ? b.amount - a.amount : new Date(b.date) - new Date(a.date)
   )
@@ -15,6 +16,7 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
   }
 
   return (
+    <>
     <ul className="chart-detail-list">
       {sorted.map((expense) => (
         <li key={expense.id} className="chart-detail-row">
@@ -48,6 +50,13 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
         </li>
       ))}
     </ul>
+    {showTotal && (
+      <div className="chart-detail-total">
+        <span>Total</span>
+        <span className="chart-detail-amount">{formatCurrency(total, hidden)}</span>
+      </div>
+    )}
+    </>
   )
 }
 
@@ -57,7 +66,7 @@ function ExpenseDetailList({ expenses, emptyMessage, onEditExpense, sortBy }) {
 // expenses missing that field (e.g. legacy expenses without a subcategory) under a synthetic
 // bucket instead of dropping them. Clicking a bar/slice drills one level deeper; the last level's
 // clicks reveal the individual expenses behind it.
-function DrillDownBreakdownChart({ title, expenses, resetKey, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense }) {
+function DrillDownBreakdownChart({ title, expenses, resetKey, dimensions, rootLabel, caption, detailEmptyMessage, onEditExpense, showLeafTotal }) {
   const [drillPath, setDrillPath] = useState([])
   const [sortBy, setSortBy] = useState('date')
 
@@ -168,6 +177,7 @@ function DrillDownBreakdownChart({ title, expenses, resetKey, dimensions, rootLa
             emptyMessage={detailEmptyMessage}
             onEditExpense={onEditExpense}
             sortBy={sortBy}
+            showTotal={showLeafTotal}
           />
         )}
       </div>

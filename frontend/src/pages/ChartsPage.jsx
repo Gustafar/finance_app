@@ -152,6 +152,7 @@ function ChartsPage({
                 caption={caption}
                 detailEmptyMessage="Nenhuma despesa para exibir."
                 onEditExpense={onEditExpense}
+                showLeafTotal
                 dimensions={[
                   {
                     idKey: 'person_id',
