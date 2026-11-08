@@ -2562,6 +2562,7 @@
 }
 
 .chart-body {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2722,6 +2723,18 @@
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+
+.chart-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chart-table-scroll .chart-table {
+  min-width: max-content;
 }
 
 .chart-legend {

@@ -258,6 +258,7 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                   </svg>
                 </button>
               </summary>
+              <div className="chart-table-scroll">
               <table className="chart-table">
                 <thead>
                   <tr>
@@ -292,6 +293,7 @@ function MonthlyTrendChart({ title, caption, expenses, dateFrom, dateTo }) {
                   </tfoot>
                 )}
               </table>
+              </div>
             </details>
           </>
         )}
