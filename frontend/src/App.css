@@ -1489,6 +1489,67 @@
   color: var(--text-h);
 }
 
+.field textarea {
+  width: 100%;
+  min-height: 120px;
+  font-family: inherit;
+  font-size: var(--input-font-size);
+  line-height: 1.5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px var(--input-padding-x);
+  background: var(--bg);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+}
+
+.field textarea:focus {
+  border-color: var(--primary);
+}
+
+.note-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.note-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.note-card-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.note-card-title {
+  font-weight: 600;
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+
+.note-card-content {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
 .field input,
 .field select {
   width: 100%;
@@ -3074,7 +3135,12 @@
   gap: 10px;
 }
 
-.debt-payment-row .expense-date {
+.debt-payment-row .expense-date,
+.investment-box-history-main .expense-date {
   min-width: 0;
   flex: 1;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

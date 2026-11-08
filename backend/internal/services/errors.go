@@ -78,5 +78,10 @@ var (
 	ErrInvalidPlanYear            = errors.New("plan year is required")
 	ErrInvalidPlanMonth           = errors.New("plan month must be between 1 and 12")
 
+	ErrEmptyNoteContent = errors.New("note content cannot be empty")
+	ErrInvalidNoteYear  = errors.New("note year is required")
+	ErrInvalidNoteMonth = errors.New("note month must be between 1 and 12")
+	ErrNoteNotFound     = errors.New("note not found")
+
 	ErrInvalidExportDateRange = errors.New("date_from and date_to are required and date_from cannot be after date_to")
 )

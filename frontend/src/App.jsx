@@ -19,6 +19,7 @@ import DashboardPage from './pages/DashboardPage'
 import RecurringExpensesPage from './pages/RecurringExpensesPage'
 import InvestmentsPage from './pages/InvestmentsPage'
 import DebtsPage from './pages/DebtsPage'
+import NotesPage from './pages/NotesPage'
 import { fetchExpenses, deleteExpense } from './api/expenses'
 import { fetchSubcategories } from './api/subcategories'
 import { fetchPeople } from './api/people'
@@ -392,6 +393,22 @@ function App() {
                 <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1H6.32c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
               </svg>
             </Link>
+            <Link
+              to="/notas"
+              className={`icon-btn icon-btn--header${location.pathname === '/notas' ? ' icon-btn--active' : ''}`}
+              aria-label="Notas"
+              title="Notas"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M3.5 2h6.8L13 4.7V13a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinejoin="round"
+                />
+                <path d="M5 7h6M5 9.5h6M5 12h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            </Link>
             <VisibilityToggle hidden={valuesHidden} onToggle={toggleValuesHidden} />
             <ThemeToggle theme={theme} onToggle={cycleTheme} />
           </div>
@@ -576,6 +593,19 @@ function App() {
           Cobranças
         </Link>
 
+        <Link to="/notas" className="drawer-item" onClick={() => setIsMenuOpen(false)}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3.5 2h6.8L13 4.7V13a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinejoin="round"
+            />
+            <path d="M5 7h6M5 9.5h6M5 12h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          Notas
+        </Link>
+
         <button
           type="button"
           className="drawer-item"
@@ -662,6 +692,7 @@ function App() {
           }
         />
         <Route path="/cobrancas" element={<DebtsPage />} />
+        <Route path="/notas" element={<NotesPage />} />
       </Routes>
 
       <AddExpenseModal
