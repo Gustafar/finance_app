@@ -1,0 +1,23 @@
+# Pinga /health a cada 3 dias para o banco no Supabase (plano free) não
+# pausar por inatividade (pausa após 7 dias sem atividade).
+# Requer o secret HEALTHCHECK_URL = https://<seu-servico>.onrender.com/health
+name: Keepalive
+
+on:
+  schedule:
+    - cron: "0 12 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        env:
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+        run: |
+          # O Render free pode levar ~1 min para acordar; tenta algumas vezes.
+          curl --fail --silent --show-error \
+            --retry 5 --retry-delay 30 --retry-all-errors \
+            --max-time 90 \
+            "$HEALTHCHECK_URL"

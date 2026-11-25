@@ -69,7 +69,10 @@ func main() {
 	monthNoteService := services.NewMonthNoteService(monthNoteRepo)
 	monthNoteHandler := handlers.NewMonthNoteHandler(monthNoteService)
 
+	healthHandler := handlers.NewHealthHandler(db)
+
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", healthHandler.Check)
 	mux.HandleFunc("GET /auth/status", handlers.AuthStatus)
 	mux.HandleFunc("POST /login", handlers.Login)
 

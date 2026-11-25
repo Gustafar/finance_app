@@ -8,11 +8,11 @@ import (
 	"finance_app/internal/auth"
 )
 
-// RequireAuth guards every route except /login with a bearer token.
+// RequireAuth guards every route except /login, /auth/status and /health with a bearer token.
 // If APP_PASSWORD is unset, auth is skipped entirely (frictionless local dev).
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if os.Getenv("APP_PASSWORD") == "" || r.URL.Path == "/login" || r.URL.Path == "/auth/status" {
+		if os.Getenv("APP_PASSWORD") == "" || r.URL.Path == "/login" || r.URL.Path == "/auth/status" || r.URL.Path == "/health" {
 			next.ServeHTTP(w, r)
 			return
 		}
